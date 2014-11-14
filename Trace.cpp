@@ -19,6 +19,16 @@ inline bool IsZero(const Vec3& vec)
         vec.data[2] == 0.0f;
 }
 
+Vec3 inline Lerp(const Vec3& start, const Vec3&end, float fraction)
+{
+    return
+    {
+        start.data[0] + fraction * (end.data[0] - start.data[0]),
+        start.data[1] + fraction * (end.data[1] - start.data[1]),
+        start.data[2] + fraction * (end.data[2] - start.data[2]),
+    };
+}
+
 inline float Clamp0To1(float toClamp)
 {
     return toClamp > 0.0f ? (toClamp < 1.0f ? toClamp : 1.0f) : 0.0f;
@@ -240,7 +250,6 @@ void CheckNode(
         float fraction1;
         float fraction2;
         float middleFraction;
-        Vec3 middle;
 
         // split the segment into two
         if (startDistance < endDistance)
@@ -270,12 +279,12 @@ void CheckNode(
 
         // calculate the middle point for the first side
         middleFraction = startFraction + (endFraction - startFraction) * fraction1;
-        for (int i = 0; i < 3; i++)
-            middle[i] = start[i] + fraction1 * (end[i] - start[i]);
+        auto middle = Lerp(start, end, fraction1);
 
         // check the first side
         CheckNode(
-            node->children[side],
+            bsp,
+            node.mChildren[side],
             startFraction,
             middleFraction,
             start,
@@ -283,12 +292,12 @@ void CheckNode(
 
         // calculate the middle point for the second side
         middleFraction = startFraction + (endFraction - startFraction) * fraction2;
-        for (int i = 0; i < 3; i++)
-            middle[i] = start[i] + fraction2 * (end[i] - start[i]);
+        middle = Lerp(start, end, fraction2);
 
         // check the second side
         CheckNode(
-            node->children[!side],
+            bsp,
+            node.mChildren[!side],
             middleFraction,
             endFraction,
             middle,
