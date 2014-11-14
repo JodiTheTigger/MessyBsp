@@ -50,6 +50,15 @@ inline float DotProduct(const Vec3& a, const float* b)
             a.data[2] * b[2];
 }
 
+enum class PathInfo
+{
+    OutsideSolid,
+    StartsInsideEndsOutsideSolid,
+    InsideSolid,
+
+    Count
+};
+
 struct TraceResult
 {
     /// 0 - 1.0f
@@ -57,8 +66,7 @@ struct TraceResult
     /// 0.5 means a collision 1/2 way thought the path, etc.
     float pathFollowed;
 
-    bool pathCompletelyInsideASolid;
-    bool pathStartsOutsideASolid;
+    PathInfo info;
 };
 
 enum class TraceBounds
@@ -125,8 +133,7 @@ TraceResult Trace(
     return
     {
         1.0f,
-        false,
-        true,
+        PathInfo::OutsideSolid
     };
 }
 
@@ -139,8 +146,7 @@ TraceResult TraceRay(
     return
     {
         1.0f,
-        false,
-        true,
+        PathInfo::OutsideSolid
     };
 }
 
@@ -154,8 +160,7 @@ TraceResult TraceSphere(
     return
     {
         1.0f,
-        false,
-        true,
+        PathInfo::OutsideSolid
     };
 }
 
@@ -170,13 +175,17 @@ TraceResult TraceBox(
     return
     {
         1.0f,
-        false,
-        true,
+        PathInfo::OutsideSolid
     };
 }
 
 // Stub
-void CheckBrush(TBrush) {};
+TraceResult CheckBrush(
+        const TMapQ3& bsp,
+        const TBrush& brush,
+        const Vec3& start,
+        const Vec3& end,
+        float currentFraction);
 
 void CheckNode(
         const TMapQ3& bsp,
@@ -200,7 +209,7 @@ void CheckNode(
                     // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
                 )
             {
-                CheckBrush(brush);
+                CheckBrush(bsp, brush, start, end);
             }
         }
 
@@ -304,6 +313,104 @@ void CheckNode(
             end );
     }
 }
+
+TraceResult CheckBrush(
+        const TMapQ3& bsp,
+        const TBrush& brush,
+        const Vec3& start,
+        const Vec3& end,
+        float currectFraction)
+{
+    float startFraction = -1.0f;
+    float endFraction = 1.0f;
+    bool startsOut = false;
+    bool endsOut = false;
+
+    for (int i = 0; i < brush.mNbBrushSides; i++)
+    {
+        const auto& brushSide = bsp.mBrushSides[brush.mBrushSide + i];
+        const auto& plane = bsp.mPlanes[brushSide.mPlaneIndex];
+
+        float startDistance = DotProduct(start, plane.mNormal) - plane.mDistance;
+        float endDistance = DotProduct(end, plane.mNormal) - plane.mDistance;
+
+        if (startDistance > 0)
+        {
+            startsOut = true;
+        }
+
+        if (endDistance > 0)
+        {
+            endsOut = true;
+        }
+
+        // make sure the trace isn't completely on one side of the brush
+        if (startDistance > 0 && endDistance > 0)
+        {
+            // both are in front of the plane, its outside of this brush
+            return
+            {
+                1.0f,
+                PathInfo::OutsideSolid
+            };
+        }
+
+        if (startDistance <= 0 && endDistance <= 0)
+        {
+            // both are behind this plane, it will get clipped by another one
+            continue;
+        }
+
+        if (startDistance > endDistance)
+        {
+            // line is entering into the brush
+            float fraction = (startDistance - EPSILON) / (startDistance - endDistance);
+            if (fraction > startFraction)
+            {
+                startFraction = fraction;
+            }
+        }
+        else
+        {
+            // line is leaving the brush
+            float fraction = (startDistance + EPSILON) / (startDistance - endDistance);
+            if (fraction < endFraction)
+            {
+                endFraction = fraction;
+            }
+        }
+    }
+
+    if (startsOut == false)
+    {
+        // Starts inside a solid, maybe even ends in one.
+        return
+        {
+            0.0f,
+            endsOut ? PathInfo::StartsInsideEndsOutsideSolid : PathInfo::InsideSolid
+        };
+    }
+
+    if (startFraction < endFraction)
+    {
+        if (startFraction > -1 && startFraction < currectFraction)
+        {
+            if (startFraction < 0)
+            {
+                startFraction = 0;
+            }
+
+            currectFraction = startFraction;
+        }
+    }
+
+    return
+    {
+        currentFraction,
+        PathInfo::OutsideSolid
+    };
+}
+
 
 #if PSEUDO_CODE
 float outputFraction;
