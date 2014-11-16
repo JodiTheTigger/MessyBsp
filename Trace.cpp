@@ -180,12 +180,10 @@ TraceResult TraceBox(
 }
 
 // Stub
-TraceResult CheckBrush(
-        const TMapQ3& bsp,
+TraceResult CheckBrush(const TMapQ3& bsp,
         const TBrush& brush,
         const Vec3& start,
-        const Vec3& end,
-        float currentFraction);
+        const Vec3& end);
 
 TraceResult CheckNode(
         const TMapQ3& bsp,
@@ -218,7 +216,13 @@ TraceResult CheckNode(
                     // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
                 )
             {
-                result = CheckBrush(bsp, brush, originalStart, originalEnd, result.pathFollowed);
+                auto test = CheckBrush(bsp, brush, originalStart, originalEnd);
+
+                if (test.pathFollowed < result.pathFollowed)
+                {
+                    result = test;
+                }
+
             }
         }
 
@@ -341,8 +345,7 @@ TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
         const Vec3& start,
-        const Vec3& end,
-        float currentFraction)
+        const Vec3& end)
 {
     float startFraction = -1.0f;
     float endFraction = 1.0f;
@@ -415,21 +418,18 @@ TraceResult CheckBrush(
     }
 
     if (startFraction < endFraction)
-    {
-        if (startFraction > -1 && startFraction < currentFraction)
+    {        
+        return
         {
-            if (startFraction < 0)
-            {
-                startFraction = 0;
-            }
-
-            currentFraction = startFraction;
-        }
+            Clamp0To1(startFraction),
+            PathInfo::OutsideSolid
+        };
     }
 
+    // No collision
     return
     {
-        currentFraction,
+        1.0,
         PathInfo::OutsideSolid
     };
 }
