@@ -259,31 +259,27 @@ TraceResult CheckNode(
     else
     {
         // the line spans the splitting plane
-        int side;
-        float fraction1;
-        float fraction2;
-        float middleFraction;
+        // Default values assume startDistance == endDistance.
+        int side = 0;
+        float fraction1 = 1.0f;
+        float fraction2 = 0.0f;
 
         // split the segment into two
         if (startDistance < endDistance)
         {
-            side = 1; // back
+            // back
+            side = 1;
             float inverseDistance = 1.0f / (startDistance - endDistance);
             fraction1 = (startDistance - offset + EPSILON) * inverseDistance;
             fraction2 = (startDistance + offset + EPSILON) * inverseDistance;
         }
-        else if (endDistance < startDistance)
+
+        if (endDistance < startDistance)
         {
-            side = 0; // front
+            // front
             float inverseDistance = 1.0f / (startDistance - endDistance);
             fraction1 = (startDistance + offset + EPSILON) * inverseDistance;
             fraction2 = (startDistance - offset - EPSILON) * inverseDistance;
-        }
-        else
-        {
-            side = 0; // front
-            fraction1 = 1.0f;
-            fraction2 = 0.0f;
         }
 
         // make sure the numbers are valid
@@ -291,36 +287,40 @@ TraceResult CheckNode(
         fraction2 = Clamp0To1(fraction2);
 
         // calculate the middle point for the first side
-        middleFraction = startFraction + (endFraction - startFraction) * fraction1;
-        auto middle = Lerp(start, end, fraction1);
+        {
+            auto middleFraction = startFraction + (endFraction - startFraction) * fraction1;
+            auto middle = Lerp(start, end, fraction1);
 
-        // check the first side
-        result = CheckNode(
-            bsp,
-            node.mChildren[side],
-            startFraction,
-            middleFraction,
-            start,
-            middle,
-            originalStart,
-            originalEnd,
-            result);
+            // check the first side
+            result = CheckNode(
+                bsp,
+                node.mChildren[side],
+                startFraction,
+                middleFraction,
+                start,
+                middle,
+                originalStart,
+                originalEnd,
+                result);
+        }
 
         // calculate the middle point for the second side
-        middleFraction = startFraction + (endFraction - startFraction) * fraction2;
-        middle = Lerp(start, end, fraction2);
+        {
+            auto middleFraction = startFraction + (endFraction - startFraction) * fraction2;
+            auto middle = Lerp(start, end, fraction2);
 
-        // check the second side
-        result = CheckNode(
-            bsp,
-            node.mChildren[!side],
-            middleFraction,
-            endFraction,
-            middle,
-            end,
-            originalStart,
-            originalEnd,
-            result);
+            // check the second side
+            result = CheckNode(
+                bsp,
+                node.mChildren[!side],
+                middleFraction,
+                endFraction,
+                middle,
+                end,
+                originalStart,
+                originalEnd,
+                result);
+        }
     }
 
     return result;
