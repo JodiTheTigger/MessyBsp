@@ -194,14 +194,8 @@ TraceResult CheckNode(
         const Vec3& end,
         const Vec3& originalStart,
         const Vec3& originalEnd,
-        float currentFraction)
+        TraceResult result)
 {
-    TraceResult result =
-    {
-        currentFraction,
-        PathInfo::OutsideSolid
-    };
-
     if (nodeIndex < 0)
     {
         // this is a leaf
@@ -222,7 +216,6 @@ TraceResult CheckNode(
                 {
                     result = test;
                 }
-
             }
         }
 
@@ -253,7 +246,7 @@ TraceResult CheckNode(
             end,
             originalStart,
             originalEnd,
-            result.pathFollowed);
+            result);
     }
 
     if (startDistance < -offset && endDistance < -offset)
@@ -269,7 +262,7 @@ TraceResult CheckNode(
             end,
             originalStart,
             originalEnd,
-            result.pathFollowed);
+            result);
     }
     else
     {
@@ -319,7 +312,7 @@ TraceResult CheckNode(
             middle,
             originalStart,
             originalEnd,
-            result.pathFollowed);
+            result);
 
         // calculate the middle point for the second side
         middleFraction = startFraction + (endFraction - startFraction) * fraction2;
@@ -335,7 +328,7 @@ TraceResult CheckNode(
             end,
             originalStart,
             originalEnd,
-            result.pathFollowed );
+            result);
     }
 
     return result;
