@@ -187,14 +187,23 @@ TraceResult CheckBrush(
         const Vec3& end,
         float currentFraction);
 
-void CheckNode(
+TraceResult CheckNode(
         const TMapQ3& bsp,
         int nodeIndex,
         float startFraction,
         float endFraction,
         const Vec3& start,
-        const Vec3& end)
+        const Vec3& end,
+        const Vec3& originalStart,
+        const Vec3& originalEnd,
+        float currentFraction)
 {
+    TraceResult result =
+    {
+        currentFraction,
+        PathInfo::OutsideSolid
+    };
+
     if (nodeIndex < 0)
     {
         // this is a leaf
@@ -209,12 +218,12 @@ void CheckNode(
                     // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
                 )
             {
-                CheckBrush(bsp, brush, start, end);
+                result = CheckBrush(bsp, brush, originalStart, originalEnd, result.pathFollowed);
             }
         }
 
         // don't have to do anything else for leaves
-        return;
+        return result;
     }
 
     // this is a node
@@ -231,26 +240,32 @@ void CheckNode(
     {
         // both points are in front of the plane
         // so check the front child
-        CheckNode(
+        result = CheckNode(
             bsp,
             node.mChildren[0],
             startFraction,
             endFraction,
             start,
-            end );
+            end,
+            originalStart,
+            originalEnd,
+            result.pathFollowed);
     }
 
     if (startDistance < -offset && endDistance < -offset)
     {
         // both points are behind the plane
         // so check the back child
-        CheckNode(
+        result = CheckNode(
             bsp,
             node.mChildren[1],
             startFraction,
             endFraction,
             start,
-            end);
+            end,
+            originalStart,
+            originalEnd,
+            result.pathFollowed);
     }
     else
     {
@@ -291,27 +306,35 @@ void CheckNode(
         auto middle = Lerp(start, end, fraction1);
 
         // check the first side
-        CheckNode(
+        result = CheckNode(
             bsp,
             node.mChildren[side],
             startFraction,
             middleFraction,
             start,
-            middle );
+            middle,
+            originalStart,
+            originalEnd,
+            result.pathFollowed);
 
         // calculate the middle point for the second side
         middleFraction = startFraction + (endFraction - startFraction) * fraction2;
         middle = Lerp(start, end, fraction2);
 
         // check the second side
-        CheckNode(
+        result = CheckNode(
             bsp,
             node.mChildren[!side],
             middleFraction,
             endFraction,
             middle,
-            end );
+            end,
+            originalStart,
+            originalEnd,
+            result.pathFollowed );
     }
+
+    return result;
 }
 
 TraceResult CheckBrush(
@@ -319,7 +342,7 @@ TraceResult CheckBrush(
         const TBrush& brush,
         const Vec3& start,
         const Vec3& end,
-        float currectFraction)
+        float currentFraction)
 {
     float startFraction = -1.0f;
     float endFraction = 1.0f;
@@ -393,14 +416,14 @@ TraceResult CheckBrush(
 
     if (startFraction < endFraction)
     {
-        if (startFraction > -1 && startFraction < currectFraction)
+        if (startFraction > -1 && startFraction < currentFraction)
         {
             if (startFraction < 0)
             {
                 startFraction = 0;
             }
 
-            currectFraction = startFraction;
+            currentFraction = startFraction;
         }
     }
 
