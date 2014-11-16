@@ -64,7 +64,7 @@ struct TraceResult
     /// 0 - 1.0f
     /// 0 == collision straight away, 1.0 means no collision at all.
     /// 0.5 means a collision 1/2 way thought the path, etc.
-    float pathFollowed;
+    float pathFraction;
 
     PathInfo info;
 };
@@ -137,19 +137,6 @@ TraceResult Trace(
     };
 }
 
-TraceResult TraceRay(
-        const TMapQ3&,
-        const Vec3&,
-        const Vec3&)
-{
-    // RAM: TODO
-    return
-    {
-        1.0f,
-        PathInfo::OutsideSolid
-    };
-}
-
 TraceResult TraceSphere(
         const TMapQ3&,
         const Vec3&,
@@ -212,7 +199,7 @@ TraceResult CheckNode(
             {
                 auto test = CheckBrush(bsp, brush, originalStart, originalEnd);
 
-                if (test.pathFollowed < result.pathFollowed)
+                if (test.pathFraction < result.pathFraction)
                 {
                     result = test;
                 }
@@ -427,6 +414,25 @@ TraceResult CheckBrush(
     };
 }
 
+TraceResult TraceRay(
+        const TMapQ3& bsp,
+        const Vec3& start,
+        const Vec3& end)
+{
+    return CheckNode(
+                bsp,
+                0,
+                0.0f,
+                1.0f,
+                start,
+                end,
+                start,
+                end,
+                {
+                    1.0f,
+                    PathInfo::OutsideSolid
+                });
+}
 
 #if PSEUDO_CODE
 float outputFraction;
