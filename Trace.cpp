@@ -229,7 +229,7 @@ TraceResult CheckNode(
     {
         // both points are in front of the plane
         // so check the front child
-        result = CheckNode(
+        return CheckNode(
             bsp,
             node.mChildren[0],
             startFraction,
@@ -245,7 +245,7 @@ TraceResult CheckNode(
     {
         // both points are behind the plane
         // so check the back child
-        result = CheckNode(
+        return CheckNode(
             bsp,
             node.mChildren[1],
             startFraction,
@@ -256,71 +256,69 @@ TraceResult CheckNode(
             originalEnd,
             result);
     }
-    else
+
+    // the line spans the splitting plane
+    // Default values assume startDistance == endDistance.
+    int side = 0;
+    float fraction1 = 1.0f;
+    float fraction2 = 0.0f;
+
+    // split the segment into two
+    if (startDistance < endDistance)
     {
-        // the line spans the splitting plane
-        // Default values assume startDistance == endDistance.
-        int side = 0;
-        float fraction1 = 1.0f;
-        float fraction2 = 0.0f;
+        // back
+        side = 1;
+        float inverseDistance = 1.0f / (startDistance - endDistance);
+        fraction1 = (startDistance - offset + EPSILON) * inverseDistance;
+        fraction2 = (startDistance + offset + EPSILON) * inverseDistance;
+    }
 
-        // split the segment into two
-        if (startDistance < endDistance)
-        {
-            // back
-            side = 1;
-            float inverseDistance = 1.0f / (startDistance - endDistance);
-            fraction1 = (startDistance - offset + EPSILON) * inverseDistance;
-            fraction2 = (startDistance + offset + EPSILON) * inverseDistance;
-        }
+    if (endDistance < startDistance)
+    {
+        // front
+        float inverseDistance = 1.0f / (startDistance - endDistance);
+        fraction1 = (startDistance + offset + EPSILON) * inverseDistance;
+        fraction2 = (startDistance - offset - EPSILON) * inverseDistance;
+    }
 
-        if (endDistance < startDistance)
-        {
-            // front
-            float inverseDistance = 1.0f / (startDistance - endDistance);
-            fraction1 = (startDistance + offset + EPSILON) * inverseDistance;
-            fraction2 = (startDistance - offset - EPSILON) * inverseDistance;
-        }
+    // make sure the numbers are valid
+    fraction1 = Clamp0To1(fraction1);
+    fraction2 = Clamp0To1(fraction2);
 
-        // make sure the numbers are valid
-        fraction1 = Clamp0To1(fraction1);
-        fraction2 = Clamp0To1(fraction2);
+    // calculate the middle point for the first side
+    {
+        auto middleFraction = startFraction + (endFraction - startFraction) * fraction1;
+        auto middle = Lerp(start, end, fraction1);
 
-        // calculate the middle point for the first side
-        {
-            auto middleFraction = startFraction + (endFraction - startFraction) * fraction1;
-            auto middle = Lerp(start, end, fraction1);
+        // check the first side
+        result = CheckNode(
+            bsp,
+            node.mChildren[side],
+            startFraction,
+            middleFraction,
+            start,
+            middle,
+            originalStart,
+            originalEnd,
+            result);
+    }
 
-            // check the first side
-            result = CheckNode(
-                bsp,
-                node.mChildren[side],
-                startFraction,
-                middleFraction,
-                start,
-                middle,
-                originalStart,
-                originalEnd,
-                result);
-        }
+    // calculate the middle point for the second side
+    {
+        auto middleFraction = startFraction + (endFraction - startFraction) * fraction2;
+        auto middle = Lerp(start, end, fraction2);
 
-        // calculate the middle point for the second side
-        {
-            auto middleFraction = startFraction + (endFraction - startFraction) * fraction2;
-            auto middle = Lerp(start, end, fraction2);
-
-            // check the second side
-            result = CheckNode(
-                bsp,
-                node.mChildren[!side],
-                middleFraction,
-                endFraction,
-                middle,
-                end,
-                originalStart,
-                originalEnd,
-                result);
-        }
+        // check the second side
+        result = CheckNode(
+            bsp,
+            node.mChildren[!side],
+            middleFraction,
+            endFraction,
+            middle,
+            end,
+            originalStart,
+            originalEnd,
+            result);
     }
 
     return result;
