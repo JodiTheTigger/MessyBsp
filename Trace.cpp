@@ -3,6 +3,11 @@
 // Quake 3 defines it as 0.03125f, or 1/32.
 static const float EPSILON = 0.03125f;
 
+// RAM: Or does it? Taken from CM_TraceThroughBrush
+// keep 1/8 unit away to keep the position valid before network snapping
+// and to avoid various numeric issues
+#define	SURFACE_CLIP_EPSILON	(0.125)
+
 void rAssert(bool) {};
 
 struct Vec3
@@ -387,13 +392,26 @@ TraceResult CheckBrush(
         }
     }
 
-    if (startsOut == false)
+    if (!startsOut)
     {
         // Starts inside a solid, maybe even ends in one.
+        // Q3 Doesn't consider it a collision if it only
+        // Starts inside a solid.
+        // RAM: TODO: Info will get overridden if
+        // it intersects with a later brush. Fix that.
+        if (endsOut)
+        {
+            return
+            {
+                1.0f,
+                PathInfo::StartsInsideEndsOutsideSolid,
+            };
+        }
+
         return
         {
             0.0f,
-            endsOut ? PathInfo::StartsInsideEndsOutsideSolid : PathInfo::InsideSolid
+            PathInfo::InsideSolid
         };
     }
 
@@ -404,6 +422,16 @@ TraceResult CheckBrush(
             Clamp0To1(startFraction),
             PathInfo::OutsideSolid
         };
+
+        // Q3 also returns these helpful things
+//        tw->trace.fraction = enterFrac;
+//        if (clipplane != NULL) {
+//            tw->trace.plane = *clipplane;
+//        }
+//        if (leadside != NULL) {
+//            tw->trace.surfaceFlags = leadside->surfaceFlags;
+//        }
+//        tw->trace.contents = brush->contents;
     }
 
     // No collision
