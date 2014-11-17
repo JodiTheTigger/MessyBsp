@@ -108,17 +108,16 @@ TraceResult CheckBrush(
         const TBrush& brush,
         const Vec3& start,
         const Vec3& end,
-        const Vec3& traceMins,
-        const Vec3& traceMaxs,
-        float traceRadius,
-        TraceBounds how)
+        const Vec3* boxMin,
+        const Vec3* boxMax,
+        float traceRadius)
 {
     float startFraction     = -1.0f;
     float endFraction       = 1.0f;
     bool startsOut          = false;
     bool endsOut            = false;
 
-    for (int i = 0; i < brush.mNbBrushSides; i++)
+    for (int i = 0; i < brush.mNbBrushSides; ++i)
     {
         const auto& brushSide   = bsp.mBrushSides[brush.mBrushSide + i];
         const auto& plane       = bsp.mPlanes[brushSide.mPlaneIndex];
@@ -130,13 +129,13 @@ TraceResult CheckBrush(
             0.0f,
         };
 
-        if (how == TraceBounds::Box)
+        if (boxMin && boxMax)
         {
             offset =
             {
-                plane.mNormal[0] < 0 ? traceMaxs.data[0] : traceMins.data[0],
-                plane.mNormal[1] < 0 ? traceMaxs.data[1] : traceMins.data[1],
-                plane.mNormal[2] < 0 ? traceMaxs.data[2] : traceMins.data[2],
+                plane.mNormal[0] < 0 ? boxMax->data[0] : boxMin->data[0],
+                plane.mNormal[1] < 0 ? boxMax->data[1] : boxMin->data[1],
+                plane.mNormal[2] < 0 ? boxMax->data[2] : boxMin->data[2],
             };
         }
 
@@ -223,16 +222,6 @@ TraceResult CheckBrush(
             Clamp0To1(startFraction),
             PathInfo::OutsideSolid
         };
-
-        // Q3 also returns these helpful things
-//        tw->trace.fraction = enterFrac;
-//        if (clipplane != NULL) {
-//            tw->trace.plane = *clipplane;
-//        }
-//        if (leadside != NULL) {
-//            tw->trace.surfaceFlags = leadside->surfaceFlags;
-//        }
-//        tw->trace.contents = brush->contents;
     }
 
     // No collision
@@ -243,7 +232,7 @@ TraceResult CheckBrush(
     };
 }
 
-
+// RAM: TODO: Return the surface normal at the collision as well please.
 TraceResult CheckNode(
     const TMapQ3& bsp,
     int nodeIndex,
@@ -255,8 +244,8 @@ TraceResult CheckNode(
     const Vec3& originalEnd,
     TraceResult result,
     TraceBounds bounding,
-    const Vec3& boxMin,
-    const Vec3& boxMax,
+    const Vec3* boxMin,
+    const Vec3* boxMax,
     float sphereRadius)
 {
     if (nodeIndex < 0)
@@ -280,8 +269,7 @@ TraceResult CheckNode(
                             originalEnd,
                             boxMin,
                             boxMax,
-                            sphereRadius,
-                            bounding);
+                            sphereRadius);
 
                 if (test.pathFraction < result.pathFraction)
                 {
@@ -451,8 +439,8 @@ TraceResult Trace(
                     PathInfo::OutsideSolid
                 },
                 bounding,
-                *boxMin,
-                *boxMax,
+                boxMin,
+                boxMax,
                 sphereRadius);
 }
 
