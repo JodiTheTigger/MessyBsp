@@ -16,21 +16,13 @@ static const float EPSILON = 0.03125f;
 //  32 - fastcall   first two on left via register, rest via stack (right to left)
 //  64              first 4 ints via reg, first 4 floats via XMM reg, rest via stack (right to left), returns via regs.
 
+// TODO: http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
 void rAssert(bool) {};
 
 struct Vec3
 {
     float data[3];
 };
-
-// Watch out, floating point is haaaaaard.
-inline bool IsZero(const Vec3& vec)
-{
-    return
-        vec.data[0] == 0.0f &&
-        vec.data[1] == 0.0f &&
-        vec.data[2] == 0.0f;
-}
 
 Vec3 inline Add(const Vec3& a, const Vec3& b)
 {
@@ -39,16 +31,6 @@ Vec3 inline Add(const Vec3& a, const Vec3& b)
         a.data[0] + b.data[0],
         a.data[1] + b.data[1],
         a.data[2] + b.data[2],
-    };
-}
-
-Vec3 inline Negative(const Vec3& a)
-{
-    return
-    {
-        -a.data[0],
-        -a.data[1],
-        -a.data[2],
     };
 }
 
