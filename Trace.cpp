@@ -24,7 +24,34 @@ inline bool IsZero(const Vec3& vec)
         vec.data[2] == 0.0f;
 }
 
-Vec3 inline Lerp(const Vec3& start, const Vec3&end, float fraction)
+Vec3 inline Add(const Vec3& a, const Vec3& b)
+{
+    return
+    {
+        a.data[0] + b.data[0],
+        a.data[1] + b.data[1],
+        a.data[2] + b.data[2],
+    };
+}
+
+Vec3 inline Negative(const Vec3& a)
+{
+    return
+    {
+        -a.data[0],
+        -a.data[1],
+        -a.data[2],
+    };
+}
+
+float inline DotProduct(const Vec3& a, const float* b)
+{
+    return  (a.data[0] * b[0]) +
+            (a.data[1] * b[1]) +
+            (a.data[2] * b[2]);
+}
+
+Vec3 inline Lerp(const Vec3& start, const Vec3& end, float fraction)
 {
     return
     {
@@ -37,22 +64,6 @@ Vec3 inline Lerp(const Vec3& start, const Vec3&end, float fraction)
 inline float Clamp0To1(float toClamp)
 {
     return toClamp > 0.0f ? (toClamp < 1.0f ? toClamp : 1.0f) : 0.0f;
-}
-
-//inline float DotProduct(const Vec3& a, const Vec3& b)
-//{
-//    return
-//            a.data[0] * b.data[0] +
-//            a.data[1] * b.data[1] +
-//            a.data[2] * b.data[2];
-//}
-
-inline float DotProduct(const Vec3& a, const float* b)
-{
-    return
-            a.data[0] * b[0] +
-            a.data[1] * b[1] +
-            a.data[2] * b[2];
 }
 
 enum class PathInfo
@@ -83,252 +94,15 @@ enum class TraceBounds
     Count
 };
 
-
-TraceResult TraceRay(
-        const TMapQ3& bsp,
-        const Vec3& start,
-        const Vec3& end);
-
-TraceResult TraceSphere(
-        const TMapQ3&,
-        const Vec3& start,
-        const Vec3& end,
-        float sphereRadius);
-
-TraceResult TraceBox(
-        const TMapQ3&,
-        const Vec3& start,
-        const Vec3& end,
-        const Vec3& boxMin,
-        const Vec3& boxMax);
-
-TraceResult Trace(
-        const TMapQ3& bsp,
-        const Vec3& start,
-        const Vec3& end,
-        TraceBounds bounding,
-        const Vec3* boxMin,
-        const Vec3* boxMax,
-        float sphereRadius)
-{
-
-    if (bounding == TraceBounds::Ray)
-    {
-        return TraceRay(bsp, start, end);
-    }
-
-    if (bounding == TraceBounds::Sphere)
-    {
-        rAssert(sphereRadius > 0.0f);
-
-        return TraceSphere(bsp, start, end, sphereRadius);
-    }
-
-    if (bounding == TraceBounds::Box)
-    {
-        rAssert((boxMin != nullptr) && (boxMax != nullptr));
-        rAssert(!IsZero(*boxMin));
-        rAssert(!IsZero(*boxMax));
-
-        return TraceBox(bsp, start, end, *boxMin, *boxMax);
-    }
-
-    // Wtf?
-    rAssert(bounding < TraceBounds::Count);
-    return
-    {
-        1.0f,
-        PathInfo::OutsideSolid
-    };
-}
-
-TraceResult TraceSphere(
-        const TMapQ3&,
-        const Vec3&,
-        const Vec3&,
-        float)
-{
-    // RAM: TODO
-    return
-    {
-        1.0f,
-        PathInfo::OutsideSolid
-    };
-}
-
-TraceResult TraceBox(
-        const TMapQ3&,
-        const Vec3&,
-        const Vec3&,
-        const Vec3&,
-        const Vec3&)
-{
-    // RAM: TODO
-    return
-    {
-        1.0f,
-        PathInfo::OutsideSolid
-    };
-}
-
-// Stub
-TraceResult CheckBrush(const TMapQ3& bsp,
-        const TBrush& brush,
-        const Vec3& start,
-        const Vec3& end);
-
-TraceResult CheckNode(
-        const TMapQ3& bsp,
-        int nodeIndex,
-        float startFraction,
-        float endFraction,
-        const Vec3& start,
-        const Vec3& end,
-        const Vec3& originalStart,
-        const Vec3& originalEnd,
-        TraceResult result)
-{
-    if (nodeIndex < 0)
-    {
-        // this is a leaf
-        const auto& leaf = bsp.mLeaves[-(nodeIndex + 1)];
-
-        for (int i = 0; i < leaf.mNbLeafBrushes; i++)
-        {
-            const auto& brush = bsp.mBrushes[bsp.mLeafBrushes[leaf.mLeafBrush + i].mBrushIndex];
-
-            if  (
-                    (brush.mNbBrushSides > 0) //&&
-                    // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
-                )
-            {
-                auto test = CheckBrush(bsp, brush, originalStart, originalEnd);
-
-                if (test.pathFraction < result.pathFraction)
-                {
-                    result = test;
-                }
-            }
-        }
-
-        // don't have to do anything else for leaves
-        return result;
-    }
-
-    // this is a node
-    const auto& node = bsp.mNodes[nodeIndex];
-    const auto& plane = bsp.mPlanes[node.mPlane];
-
-    float startDistance = DotProduct(start, plane.mNormal) - plane.mDistance;
-    float endDistance   = DotProduct(end, plane.mNormal) - plane.mDistance;
-
-    // Used for volumns, for now, assume ray == 0.
-    float offset = 0;
-
-    if (startDistance >= offset && endDistance >= offset)
-    {
-        // both points are in front of the plane
-        // so check the front child
-        return CheckNode(
-            bsp,
-            node.mChildren[0],
-            startFraction,
-            endFraction,
-            start,
-            end,
-            originalStart,
-            originalEnd,
-            result);
-    }
-
-    if (startDistance < -offset && endDistance < -offset)
-    {
-        // both points are behind the plane
-        // so check the back child
-        return CheckNode(
-            bsp,
-            node.mChildren[1],
-            startFraction,
-            endFraction,
-            start,
-            end,
-            originalStart,
-            originalEnd,
-            result);
-    }
-
-    // the line spans the splitting plane
-    // Default values assume startDistance == endDistance.
-    int side = 0;
-    float fraction1 = 1.0f;
-    float fraction2 = 0.0f;
-
-    // split the segment into two
-    if (startDistance < endDistance)
-    {
-        // back
-        side = 1;
-        float inverseDistance = 1.0f / (startDistance - endDistance);
-        fraction1 = (startDistance - offset + EPSILON) * inverseDistance;
-        fraction2 = (startDistance + offset + EPSILON) * inverseDistance;
-    }
-
-    if (endDistance < startDistance)
-    {
-        // front
-        float inverseDistance = 1.0f / (startDistance - endDistance);
-        fraction1 = (startDistance + offset + EPSILON) * inverseDistance;
-        fraction2 = (startDistance - offset - EPSILON) * inverseDistance;
-    }
-
-    // make sure the numbers are valid
-    fraction1 = Clamp0To1(fraction1);
-    fraction2 = Clamp0To1(fraction2);
-
-    // calculate the middle point for the first side
-    {
-        auto middleFraction = startFraction + (endFraction - startFraction) * fraction1;
-        auto middle = Lerp(start, end, fraction1);
-
-        // check the first side
-        result = CheckNode(
-            bsp,
-            node.mChildren[side],
-            startFraction,
-            middleFraction,
-            start,
-            middle,
-            originalStart,
-            originalEnd,
-            result);
-    }
-
-    // calculate the middle point for the second side
-    {
-        auto middleFraction = startFraction + (endFraction - startFraction) * fraction2;
-        auto middle = Lerp(start, end, fraction2);
-
-        // check the second side
-        result = CheckNode(
-            bsp,
-            node.mChildren[!side],
-            middleFraction,
-            endFraction,
-            middle,
-            end,
-            originalStart,
-            originalEnd,
-            result);
-    }
-
-    return result;
-}
-
 TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
         const Vec3& start,
-        const Vec3& end)
+        const Vec3& end,
+        const Vec3& traceMins,
+        const Vec3& traceMaxs,
+        float traceRadius,
+        TraceBounds how)
 {
     float startFraction = -1.0f;
     float endFraction = 1.0f;
@@ -340,8 +114,33 @@ TraceResult CheckBrush(
         const auto& brushSide = bsp.mBrushSides[brush.mBrushSide + i];
         const auto& plane = bsp.mPlanes[brushSide.mPlaneIndex];
 
-        float startDistance = DotProduct(start, plane.mNormal) - plane.mDistance;
-        float endDistance = DotProduct(end, plane.mNormal) - plane.mDistance;
+        float startDistance = -plane.mDistance;
+        float endDistance   = -plane.mDistance;
+
+        if (how == TraceBounds::Box)
+        {
+            Vec3 offset
+            {
+                plane.mNormal[0] < 0 ? traceMaxs.data[0] : traceMins.data[0],
+                plane.mNormal[1] < 0 ? traceMaxs.data[1] : traceMins.data[1],
+                plane.mNormal[2] < 0 ? traceMaxs.data[2] : traceMins.data[2],
+            };
+
+            startDistance   += DotProduct(Add(start, offset), plane.mNormal);
+            endDistance     += DotProduct(Add(end,   offset), plane.mNormal);
+        }
+        else
+        {
+            // Ray
+            startDistance   += DotProduct(start, plane.mNormal);
+            endDistance     += DotProduct(end,   plane.mNormal);
+
+            if (how == TraceBounds::Sphere)
+            {
+                startDistance   -= traceRadius;
+                endDistance     -= traceRadius;
+            }
+        }
 
         if (startDistance > 0)
         {
@@ -414,7 +213,7 @@ TraceResult CheckBrush(
     }
 
     if (startFraction < endFraction)
-    {        
+    {
         return
         {
             Clamp0To1(startFraction),
@@ -440,11 +239,200 @@ TraceResult CheckBrush(
     };
 }
 
-TraceResult TraceRay(
+
+TraceResult CheckNode(
+    const TMapQ3& bsp,
+    int nodeIndex,
+    float startFraction,
+    float endFraction,
+    const Vec3& start,
+    const Vec3& end,
+    const Vec3& originalStart,
+    const Vec3& originalEnd,
+    TraceResult result,
+    TraceBounds bounding,
+    const Vec3& boxMin,
+    const Vec3& boxMax,
+    float sphereRadius)
+{
+    if (nodeIndex < 0)
+    {
+        // this is a leaf
+        const auto& leaf = bsp.mLeaves[-(nodeIndex + 1)];
+
+        for (int i = 0; i < leaf.mNbLeafBrushes; i++)
+        {
+            const auto& brush = bsp.mBrushes[bsp.mLeafBrushes[leaf.mLeafBrush + i].mBrushIndex];
+
+            if  (
+                    (brush.mNbBrushSides > 0) //&&
+                    // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
+                )
+            {
+                auto test = CheckBrush(
+                            bsp,
+                            brush,
+                            originalStart,
+                            originalEnd,
+                            boxMin,
+                            boxMax,
+                            sphereRadius,
+                            bounding);
+
+                if (test.pathFraction < result.pathFraction)
+                {
+                    result = test;
+                }
+            }
+        }
+
+        // don't have to do anything else for leaves
+        return result;
+    }
+
+    // this is a node
+    const auto& node = bsp.mNodes[nodeIndex];
+    const auto& plane = bsp.mPlanes[node.mPlane];
+
+    float startDistance = DotProduct(start, plane.mNormal) - plane.mDistance;
+    float endDistance   = DotProduct(end, plane.mNormal) - plane.mDistance;
+
+    // Used for volumns, for now, assume ray == 0.
+    float offset = 0;
+
+    if (startDistance >= offset && endDistance >= offset)
+    {
+        // both points are in front of the plane
+        // so check the front child
+        return CheckNode(
+            bsp,
+            node.mChildren[0],
+            startFraction,
+            endFraction,
+            start,
+            end,
+            originalStart,
+            originalEnd,
+            result,
+            bounding,
+            boxMin,
+            boxMax,
+            sphereRadius);
+    }
+
+    if (startDistance < -offset && endDistance < -offset)
+    {
+        // both points are behind the plane
+        // so check the back child
+        return CheckNode(
+            bsp,
+            node.mChildren[1],
+            startFraction,
+            endFraction,
+            start,
+            end,
+            originalStart,
+            originalEnd,
+            result,
+            bounding,
+            boxMin,
+            boxMax,
+            sphereRadius);
+    }
+
+    // the line spans the splitting plane
+    // Default values assume startDistance == endDistance.
+    int side = 0;
+    float fraction1 = 1.0f;
+    float fraction2 = 0.0f;
+
+    // split the segment into two
+    if (startDistance < endDistance)
+    {
+        // back
+        side = 1;
+        float inverseDistance = 1.0f / (startDistance - endDistance);
+        fraction1 = (startDistance - offset + EPSILON) * inverseDistance;
+        fraction2 = (startDistance + offset + EPSILON) * inverseDistance;
+    }
+
+    if (endDistance < startDistance)
+    {
+        // front
+        float inverseDistance = 1.0f / (startDistance - endDistance);
+        fraction1 = (startDistance + offset + EPSILON) * inverseDistance;
+        fraction2 = (startDistance - offset - EPSILON) * inverseDistance;
+    }
+
+    // make sure the numbers are valid
+    fraction1 = Clamp0To1(fraction1);
+    fraction2 = Clamp0To1(fraction2);
+
+    // calculate the middle point for the first side
+    {
+        auto middleFraction = startFraction + (endFraction - startFraction) * fraction1;
+        auto middle = Lerp(start, end, fraction1);
+
+        // check the first side
+        result = CheckNode(
+            bsp,
+            node.mChildren[side],
+            startFraction,
+            middleFraction,
+            start,
+            middle,
+            originalStart,
+            originalEnd,
+            result,
+            bounding,
+            boxMin,
+            boxMax,
+            sphereRadius);
+    }
+
+    // calculate the middle point for the second side
+    {
+        auto middleFraction = startFraction + (endFraction - startFraction) * fraction2;
+        auto middle = Lerp(start, end, fraction2);
+
+        // check the second side
+        result = CheckNode(
+            bsp,
+            node.mChildren[!side],
+            middleFraction,
+            endFraction,
+            middle,
+            end,
+            originalStart,
+            originalEnd,
+            result,
+            bounding,
+            boxMin,
+            boxMax,
+            sphereRadius);
+    }
+
+    return result;
+}
+
+TraceResult Trace(
         const TMapQ3& bsp,
         const Vec3& start,
-        const Vec3& end)
+        const Vec3& end,
+        TraceBounds bounding,
+        const Vec3* boxMin,
+        const Vec3* boxMax,
+        float sphereRadius)
 {
+    rAssert(bounding < TraceBounds::Count);
+
+    if (bounding == TraceBounds::Box)
+    {
+        rAssert((boxMin != nullptr) && (boxMax != nullptr));
+        rAssert(!IsZero(*boxMin));
+        rAssert(!IsZero(*boxMax));
+    }
+
     return CheckNode(
                 bsp,
                 0,
@@ -457,7 +445,11 @@ TraceResult TraceRay(
                 {
                     1.0f,
                     PathInfo::OutsideSolid
-                });
+                },
+                bounding,
+                *boxMin,
+                *boxMax,
+                sphereRadius);
 }
 
 #if PSEUDO_CODE
