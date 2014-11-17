@@ -192,13 +192,9 @@ TraceResult CheckBrush(
         }
     }
 
+    // Does it start (and end) inside a solid?
     if (!startsOut)
     {
-        // Starts inside a solid, maybe even ends in one.
-        // Q3 Doesn't consider it a collision if it only
-        // Starts inside a solid.
-        // RAM: TODO: Info will get overridden if
-        // it intersects with a later brush. Fix that.
         if (endsOut)
         {
             return
@@ -215,6 +211,7 @@ TraceResult CheckBrush(
         };
     }
 
+    // So, is it an actual collision?
     if (startFraction < endFraction)
     {
         return
@@ -271,6 +268,8 @@ TraceResult CheckNode(
                             boxMax,
                             sphereRadius);
 
+                // RAM: TODO: Don't alter the fraction if the collision starts inside a solid.
+                // RAM: TODO: Don't alter the collsion type if it's already != OutsideSolid.
                 if (test.pathFraction < result.pathFraction)
                 {
                     result = test;
