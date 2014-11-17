@@ -113,18 +113,15 @@ TraceResult CheckBrush(
         float traceRadius,
         TraceBounds how)
 {
-    float startFraction = -1.0f;
-    float endFraction = 1.0f;
-    bool startsOut = false;
-    bool endsOut = false;
+    float startFraction     = -1.0f;
+    float endFraction       = 1.0f;
+    bool startsOut          = false;
+    bool endsOut            = false;
 
     for (int i = 0; i < brush.mNbBrushSides; i++)
     {
-        const auto& brushSide = bsp.mBrushSides[brush.mBrushSide + i];
-        const auto& plane = bsp.mPlanes[brushSide.mPlaneIndex];
-
-        float startDistance = -plane.mDistance;
-        float endDistance   = -plane.mDistance;
+        const auto& brushSide   = bsp.mBrushSides[brush.mBrushSide + i];
+        const auto& plane       = bsp.mPlanes[brushSide.mPlaneIndex];
 
         Vec3 offset =
         {
@@ -143,9 +140,11 @@ TraceResult CheckBrush(
             };
         }
 
-        // Ray is just a Sphere with a traceRadius of 0.
-        startDistance   += DotProduct(Add(start, offset), plane.mNormal) - traceRadius;
-        endDistance     += DotProduct(Add(end,   offset), plane.mNormal) - traceRadius;
+        // Ray is just a Sphere with a traceRadius of 0, and a box offset of 0.
+        // A sphere has a box offset of 0 as well.
+        // A box just has a traceRadius, like the ray, of 0.
+        float startDistance   = DotProduct(Add(start, offset), plane.mNormal) - (traceRadius + plane.mDistance);
+        float endDistance     = DotProduct(Add(end,   offset), plane.mNormal) - (traceRadius + plane.mDistance);
 
         if (startDistance > 0)
         {
