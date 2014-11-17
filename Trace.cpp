@@ -102,6 +102,7 @@ enum class TraceBounds
     Count
 };
 
+// Set Traceradius to 0 for ray tests over sphere tests.
 TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
@@ -125,30 +126,26 @@ TraceResult CheckBrush(
         float startDistance = -plane.mDistance;
         float endDistance   = -plane.mDistance;
 
+        Vec3 offset =
+        {
+            0.0f,
+            0.0f,
+            0.0f,
+        };
+
         if (how == TraceBounds::Box)
         {
-            Vec3 offset
+            offset =
             {
                 plane.mNormal[0] < 0 ? traceMaxs.data[0] : traceMins.data[0],
                 plane.mNormal[1] < 0 ? traceMaxs.data[1] : traceMins.data[1],
                 plane.mNormal[2] < 0 ? traceMaxs.data[2] : traceMins.data[2],
             };
-
-            startDistance   += DotProduct(Add(start, offset), plane.mNormal);
-            endDistance     += DotProduct(Add(end,   offset), plane.mNormal);
         }
-        else
-        {
-            // Ray
-            startDistance   += DotProduct(start, plane.mNormal);
-            endDistance     += DotProduct(end,   plane.mNormal);
 
-            if (how == TraceBounds::Sphere)
-            {
-                startDistance   -= traceRadius;
-                endDistance     -= traceRadius;
-            }
-        }
+        // Ray is just a Sphere with a traceRadius of 0.
+        startDistance   += DotProduct(Add(start, offset), plane.mNormal) - traceRadius;
+        endDistance     += DotProduct(Add(end,   offset), plane.mNormal) - traceRadius;
 
         if (startDistance > 0)
         {
