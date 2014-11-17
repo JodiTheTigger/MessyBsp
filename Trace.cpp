@@ -113,13 +113,14 @@ struct TraceResult
 TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
-        const Bounds& bounds)
+        const Bounds& bounds,
+        const TraceResult& currentResult)
 {
-    float startFraction     = -1.0f;
-    float endFraction       = 1.0f;
-    bool startsOut          = false;
-    bool endsOut            = false;
-    const TPlane* collisionPlane  = nullptr;
+    float startFraction             = -1.0f;
+    float endFraction               = 1.0f;
+    bool startsOut                  = false;
+    bool endsOut                    = false;
+    const TPlane* collisionPlane    = nullptr;
 
     for (int i = 0; i < brush.mNbBrushSides; ++i)
     {
@@ -198,35 +199,31 @@ TraceResult CheckBrush(
         }
     }
 
-    // Does it start (and end) inside a solid?
-    if (!startsOut)
+    if (startsOut == false)
     {
         return
         {
-            nullptr,
-            0.0f,
+            currentResult.collisionPlane,
+            currentResult.pathFraction,
             endsOut ? PathInfo::StartsInsideEndsOutsideSolid : PathInfo::InsideSolid
         };
     }
 
-    // So, is it an actual collision?
     if (startFraction < endFraction)
     {
-        return
+        if (startFraction > -1 && startFraction < currentResult.pathFraction)
         {
-            collisionPlane,
-            Clamp0To1(startFraction),
-            PathInfo::OutsideSolid
-        };
+            return
+            {
+                collisionPlane,
+                Clamp0To1(startFraction),
+                PathInfo::OutsideSolid
+            };
+        }
     }
 
-    // No collision
-    return
-    {
-        nullptr,
-        1.0,
-        PathInfo::OutsideSolid
-    };
+    // No collision. Do nothing.
+    return currentResult;
 }
 
 TraceResult CheckNode(
@@ -253,17 +250,7 @@ TraceResult CheckNode(
                     // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
                 )
             {
-                auto test = CheckBrush(
-                            bsp,
-                            brush,
-                            bounds);
-
-                // RAM: TODO: Don't alter the fraction if the collision starts inside a solid.
-                // RAM: TODO: Don't alter the collsion type if it's already != OutsideSolid.
-                if (test.pathFraction < result.pathFraction)
-                {
-                    result = test;
-                }
+                result = CheckBrush(bsp, brush, bounds, result);
             }
         }
 
