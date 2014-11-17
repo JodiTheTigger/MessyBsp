@@ -76,9 +76,17 @@ inline float Clamp0To1(float toClamp)
 
 struct Bounds
 {
-    float sphereRadius;
-    Vec3* boxMin;
-    Vec3* boxMax;
+    // Path to test
+    Vec3    start;
+    Vec3    end;
+
+    // Trace type:
+    // Ray      : boxMin == boxMax == nullptr, sphereRadius == 0
+    // Sphere   : boxMin == boxMax == nullptr, sphereRadius > 0
+    // Box      : boxMin != nullptr, boxMax != nullptr, sphereRadius == 0
+    float   sphereRadius;
+    Vec3*   boxMin;
+    Vec3*   boxMax;
 };
 
 enum class PathInfo
@@ -104,8 +112,6 @@ struct TraceResult
 TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
-        const Vec3& start,
-        const Vec3& end,
         const Bounds& bounds)
 {
     float startFraction     = -1.0f;
@@ -138,8 +144,8 @@ TraceResult CheckBrush(
         // Ray is just a Sphere with a sphereRadius of 0, and a box offset of 0.
         // A sphere has a box offset of 0 as well.
         // A box just has a sphereRadius, like the ray, of 0.
-        float startDistance   = DotProduct(Add(start, offset), plane.mNormal) - (bounds.sphereRadius + plane.mDistance);
-        float endDistance     = DotProduct(Add(end,   offset), plane.mNormal) - (bounds.sphereRadius + plane.mDistance);
+        float startDistance   = DotProduct(Add(bounds.start, offset), plane.mNormal) - (bounds.sphereRadius + plane.mDistance);
+        float endDistance     = DotProduct(Add(bounds.end,   offset), plane.mNormal) - (bounds.sphereRadius + plane.mDistance);
 
         if (startDistance > 0)
         {
@@ -233,8 +239,6 @@ TraceResult CheckNode(
     float endFraction,
     const Vec3& start,
     const Vec3& end,
-    const Vec3& originalStart,
-    const Vec3& originalEnd,
     TraceResult result,
     const Bounds& bounds)
 {
@@ -255,8 +259,6 @@ TraceResult CheckNode(
                 auto test = CheckBrush(
                             bsp,
                             brush,
-                            originalStart,
-                            originalEnd,
                             bounds);
 
                 // RAM: TODO: Don't alter the fraction if the collision starts inside a solid.
@@ -293,8 +295,6 @@ TraceResult CheckNode(
             endFraction,
             start,
             end,
-            originalStart,
-            originalEnd,
             result,
             bounds);
     }
@@ -310,8 +310,6 @@ TraceResult CheckNode(
             endFraction,
             start,
             end,
-            originalStart,
-            originalEnd,
             result,
             bounds);
     }
@@ -357,8 +355,6 @@ TraceResult CheckNode(
             middleFraction,
             start,
             middle,
-            originalStart,
-            originalEnd,
             result,
             bounds);
     }
@@ -376,8 +372,6 @@ TraceResult CheckNode(
             endFraction,
             middle,
             end,
-            originalStart,
-            originalEnd,
             result,
             bounds);
     }
@@ -385,14 +379,8 @@ TraceResult CheckNode(
     return result;
 }
 
-// Trace type if for bounds:
-// Ray      : boxMin == boxMax == nullptr, sphereRadius == 0
-// Sphere   : boxMin == boxMax == nullptr, sphereRadius > 0
-// Box      : boxMin != nullptr, boxMax != nullptr, sphereRadius == 0
 TraceResult Trace(
         const TMapQ3& bsp,
-        const Vec3& start,
-        const Vec3& end,
         const Bounds& bounds)
 {
     rAssert(
@@ -405,10 +393,8 @@ TraceResult Trace(
                 0,
                 0.0f,
                 1.0f,
-                start,
-                end,
-                start,
-                end,
+                bounds.start,
+                bounds.end,
                 {
                     1.0f,
                     PathInfo::OutsideSolid
