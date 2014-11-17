@@ -8,7 +8,7 @@ static const float EPSILON = 0.03125f;
 // and to avoid various numeric issues
 #define	SURFACE_CLIP_EPSILON	(0.125)
 
-// Passing stuff into poitners
+// Passing arguments into functions. Calling conventions.
 // http://en.wikipedia.org/wiki/X86_calling_conventions#Microsoft_x64_calling_convention
 // http://msdn.microsoft.com/en-us/library/zthk2dkh.aspx
 //  bits:           how:
@@ -100,6 +100,8 @@ enum class PathInfo
 
 struct TraceResult
 {
+    const TPlane* collisionPlane;
+
     /// 0 - 1.0f
     /// 0 == collision straight away, 1.0 means no collision at all.
     /// 0.5 means a collision 1/2 way thought the path, etc.
@@ -108,7 +110,6 @@ struct TraceResult
     PathInfo info;
 };
 
-// Set sphereRadius to 0 for ray tests over sphere tests.
 TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
@@ -118,6 +119,7 @@ TraceResult CheckBrush(
     float endFraction       = 1.0f;
     bool startsOut          = false;
     bool endsOut            = false;
+    const TPlane* collisionPlane  = nullptr;
 
     for (int i = 0; i < brush.mNbBrushSides; ++i)
     {
@@ -163,6 +165,7 @@ TraceResult CheckBrush(
             // both are in front of the plane, its outside of this brush
             return
             {
+                nullptr,
                 1.0f,
                 PathInfo::OutsideSolid
             };
@@ -181,6 +184,7 @@ TraceResult CheckBrush(
             if (fraction > startFraction)
             {
                 startFraction = fraction;
+                collisionPlane = &plane;
             }
         }
         else
@@ -197,19 +201,11 @@ TraceResult CheckBrush(
     // Does it start (and end) inside a solid?
     if (!startsOut)
     {
-        if (endsOut)
-        {
-            return
-            {
-                1.0f,
-                PathInfo::StartsInsideEndsOutsideSolid,
-            };
-        }
-
         return
         {
+            nullptr,
             0.0f,
-            PathInfo::InsideSolid
+            endsOut ? PathInfo::StartsInsideEndsOutsideSolid : PathInfo::InsideSolid
         };
     }
 
@@ -218,6 +214,7 @@ TraceResult CheckBrush(
     {
         return
         {
+            collisionPlane,
             Clamp0To1(startFraction),
             PathInfo::OutsideSolid
         };
@@ -226,12 +223,12 @@ TraceResult CheckBrush(
     // No collision
     return
     {
+        nullptr,
         1.0,
         PathInfo::OutsideSolid
     };
 }
 
-// RAM: TODO: Return the surface normal at the collision as well please.
 TraceResult CheckNode(
     const TMapQ3& bsp,
     int nodeIndex,
@@ -396,6 +393,7 @@ TraceResult Trace(
                 bounds.start,
                 bounds.end,
                 {
+                    nullptr,
                     1.0f,
                     PathInfo::OutsideSolid
                 },
