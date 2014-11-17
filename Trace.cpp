@@ -74,6 +74,13 @@ inline float Clamp0To1(float toClamp)
     return toClamp > 0.0f ? (toClamp < 1.0f ? toClamp : 1.0f) : 0.0f;
 }
 
+struct Bounds
+{
+    float sphereRadius;
+    Vec3* boxMin;
+    Vec3* boxMax;
+};
+
 enum class PathInfo
 {
     OutsideSolid,
@@ -93,15 +100,13 @@ struct TraceResult
     PathInfo info;
 };
 
-// Set Traceradius to 0 for ray tests over sphere tests.
+// Set sphereRadius to 0 for ray tests over sphere tests.
 TraceResult CheckBrush(
         const TMapQ3& bsp,
         const TBrush& brush,
         const Vec3& start,
         const Vec3& end,
-        const Vec3* boxMin,
-        const Vec3* boxMax,
-        float traceRadius)
+        const Bounds& bounds)
 {
     float startFraction     = -1.0f;
     float endFraction       = 1.0f;
@@ -120,21 +125,21 @@ TraceResult CheckBrush(
             0.0f,
         };
 
-        if (boxMin && boxMax)
+        if (bounds.boxMin && bounds.boxMax)
         {
             offset =
             {
-                plane.mNormal[0] < 0 ? boxMax->data[0] : boxMin->data[0],
-                plane.mNormal[1] < 0 ? boxMax->data[1] : boxMin->data[1],
-                plane.mNormal[2] < 0 ? boxMax->data[2] : boxMin->data[2],
+                plane.mNormal[0] < 0 ? bounds.boxMax->data[0] : bounds.boxMin->data[0],
+                plane.mNormal[1] < 0 ? bounds.boxMax->data[1] : bounds.boxMin->data[1],
+                plane.mNormal[2] < 0 ? bounds.boxMax->data[2] : bounds.boxMin->data[2],
             };
         }
 
-        // Ray is just a Sphere with a traceRadius of 0, and a box offset of 0.
+        // Ray is just a Sphere with a sphereRadius of 0, and a box offset of 0.
         // A sphere has a box offset of 0 as well.
-        // A box just has a traceRadius, like the ray, of 0.
-        float startDistance   = DotProduct(Add(start, offset), plane.mNormal) - (traceRadius + plane.mDistance);
-        float endDistance     = DotProduct(Add(end,   offset), plane.mNormal) - (traceRadius + plane.mDistance);
+        // A box just has a sphereRadius, like the ray, of 0.
+        float startDistance   = DotProduct(Add(start, offset), plane.mNormal) - (bounds.sphereRadius + plane.mDistance);
+        float endDistance     = DotProduct(Add(end,   offset), plane.mNormal) - (bounds.sphereRadius + plane.mDistance);
 
         if (startDistance > 0)
         {
@@ -231,9 +236,7 @@ TraceResult CheckNode(
     const Vec3& originalStart,
     const Vec3& originalEnd,
     TraceResult result,
-    const Vec3* boxMin,
-    const Vec3* boxMax,
-    float sphereRadius)
+    const Bounds& bounds)
 {
     if (nodeIndex < 0)
     {
@@ -254,9 +257,7 @@ TraceResult CheckNode(
                             brush,
                             originalStart,
                             originalEnd,
-                            boxMin,
-                            boxMax,
-                            sphereRadius);
+                            bounds);
 
                 // RAM: TODO: Don't alter the fraction if the collision starts inside a solid.
                 // RAM: TODO: Don't alter the collsion type if it's already != OutsideSolid.
@@ -295,9 +296,7 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            boxMin,
-            boxMax,
-            sphereRadius);
+            bounds);
     }
 
     if (startDistance < -offset && endDistance < -offset)
@@ -314,9 +313,7 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            boxMin,
-            boxMax,
-            sphereRadius);
+            bounds);
     }
 
     // the line spans the splitting plane
@@ -363,9 +360,7 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            boxMin,
-            boxMax,
-            sphereRadius);
+            bounds);
     }
 
     // calculate the middle point for the second side
@@ -384,15 +379,13 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            boxMin,
-            boxMax,
-            sphereRadius);
+            bounds);
     }
 
     return result;
 }
 
-// Trace type if:
+// Trace type if for bounds:
 // Ray      : boxMin == boxMax == nullptr, sphereRadius == 0
 // Sphere   : boxMin == boxMax == nullptr, sphereRadius > 0
 // Box      : boxMin != nullptr, boxMax != nullptr, sphereRadius == 0
@@ -400,13 +393,11 @@ TraceResult Trace(
         const TMapQ3& bsp,
         const Vec3& start,
         const Vec3& end,
-        const Vec3* boxMin,
-        const Vec3* boxMax,
-        float sphereRadius)
+        const Bounds& bounds)
 {
     rAssert(
-                (!boxMin && !boxMax) ||
-                (boxMin && boxMax && !sphereRadius)
+                (!bounds.boxMin && !bounds.boxMax) ||
+                (bounds.boxMin && bounds.boxMax && !bounds.sphereRadius)
            );
 
     return CheckNode(
@@ -422,9 +413,7 @@ TraceResult Trace(
                     1.0f,
                     PathInfo::OutsideSolid
                 },
-                boxMin,
-                boxMax,
-                sphereRadius);
+                bounds);
 }
 
 #if PSEUDO_CODE
@@ -438,7 +427,7 @@ boolean outputAllSolid;
 #define TT_BOX 2
 
 int traceType;
-float traceRadius;
+float sphereRadius;
 vector traceMins;
 vector traceMaxs;
 vector traceExtents;
@@ -452,7 +441,7 @@ void TraceRay( vector inputStart, vector inputEnd )
 void TraceSphere( vector inputStart, vector inputEnd, float inputRadius )
 {
     traceType = TT_SPHERE;
-    traceRadius = inputRadius;
+    sphereRadius = inputRadius;
     Trace( inputStart, inputEnd );
 }
 
@@ -531,7 +520,7 @@ void CheckNode( int nodeIndex, float startFraction, float endFraction, vector st
     }
     else if (traceType == TT_SPHERE)
     {
-        offset = traceRadius;
+        offset = sphereRadius;
     }
     else if (traceType == TT_BOX)
     {
@@ -623,8 +612,8 @@ void CheckBrush( auto* brush )
         }
         else if (traceType == TT_SPHERE)
         {
-            startDistance = DotProduct( inputStart, plane->normal ) - (plane->distance + traceRadius);
-            endDistance = DotProduct( inputEnd, plane->normal ) - (plane->distance + traceRadius);
+            startDistance = DotProduct( inputStart, plane->normal ) - (plane->distance + sphereRadius);
+            endDistance = DotProduct( inputEnd, plane->normal ) - (plane->distance + sphereRadius);
         }
         else if (traceType == TT_BOX)
         {
