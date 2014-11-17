@@ -227,14 +227,16 @@ TraceResult CheckBrush(
 }
 
 TraceResult CheckNode(
-    const TMapQ3& bsp,
     int nodeIndex,
     float startFraction,
     float endFraction,
+
     const Vec3& start,
     const Vec3& end,
+    const Bounds& bounds,
+
     TraceResult result,
-    const Bounds& bounds)
+    const TMapQ3& bsp)
 {
     if (nodeIndex < 0)
     {
@@ -273,14 +275,14 @@ TraceResult CheckNode(
         // both points are in front of the plane
         // so check the front child
         return CheckNode(
-            bsp,
             node.mChildren[0],
             startFraction,
             endFraction,
             start,
             end,
+            bounds,
             result,
-            bounds);
+            bsp);
     }
 
     if (startDistance < -offset && endDistance < -offset)
@@ -288,14 +290,14 @@ TraceResult CheckNode(
         // both points are behind the plane
         // so check the back child
         return CheckNode(
-            bsp,
             node.mChildren[1],
             startFraction,
             endFraction,
             start,
             end,
+            bounds,
             result,
-            bounds);
+            bsp);
     }
 
     // the line spans the splitting plane
@@ -333,14 +335,14 @@ TraceResult CheckNode(
 
         // check the first side
         result = CheckNode(
-            bsp,
             node.mChildren[side],
             startFraction,
             middleFraction,
             start,
             middle,
+            bounds,
             result,
-            bounds);
+            bsp);
     }
 
     // calculate the middle point for the second side
@@ -350,14 +352,14 @@ TraceResult CheckNode(
 
         // check the second side
         result = CheckNode(
-            bsp,
             node.mChildren[!side],
             middleFraction,
             endFraction,
             middle,
             end,
+            bounds,
             result,
-            bounds);
+            bsp);
     }
 
     return result;
@@ -373,18 +375,18 @@ TraceResult Trace(
            );
 
     return CheckNode(
-                bsp,
                 0,
                 0.0f,
                 1.0f,
                 bounds.start,
                 bounds.end,
+                bounds,
                 {
                     nullptr,
                     1.0f,
                     PathInfo::OutsideSolid
                 },
-                bounds);
+                bsp);
 }
 
 #if PSEUDO_CODE
