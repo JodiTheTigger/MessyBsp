@@ -93,15 +93,6 @@ struct TraceResult
     PathInfo info;
 };
 
-enum class TraceBounds
-{
-    Ray,
-    Sphere,
-    Box,
-
-    Count
-};
-
 // Set Traceradius to 0 for ray tests over sphere tests.
 TraceResult CheckBrush(
         const TMapQ3& bsp,
@@ -240,7 +231,6 @@ TraceResult CheckNode(
     const Vec3& originalStart,
     const Vec3& originalEnd,
     TraceResult result,
-    TraceBounds bounding,
     const Vec3* boxMin,
     const Vec3* boxMax,
     float sphereRadius)
@@ -305,7 +295,6 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            bounding,
             boxMin,
             boxMax,
             sphereRadius);
@@ -325,7 +314,6 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            bounding,
             boxMin,
             boxMax,
             sphereRadius);
@@ -375,7 +363,6 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            bounding,
             boxMin,
             boxMax,
             sphereRadius);
@@ -397,7 +384,6 @@ TraceResult CheckNode(
             originalStart,
             originalEnd,
             result,
-            bounding,
             boxMin,
             boxMax,
             sphereRadius);
@@ -406,23 +392,22 @@ TraceResult CheckNode(
     return result;
 }
 
+// Trace type if:
+// Ray      : boxMin == boxMax == nullptr, sphereRadius == 0
+// Sphere   : boxMin == boxMax == nullptr, sphereRadius > 0
+// Box      : boxMin != nullptr, boxMax != nullptr, sphereRadius == 0
 TraceResult Trace(
         const TMapQ3& bsp,
         const Vec3& start,
         const Vec3& end,
-        TraceBounds bounding,
         const Vec3* boxMin,
         const Vec3* boxMax,
         float sphereRadius)
 {
-    rAssert(bounding < TraceBounds::Count);
-
-    if (bounding == TraceBounds::Box)
-    {
-        rAssert((boxMin != nullptr) && (boxMax != nullptr));
-        rAssert(!IsZero(*boxMin));
-        rAssert(!IsZero(*boxMax));
-    }
+    rAssert(
+                (!boxMin && !boxMax) ||
+                (boxMin && boxMax && !sphereRadius)
+           );
 
     return CheckNode(
                 bsp,
@@ -437,7 +422,6 @@ TraceResult Trace(
                     1.0f,
                     PathInfo::OutsideSolid
                 },
-                bounding,
                 boxMin,
                 boxMax,
                 sphereRadius);
