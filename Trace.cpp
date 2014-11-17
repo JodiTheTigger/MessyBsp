@@ -8,6 +8,14 @@ static const float EPSILON = 0.03125f;
 // and to avoid various numeric issues
 #define	SURFACE_CLIP_EPSILON	(0.125)
 
+// Passing stuff into poitners
+// http://en.wikipedia.org/wiki/X86_calling_conventions#Microsoft_x64_calling_convention
+// http://msdn.microsoft.com/en-us/library/zthk2dkh.aspx
+//  bits:           how:
+//  32 - stdcall    all vai stack (right to left)
+//  32 - fastcall   first two on left via register, rest via stack (right to left)
+//  64              first 4 ints via reg, first 4 floats via XMM reg, rest via stack (right to left), returns via regs.
+
 void rAssert(bool) {};
 
 struct Vec3
