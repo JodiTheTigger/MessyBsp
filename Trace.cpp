@@ -17,6 +17,9 @@
 #include "Trace.hpp"
 #include "Q3Loader.h"
 
+// for std::abs(float)
+#include <cmath>
+
 // Quake 3 defines it as 0.03125f, or 1/32.
 static const float EPSILON = 0.03125f;
 
@@ -191,6 +194,7 @@ TraceResult CheckNode(
 
     const Vec3& start,
     const Vec3& end,
+    const Vec3* extents,
     const Bounds& bounds,
 
     TraceResult result,
@@ -226,8 +230,16 @@ TraceResult CheckNode(
     float startDistance = DotProduct(start, plane.mNormal) - plane.mDistance;
     float endDistance   = DotProduct(end, plane.mNormal) - plane.mDistance;
 
-    // Used for volumns, for now, assume ray == 0.
-    float offset = 0;
+    // Offset used for non-ray tests.
+    float offset = bounds.sphereRadius;
+
+    if (bounds.boxMin && bounds.boxMax)
+    {
+        offset +=
+            std::abs(extents->data[0] * plane.mNormal[0]) +
+            std::abs(extents->data[1] * plane.mNormal[1]) +
+            std::abs(extents->data[2] * plane.mNormal[2]);
+    }
 
     if (startDistance >= offset && endDistance >= offset)
     {
@@ -239,6 +251,7 @@ TraceResult CheckNode(
             endFraction,
             start,
             end,
+            extents,
             bounds,
             result,
             bsp);
@@ -254,6 +267,7 @@ TraceResult CheckNode(
             endFraction,
             start,
             end,
+            extents,
             bounds,
             result,
             bsp);
@@ -299,6 +313,7 @@ TraceResult CheckNode(
             middleFraction,
             start,
             middle,
+            extents,
             bounds,
             result,
             bsp);
@@ -316,6 +331,7 @@ TraceResult CheckNode(
             endFraction,
             middle,
             end,
+            extents,
             bounds,
             result,
             bsp);
@@ -333,12 +349,28 @@ TraceResult Trace(
                 (bounds.boxMin && bounds.boxMax && !bounds.sphereRadius)
            );
 
+    Vec3 extents;
+    Vec3* pExtents = nullptr;
+
+    if (bounds.boxMin && bounds.boxMax)
+    {
+        extents =
+        {
+            -bounds.boxMin->data[0] > bounds.boxMax->data[0] ? -bounds.boxMin->data[0] : bounds.boxMax->data[0],
+            -bounds.boxMin->data[1] > bounds.boxMax->data[1] ? -bounds.boxMin->data[1] : bounds.boxMax->data[1],
+            -bounds.boxMin->data[2] > bounds.boxMax->data[2] ? -bounds.boxMin->data[2] : bounds.boxMax->data[2],
+        };
+
+        pExtents = &extents;
+    }
+
     return CheckNode(
                 0,
                 0.0f,
                 1.0f,
                 bounds.start,
                 bounds.end,
+                pExtents,
                 bounds,
                 {
                     nullptr,
