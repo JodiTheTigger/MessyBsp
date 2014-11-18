@@ -229,9 +229,10 @@ TraceResult CheckNode(
         {
             const auto& brush = bsp.mBrushes[bsp.mLeafBrushes[leaf.mLeafBrush + i].mBrushIndex];
 
+            // 1 == CONTENTS_SOLID
             if  (
-                    (brush.mNbBrushSides > 0) //&&
-                    // RAM: What's the equilivant?! TODO!(bsp.shaders[brush->shaderIndex].contentFlags & 1)
+                    (brush.mNbBrushSides > 0) &&
+                    (bsp.mTextures[brush.mTextureIndex].mFlags & 1)
                 )
             {
                 result = CheckBrush(bsp, brush, bounds, result);
