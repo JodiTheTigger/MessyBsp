@@ -21,7 +21,7 @@
 #include <vector>
 #include <random>
 
-std::chrono::microseconds TestBspCollision(
+std::chrono::microseconds TimeBspCollision(
         const TMapQ3& bsp,
         unsigned collisionsToTest)
 {
