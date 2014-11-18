@@ -1,16 +1,20 @@
 #include "Q3Loader.h"
-
+#include "TraceTest.hpp"
 #include <cstdlib>
 
-int main(int pArgc, char** pArgv)
+int main(int, char**)
 {
 	TMapQ3	lMap;
 	
 	readMap("final.bsp", lMap);
 
-	FILE*	lFile = fopen("final_debug.txt", "w+");	
-	debugInformations(lMap, lFile);
-	fclose(lFile);
+    auto result = TimeBspCollision(lMap, 10000000);
+
+    printf("Trace Took %d microseconds\n", result);
+
+//	FILE*	lFile = fopen("final_debug.txt", "w+");
+//	debugInformations(lMap, lFile);
+//	fclose(lFile);
 
 	freeMap(lMap);
 	
