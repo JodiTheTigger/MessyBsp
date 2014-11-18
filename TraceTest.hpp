@@ -14,32 +14,16 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
 */
 
-#include "TraceTest.hpp"
-#include "Trace.hpp"
+#include <chrono>
 
-#include <iostream>
-#include <vector>
-#include <random>
+// /////////////////////
+// Forward Declarations
+// /////////////////////
+class TMapQ3;
 
-std::chrono::microseconds TestBspCollision(
+// /////////////////////
+// Timer
+// /////////////////////
+std::chrono::microseconds TimeBspCollision(
         const TMapQ3& bsp,
-        unsigned collisionsToTest)
-{
-    // First build array of points to test.
-    std::vector<Bounds> testArray;
-
-    testArray.reserve(collisionsToTest);
-
-    // build the array.
-
-    // Test the array.
-    auto start = std::chrono::high_resolution_clock::now();
-    for(const auto& bounds : testArray)
-    {
-        // Ignore the result.
-        Trace(bsp, bounds);
-    }
-    auto end = std::chrono::high_resolution_clock::now();
-
-    return std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-}
+        unsigned collisionsToTest);
