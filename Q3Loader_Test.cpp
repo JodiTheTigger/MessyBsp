@@ -8,9 +8,9 @@ int main(int, char**)
 	
 	readMap("final.bsp", lMap);
 
-    auto result = TimeBspCollision(lMap, 10000);
+    auto result = TimeBspCollision(lMap, 1000000);
 
-    printf("Trace Took %d microseconds\n", result);
+    printf("Trace Took %ld microseconds\n", result.count());
 
 //	FILE*	lFile = fopen("final_debug.txt", "w+");
 //	debugInformations(lMap, lFile);

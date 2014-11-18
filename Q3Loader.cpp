@@ -498,7 +498,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Texture Lump *********\n");
 	for
-		(int lTextureCounter = 0; lTextureCounter < pMap.mTextures.size(); ++lTextureCounter)
+        (unsigned lTextureCounter = 0; lTextureCounter < pMap.mTextures.size(); ++lTextureCounter)
 	{
 		fprintf(pFile, "Texture %d\n", lTextureCounter);
 		fprintf(pFile, "\tName : %s\n", pMap.mTextures[lTextureCounter].mName);
@@ -509,7 +509,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Plane Lump *********\n");
 	for
-		(int lPlaneCounter = 0; lPlaneCounter < pMap.mPlanes.size(); ++lPlaneCounter)
+        (unsigned lPlaneCounter = 0; lPlaneCounter < pMap.mPlanes.size(); ++lPlaneCounter)
 	{
 		fprintf(pFile, "Plane %d\n", lPlaneCounter);
 		fprintf(pFile, "\tNormal : %f %f %f\n", pMap.mPlanes[lPlaneCounter].mNormal[0], pMap.mPlanes[lPlaneCounter].mNormal[1], pMap.mPlanes[lPlaneCounter].mNormal[2]);
@@ -519,7 +519,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Node Lump *********\n");
 	for
-		(int lNodeCounter = 0; lNodeCounter < pMap.mNodes.size(); ++lNodeCounter)
+        (unsigned lNodeCounter = 0; lNodeCounter < pMap.mNodes.size(); ++lNodeCounter)
 	{
 		fprintf(pFile, "Node %d\n", lNodeCounter);
 		fprintf(pFile, "\tPlane index : %d\n", pMap.mNodes[lNodeCounter].mPlane);
@@ -531,7 +531,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Leaf Lump *********\n");
 	for
-		(int lLeafCounter = 0; lLeafCounter < pMap.mLeaves.size(); ++lLeafCounter)
+        (unsigned lLeafCounter = 0; lLeafCounter < pMap.mLeaves.size(); ++lLeafCounter)
 	{
 		fprintf(pFile, "Leaf %d\n", lLeafCounter);
 		fprintf(pFile, "\tCluster %d\n", pMap.mLeaves[lLeafCounter].mCluster);
@@ -546,7 +546,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* LeafFace Lump *********\n");
 	for
-		(int lLeafFaceCounter = 0; lLeafFaceCounter < pMap.mLeafFaces.size(); ++lLeafFaceCounter)
+        (unsigned lLeafFaceCounter = 0; lLeafFaceCounter < pMap.mLeafFaces.size(); ++lLeafFaceCounter)
 	{
 		fprintf(pFile, "LeafFace %d\n", lLeafFaceCounter);
 		fprintf(pFile, "\tFaceIndex %d\n", pMap.mLeafFaces[lLeafFaceCounter].mFaceIndex);
@@ -555,7 +555,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* LeafBrush Lump *********\n");
 	for
-		(int lLeafBrushCounter = 0; lLeafBrushCounter < pMap.mLeafBrushes.size(); ++lLeafBrushCounter)
+        (unsigned lLeafBrushCounter = 0; lLeafBrushCounter < pMap.mLeafBrushes.size(); ++lLeafBrushCounter)
 	{
 		fprintf(pFile, "LeafBrush %d\n", lLeafBrushCounter);
 		fprintf(pFile, "\tBrushIndex %d\n", pMap.mLeafBrushes[lLeafBrushCounter].mBrushIndex);
@@ -564,11 +564,11 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Model Lump *********\n");
 	for
-		(int lModelCounter = 0; lModelCounter < pMap.mModels.size(); ++lModelCounter)
+        (unsigned lModelCounter = 0; lModelCounter < pMap.mModels.size(); ++lModelCounter)
 	{
 		fprintf(pFile, "Model %d\n", lModelCounter);
-		fprintf(pFile, "\tMin Bounding Box : %d %d %d\n", pMap.mModels[lModelCounter].mMins[0], pMap.mModels[lModelCounter].mMins[1], pMap.mModels[lModelCounter].mMins[2]);
-		fprintf(pFile, "\tMax Bounding Box : %d %d %d\n", pMap.mModels[lModelCounter].mMaxs[0], pMap.mModels[lModelCounter].mMaxs[1], pMap.mModels[lModelCounter].mMaxs[2]);
+        fprintf(pFile, "\tMin Bounding Box : %f %f %f\n", pMap.mModels[lModelCounter].mMins[0], pMap.mModels[lModelCounter].mMins[1], pMap.mModels[lModelCounter].mMins[2]);
+        fprintf(pFile, "\tMax Bounding Box : %f %f %f\n", pMap.mModels[lModelCounter].mMaxs[0], pMap.mModels[lModelCounter].mMaxs[1], pMap.mModels[lModelCounter].mMaxs[2]);
 		fprintf(pFile, "\tFace %d\n", pMap.mModels[lModelCounter].mFace);
 		fprintf(pFile, "\tNbFaces %d\n", pMap.mModels[lModelCounter].mNbFaces);
 		fprintf(pFile, "\tBrush %d\n", pMap.mModels[lModelCounter].mBrush);
@@ -578,7 +578,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Brush Lump *********\n");
 	for
-		(int lBrushCounter = 0; lBrushCounter < pMap.mBrushes.size(); ++lBrushCounter)
+        (unsigned lBrushCounter = 0; lBrushCounter < pMap.mBrushes.size(); ++lBrushCounter)
 	{
         fprintf(pFile, "Brush %d\n", lBrushCounter);
 		fprintf(pFile, "\tBrushSide %d\n", pMap.mBrushes[lBrushCounter].mBrushSide);
@@ -589,7 +589,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* BrushSide Lump *********\n");
 	for
-		(int lBrushSideCounter = 0; lBrushSideCounter < pMap.mBrushSides.size(); ++lBrushSideCounter)
+        (unsigned lBrushSideCounter = 0; lBrushSideCounter < pMap.mBrushSides.size(); ++lBrushSideCounter)
 	{
 		fprintf(pFile, "BrushSide %d\n", lBrushSideCounter);
 		fprintf(pFile, "\tPlaneIndex %d\n", pMap.mBrushSides[lBrushSideCounter].mPlaneIndex);
@@ -599,12 +599,12 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Vertex Lump *********\n");
 	for
-		(int lVertexCounter = 0; lVertexCounter < pMap.mVertices.size(); ++lVertexCounter)
+        (unsigned lVertexCounter = 0; lVertexCounter < pMap.mVertices.size(); ++lVertexCounter)
 	{
 		fprintf(pFile, "Vertex %d\n", lVertexCounter);
 		fprintf(pFile, "\tPosition : %f %f %f\n", pMap.mVertices[lVertexCounter].mPosition[0], pMap.mVertices[lVertexCounter].mPosition[1], pMap.mVertices[lVertexCounter].mPosition[2]);
-		fprintf(pFile, "\tTexCoord0 : %f %f\n", pMap.mVertices[lVertexCounter].mTexCoord[0], pMap.mVertices[lVertexCounter].mTexCoord[1]);
-		fprintf(pFile, "\tTexCoord0 : %f %f\n", pMap.mVertices[lVertexCounter].mTexCoord[2], pMap.mVertices[lVertexCounter].mTexCoord[3]);
+        fprintf(pFile, "\tTexCoord0 : %f %f\n", pMap.mVertices[lVertexCounter].mTexCoord[0][0], pMap.mVertices[lVertexCounter].mTexCoord[0][1]);
+        fprintf(pFile, "\tTexCoord0 : %f %f\n", pMap.mVertices[lVertexCounter].mTexCoord[1][0], pMap.mVertices[lVertexCounter].mTexCoord[1][1]);
 		fprintf(pFile, "\tNormal : %f %f %f\n", pMap.mVertices[lVertexCounter].mNormal[0], pMap.mVertices[lVertexCounter].mNormal[1], pMap.mVertices[lVertexCounter].mNormal[2]);
 		fprintf(pFile, "\tColor : %d %d %d %d\n", pMap.mVertices[lVertexCounter].mColor[0], pMap.mVertices[lVertexCounter].mColor[1], pMap.mVertices[lVertexCounter].mColor[2], pMap.mVertices[lVertexCounter].mColor[3]);
 	}
@@ -612,7 +612,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* MeshVert Lump *********\n");
 	for
-		(int lMeshVertCounter = 0; lMeshVertCounter < pMap.mMeshVertices.size(); ++lMeshVertCounter)
+        (unsigned lMeshVertCounter = 0; lMeshVertCounter < pMap.mMeshVertices.size(); ++lMeshVertCounter)
 	{
 		fprintf(pFile, "MeshVert %d\n", lMeshVertCounter);
 		fprintf(pFile, "\tVertex Index : %d\n", pMap.mMeshVertices[lMeshVertCounter].mMeshVert);
@@ -621,7 +621,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Effect Lump *********\n");
 	for
-		(int lEffectCounter = 0; lEffectCounter < pMap.mEffects.size(); ++lEffectCounter)
+        (unsigned lEffectCounter = 0; lEffectCounter < pMap.mEffects.size(); ++lEffectCounter)
 	{
 		fprintf(pFile, "Effect %d\n", lEffectCounter);
 		fprintf(pFile, "\tName : %s\n", pMap.mEffects[lEffectCounter].mName);
@@ -632,7 +632,7 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 
 	fprintf(pFile, "********* Face Lump *********\n");
 	for
-		(int lFaceCounter = 0; lFaceCounter < pMap.mFaces.size(); ++lFaceCounter)
+        (unsigned lFaceCounter = 0; lFaceCounter < pMap.mFaces.size(); ++lFaceCounter)
 	{
 		fprintf(pFile, "Face %d\n", lFaceCounter);
 		fprintf(pFile, "\tTextureIndex : %d\n", pMap.mFaces[lFaceCounter].mTextureIndex);
@@ -654,12 +654,12 @@ void debugInformations(const TMapQ3& pMap, FILE* pFile)
 	fprintf(pFile, "\n");
 
 	fprintf(pFile, "********* LightMap Lump *********\n");
-	fprintf(pFile, "NbLightMaps %d\n", pMap.mLightMaps.size());
+    fprintf(pFile, "NbLightMaps %ld\n", pMap.mLightMaps.size());
 	fprintf(pFile, "\n");
 
 	fprintf(pFile, "********* LightVol Lump *********\n");
 	for
-		(int lLightVolCounter = 0; lLightVolCounter < pMap.mLightVols.size(); ++lLightVolCounter)
+        (unsigned lLightVolCounter = 0; lLightVolCounter < pMap.mLightVols.size(); ++lLightVolCounter)
 	{
 		fprintf(pFile, "LightVol %d\n", lLightVolCounter);
 		fprintf(pFile, "\tAmbient : %d %d %d\n", pMap.mLightVols[lLightVolCounter].mAmbient[0], pMap.mLightVols[lLightVolCounter].mAmbient[1], pMap.mLightVols[lLightVolCounter].mAmbient[2]);
