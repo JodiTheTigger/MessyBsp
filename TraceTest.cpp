@@ -38,57 +38,60 @@ std::chrono::microseconds TimeBspCollision(
         auto e = std::default_random_engine{seed};
         auto d = std::uniform_real_distribution<float>{-1000, 1000};
 
-        Bounds bounds =
+        for (unsigned i = 0; i < collisionsToTest; ++i)
         {
-            Vec3
+            Bounds bounds =
             {
-                d(e),
-                d(e),
-                d(e)
-            },
+                Vec3
+                {
+                    d(e),
+                    d(e),
+                    d(e)
+                },
 
-            Vec3
-            {
-                d(e),
-                d(e),
-                d(e)
-            },
+                Vec3
+                {
+                    d(e),
+                    d(e),
+                    d(e)
+                },
 
-            0.0f,
-            nullptr,
-            nullptr,
-        };
-
-        auto typeTest = d(e);
-
-        if (typeTest > 333.0f)
-        {
-            // Just use a player size(ish) for the box bounds.
-            bounds.boxMin = new Vec3();
-            bounds.boxMax = new Vec3();
-
-            *bounds.boxMin =
-            {
-                -20,
-                -90,
-                -20,
+                0.0f,
+                nullptr,
+                nullptr,
             };
 
-            *bounds.boxMax =
+            auto typeTest = d(e);
+
+            if (typeTest > 333.0f)
             {
-                20,
-                90,
-                20,
-            };
-        }
+                // Just use a player size(ish) for the box bounds.
+                bounds.boxMin = new Vec3();
+                bounds.boxMax = new Vec3();
 
-        if (typeTest < -333.0f)
-        {
-            // use a 10cm sphere.
-            bounds.sphereRadius = 5;
-        }
+                *bounds.boxMin =
+                {
+                    -20,
+                    -90,
+                    -20,
+                };
 
-        testArray.push_back(bounds);
+                *bounds.boxMax =
+                {
+                    20,
+                    90,
+                    20,
+                };
+            }
+
+            if (typeTest < -333.0f)
+            {
+                // use a 10cm sphere.
+                bounds.sphereRadius = 5;
+            }
+
+            testArray.push_back(bounds);
+        }
     }
 
     // Test the array.

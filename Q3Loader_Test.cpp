@@ -8,7 +8,7 @@ int main(int, char**)
 	
 	readMap("final.bsp", lMap);
 
-    auto result = TimeBspCollision(lMap, 10000000);
+    auto result = TimeBspCollision(lMap, 10000);
 
     printf("Trace Took %d microseconds\n", result);
 
