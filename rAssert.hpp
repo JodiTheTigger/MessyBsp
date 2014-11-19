@@ -25,7 +25,15 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// Directly taken from
 // http://cnicholson.net/2009/02/stupid-c-tricks-adventures-in-assert/
+// * Renamed the file and added the rAssert macro.
+// * Use #pragma once instead of #include guards.
+// * Added support for GCC/linux builds (clumsily).
+// * Removed the singleton, changed it to a global (I really hate singletons)
+// * Because the singleton has been removed, don't use the macro in any code
+//   that's run during static initilisation, as you will not have had a chance
+//   to call SetHandler()/SetDefaultAssertHandler()
 
 #pragma once
 

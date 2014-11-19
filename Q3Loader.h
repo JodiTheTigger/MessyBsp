@@ -32,7 +32,9 @@ struct THeader
 
 /**
  * Entity of the Q3 map.
- * The entities lump stores game-related map information, including information about the map name, weapons, health, armor, triggers, spawn points, lights, and .md3 models to be placed in the map. 
+ * The entities lump stores game-related map information, including information
+ * about the map name, weapons, health, armor, triggers, spawn points, lights,
+ * and .md3 models to be placed in the map.
  */
 struct TEntity
 {
@@ -42,7 +44,8 @@ struct TEntity
 
 /**
  * Texture of the Q3 map.
- * The textures lump stores information about surfaces and volumes, which are in turn associated with faces, brushes, and brushsides. 
+ * The textures lump stores information about surfaces and volumes, which are
+ * in turn associated with faces, brushes, and brushsides.
  */
 struct TTexture
 {
@@ -125,7 +128,8 @@ struct TModel
 
 /**
  * Brush of the Q3 map.
- * The brushes lump stores a set of brushes, which are in turn used for collision detection.
+ * The brushes lump stores a set of brushes, which are in turn used for
+ * collision detection.
  */
 struct TBrush
 {
@@ -167,7 +171,8 @@ struct TMeshVert
 
 /**
  * Effect of the Q3 map.
- * The effects lump stores references to volumetric shaders (typically fog) which affect the rendering of a particular group of faces.
+ * The effects lump stores references to volumetric shaders (typically fog)
+ * which affect the rendering of a particular group of faces.
  */
 struct TEffect
 {
@@ -201,7 +206,8 @@ struct TFace
 
 /**
  * Lightmap of the Q3 map.
- * The lightmaps lump stores the light map textures used make surface lighting look more realistic.
+ * The lightmaps lump stores the light map textures used make surface lighting
+ * look more realistic.
  */
 struct TLightMap
 {
@@ -221,7 +227,8 @@ struct TLightVol
 
 /**
  * The Visibility data of the Q3 map.
- * The visdata lump stores bit vectors that provide cluster-to-cluster visibility information.
+ * The visdata lump stores bit vectors that provide cluster-to-cluster
+ * visibility information.
  */
 struct TVisData
 {
