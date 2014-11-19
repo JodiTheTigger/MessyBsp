@@ -14,6 +14,15 @@
     along with this program. If not, see <http://www.gnu.org/licenses/>
 */
 
+// Note:
+// This code was written based on BSP collision dection explination article
+// written by Nathan Ostgard and too much time browsing the Quake3 source code.
+//
+// It's written under C++14 (mainly for the complete brace initilisation of
+// return statements).
+//
+// http://openzone.googlecode.com/git-history/f73bb8dfe8e6a16c13d39aba1c8f6537ee263d07/doc/Quake3BSP.html
+
 #include "Trace.hpp"
 #include "Q3Loader.h"
 #include "rAssert.hpp"
