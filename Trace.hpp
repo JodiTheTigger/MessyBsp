@@ -23,7 +23,7 @@ class TMapQ3;
 // /////////////////////
 // Stucts and Enums
 // /////////////////////
-struct Vec3
+struct alignas(16) Vec3
 {
     float data[3];
 };
