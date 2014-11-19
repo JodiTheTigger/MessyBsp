@@ -23,7 +23,9 @@ set(
     Trace.cpp
     Trace.hpp
     TraceTest.cpp
-    TraceTest.hpp)
+    TraceTest.hpp
+    rAssert.hpp
+    rAssert.cpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -march=native -Wall -g")
 
