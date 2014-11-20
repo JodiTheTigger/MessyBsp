@@ -20,8 +20,6 @@
 
 namespace Bsp {
 
-/// This is bare bones, with no nice error reporting
-/// or proper exception safe cleanup. C++ makes it too ugly.
 void GetCollisionBsp(
         const std::string &filePath,
         CollisionBsp &bsp)

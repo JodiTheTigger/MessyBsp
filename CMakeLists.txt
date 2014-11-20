@@ -12,8 +12,7 @@
 #   You should have received a copy of the GNU Affero General Public License
 #   along with this program. If not, see <http://www.gnu.org/licenses/>
 
-# Simple
-project(BspUgh)
+project(MessyBsp)
 
 set(
     SOURCE_LIST
@@ -29,6 +28,6 @@ set(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -march=native -Wall -g")
 
-add_executable(BspUgh ${SOURCE_LIST})
+add_executable(MessyBsp ${SOURCE_LIST})
 
 
