@@ -55,6 +55,36 @@ Vec3 inline Add(const Vec3& a, const Vec3& b)
     };
 }
 
+Vec3 inline Add(const Vec3& a, float b)
+{
+    return
+    {
+        a.data[0] + b,
+        a.data[1] + b,
+        a.data[2] + b,
+    };
+}
+
+Vec3 inline Mins(const Vec3&a, const Vec3&b)
+{
+    return
+    {
+        a.data[0] < b.data[0] ? a.data[0] : b.data[0],
+        a.data[1] < b.data[1] ? a.data[1] : b.data[1],
+        a.data[2] < b.data[2] ? a.data[2] : b.data[2],
+    };
+}
+
+Vec3 inline Maxs(const Vec3&a, const Vec3&b)
+{
+    return
+    {
+        a.data[0] > b.data[0] ? a.data[0] : b.data[0],
+        a.data[1] > b.data[1] ? a.data[1] : b.data[1],
+        a.data[2] > b.data[2] ? a.data[2] : b.data[2],
+    };
+}
+
 float inline DotProduct(const Vec3& a, const float* b)
 {
     return  (a.data[0] * b[0]) +
@@ -398,6 +428,11 @@ TraceResult Trace(const Bsp::CollisionBsp &bsp,
 
         pExtents = &extents;
     }
+
+    // RAM: Calculate the axis aligned bounding box for a speedup.
+    // First for sphere/ray.
+    Vec3 bounds0 = Add(Mins(bounds.start, bounds.end), -bounds.sphereRadius);
+    Vec3 bounds1 = Add(Maxs(bounds.start, bounds.end),  bounds.sphereRadius);
 
     return CheckNode(
                 0,
