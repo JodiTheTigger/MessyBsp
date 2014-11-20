@@ -20,6 +20,8 @@ set(
     Q3Loader.h
     Q3Loader.cpp
     Q3Loader_Test.cpp
+    Bsp.hpp
+    Bsp.cpp
     Trace.cpp
     Trace.hpp
     TraceTest.cpp
