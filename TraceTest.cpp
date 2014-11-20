@@ -22,7 +22,7 @@
 #include <random>
 
 std::chrono::microseconds TimeBspCollision(
-        const TMapQ3& bsp,
+        const Bsp::CollisionBsp& bsp,
         unsigned collisionsToTest)
 {
     // First build array of points to test.

@@ -19,8 +19,11 @@
 // /////////////////////
 // Forward Declarations
 // /////////////////////
-class TPlane;
-class TMapQ3;
+namespace Bsp
+{
+    class CollisionBsp;
+    class Plane;
+}
 
 // /////////////////////
 // Stucts and Enums
@@ -56,7 +59,7 @@ enum class PathInfo
 
 struct TraceResult
 {
-    const TPlane* collisionPlane;
+    const Bsp::Plane* collisionPlane;
 
     /// 0 - 1.0f
     /// 0 == collision straight away, 1.0 means no collision at all.
@@ -70,5 +73,5 @@ struct TraceResult
 // Trace
 // /////////////////////
 TraceResult Trace(
-        const TMapQ3& bsp,
+        const Bsp::CollisionBsp& bsp,
         const Bounds& bounds);

@@ -27,7 +27,7 @@
 // TODO: bsp.hpp
 
 #include "Trace.hpp"
-#include "Q3Loader.h"
+#include "Bsp.hpp"
 #include "rAssert.hpp"
 
 // for std::abs(float)
@@ -81,8 +81,8 @@ inline float Clamp0To1(float toClamp)
 // Trace Functions
 // /////////////////////
 TraceResult CheckBrush(
-        const TMapQ3& bsp,
-        const TBrush& brush,
+        const Bsp::CollisionBsp& bsp,
+        const Bsp::Brush& brush,
         const Bounds& bounds,
         const TraceResult& currentResult)
 {
@@ -90,12 +90,12 @@ TraceResult CheckBrush(
     float endFraction               = 1.0f;
     bool startsOut                  = false;
     bool endsOut                    = false;
-    const TPlane* collisionPlane    = nullptr;
+    const Bsp::Plane* collisionPlane    = nullptr;
 
-    for (int i = 0; i < brush.mNbBrushSides; ++i)
+    for (int i = 0; i < brush.sideCount; ++i)
     {
-        const auto& brushSide   = bsp.mBrushSides[brush.mBrushSide + i];
-        const auto& plane       = bsp.mPlanes[brushSide.mPlaneIndex];
+        const auto& brushSide   = bsp.brushSides[brush.firstBrushSideIndex + i];
+        const auto& plane       = bsp.planes[brushSide.planeIndex];
 
         Vec3 offset =
         {
@@ -108,9 +108,9 @@ TraceResult CheckBrush(
         {
             offset =
             {
-                plane.mNormal[0] < 0 ? bounds.boxMax->data[0] : bounds.boxMin->data[0],
-                plane.mNormal[1] < 0 ? bounds.boxMax->data[1] : bounds.boxMin->data[1],
-                plane.mNormal[2] < 0 ? bounds.boxMax->data[2] : bounds.boxMin->data[2],
+                plane.normal[0] < 0 ? bounds.boxMax->data[0] : bounds.boxMin->data[0],
+                plane.normal[1] < 0 ? bounds.boxMax->data[1] : bounds.boxMin->data[1],
+                plane.normal[2] < 0 ? bounds.boxMax->data[2] : bounds.boxMin->data[2],
             };
         }
 
@@ -118,12 +118,12 @@ TraceResult CheckBrush(
         // A sphere has a box offset of 0 as well.
         // A box just has a sphereRadius, like the ray, of 0.
         float startDistance =
-                DotProduct(Add(bounds.start, offset), plane.mNormal) -
-                (bounds.sphereRadius + plane.mDistance);
+                DotProduct(Add(bounds.start, offset), plane.normal) -
+                (bounds.sphereRadius + plane.distance);
 
         float endDistance =
-                DotProduct(Add(bounds.end, offset), plane.mNormal) -
-                (bounds.sphereRadius + plane.mDistance);
+                DotProduct(Add(bounds.end, offset), plane.normal) -
+                (bounds.sphereRadius + plane.distance);
 
         if (startDistance > 0)
         {
@@ -218,22 +218,22 @@ TraceResult CheckNode(
     const Bounds& bounds,
 
     TraceResult result,
-    const TMapQ3& bsp)
+    const Bsp::CollisionBsp& bsp)
 {
     if (nodeIndex < 0)
     {
         // this is a leaf
-        const auto& leaf = bsp.mLeaves[-(nodeIndex + 1)];
+        const auto& leaf = bsp.leaves[-(nodeIndex + 1)];
 
-        for (int i = 0; i < leaf.mNbLeafBrushes; i++)
+        for (int i = 0; i < leaf.leafBrushCount; i++)
         {
             const auto& brush =
-                    bsp.mBrushes[bsp.mLeafBrushes[leaf.mLeafBrush + i].mBrushIndex];
+                    bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex];
 
             // 1 == CONTENTS_SOLID
             if  (
-                    (brush.mNbBrushSides > 0) &&
-                    (bsp.mTextures[brush.mTextureIndex].mFlags & 1)
+                    (brush.sideCount > 0) &&
+                    (bsp.textures[brush.textureIndex].surfaceFlags & 1)
                 )
             {
                 result = CheckBrush(bsp, brush, bounds, result);
@@ -245,11 +245,11 @@ TraceResult CheckNode(
     }
 
     // this is a node
-    const auto& node = bsp.mNodes[nodeIndex];
-    const auto& plane = bsp.mPlanes[node.mPlane];
+    const auto& node = bsp.nodes[nodeIndex];
+    const auto& plane = bsp.planes[node.planeIndex];
 
-    float startDistance = DotProduct(start, plane.mNormal) - plane.mDistance;
-    float endDistance   = DotProduct(end, plane.mNormal) - plane.mDistance;
+    float startDistance = DotProduct(start, plane.normal) - plane.distance;
+    float endDistance   = DotProduct(end, plane.normal) - plane.distance;
 
     // Offset used for non-ray tests.
     float offset = bounds.sphereRadius;
@@ -257,9 +257,9 @@ TraceResult CheckNode(
     if (bounds.boxMin && bounds.boxMax)
     {
         offset +=
-            std::abs(extents->data[0] * plane.mNormal[0]) +
-            std::abs(extents->data[1] * plane.mNormal[1]) +
-            std::abs(extents->data[2] * plane.mNormal[2]);
+            std::abs(extents->data[0] * plane.normal[0]) +
+            std::abs(extents->data[1] * plane.normal[1]) +
+            std::abs(extents->data[2] * plane.normal[2]);
     }
 
     if (startDistance >= offset && endDistance >= offset)
@@ -267,7 +267,7 @@ TraceResult CheckNode(
         // both points are in front of the plane
         // so check the front child
         return CheckNode(
-            node.mChildren[0],
+            node.childIndex[0],
             startFraction,
             endFraction,
             start,
@@ -283,7 +283,7 @@ TraceResult CheckNode(
         // both points are behind the plane
         // so check the back child
         return CheckNode(
-            node.mChildren[1],
+            node.childIndex[1],
             startFraction,
             endFraction,
             start,
@@ -331,7 +331,7 @@ TraceResult CheckNode(
 
         // check the first side
         result = CheckNode(
-            node.mChildren[side],
+            node.childIndex[side],
             startFraction,
             middleFraction,
             start,
@@ -351,7 +351,7 @@ TraceResult CheckNode(
 
         // check the second side
         result = CheckNode(
-            node.mChildren[!side],
+            node.childIndex[!side],
             middleFraction,
             endFraction,
             middle,
@@ -368,8 +368,7 @@ TraceResult CheckNode(
 // /////////////////////
 // Trace
 // /////////////////////
-TraceResult Trace(
-        const TMapQ3& bsp,
+TraceResult Trace(const Bsp::CollisionBsp &bsp,
         const Bounds& bounds)
 {
     rAssert(

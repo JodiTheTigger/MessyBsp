@@ -19,11 +19,14 @@
 // /////////////////////
 // Forward Declarations
 // /////////////////////
-class TMapQ3;
+namespace Bsp
+{
+    class CollisionBsp;
+}
 
 // /////////////////////
 // Timer
 // /////////////////////
 std::chrono::microseconds TimeBspCollision(
-        const TMapQ3& bsp,
+        const Bsp::CollisionBsp& bsp,
         unsigned collisionsToTest);

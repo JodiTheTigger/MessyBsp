@@ -87,7 +87,7 @@ void GetCollisionBsp(
         bsp.brushes.reserve(Counts[Brushes]);
         bsp.brushSides.reserve(Counts[BrushSides]);
 
-        // Read Textures
+        // My first generic lambda. DRY FTW!
         auto readTypes = [&] (Lumps lumpEnum, auto& vector, size_t typeSize)
         {
             fseek(
@@ -109,7 +109,8 @@ void GetCollisionBsp(
             return true;
         };
 
-        if (!readTypes(Textures,    bsp.textures,       sizeof(Brush)))     continue;
+        // Grrr, not DRY enough (how to not repeat the enum and type?)
+        if (!readTypes(Textures,    bsp.textures,       sizeof(Texture)))  continue;
         if (!readTypes(Planes,      bsp.planes,         sizeof(Plane)))     continue;
         if (!readTypes(Nodes,       bsp.nodes,          sizeof(Node)))      continue;
         if (!readTypes(Leaves,      bsp.leaves,         sizeof(Leaf)))      continue;

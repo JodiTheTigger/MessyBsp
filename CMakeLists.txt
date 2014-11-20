@@ -17,9 +17,7 @@ project(BspUgh)
 
 set(
     SOURCE_LIST
-    Q3Loader.h
-    Q3Loader.cpp
-    Q3Loader_Test.cpp
+    main.cpp
     Bsp.hpp
     Bsp.cpp
     Trace.cpp
