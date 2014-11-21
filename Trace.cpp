@@ -65,6 +65,26 @@ Vec3 inline Add(const Vec3& a, float b)
     };
 }
 
+Vec3 inline Subtract(const Vec3& a, const Vec3& b)
+{
+    return
+    {
+        a.data[0] - b.data[0],
+        a.data[1] - b.data[1],
+        a.data[2] - b.data[2],
+    };
+}
+
+Vec3 inline Multiply(const Vec3& a, float b)
+{
+    return
+    {
+        a.data[0] * b,
+        a.data[1] * b,
+        a.data[2] * b,
+    };
+}
+
 Vec3 inline Mins(const Vec3&a, const Vec3&b)
 {
     return
@@ -116,10 +136,27 @@ TraceResult CheckBrush(
         const Bounds& bounds,
         const TraceResult& currentResult)
 {
-    float startFraction             = -1.0f;
-    float endFraction               = 1.0f;
-    bool startsOut                  = false;
-    bool endsOut                    = false;
+    // Early exit if the AABB doesn't collide.
+    // special test for axial
+    // RAM: Ugh, where does Q3 get cm struct from?
+    // as that defines the brush struct that
+    // fills in the bounds structure.
+    // Hint: CM_BoundBrush, CMod_LoadBrushes
+    /*
+    if ( tw->bounds[0][0] > brush->bounds[1][0]
+        || tw->bounds[0][1] > brush->bounds[1][1]
+        || tw->bounds[0][2] > brush->bounds[1][2]
+        || tw->bounds[1][0] < brush->bounds[0][0]
+        || tw->bounds[1][1] < brush->bounds[0][1]
+        || tw->bounds[1][2] < brush->bounds[0][2]
+        ) {
+        return;
+    }*/
+
+    float startFraction                 = -1.0f;
+    float endFraction                   = 1.0f;
+    bool startsOut                      = false;
+    bool endsOut                        = false;
     const Bsp::Plane* collisionPlane    = nullptr;
 
     for (int i = 0; i < brush.sideCount; ++i)
@@ -401,6 +438,7 @@ TraceResult CheckNode(
 TraceResult Trace(const Bsp::CollisionBsp &bsp,
         const Bounds& bounds)
 {
+    // RAM: TODO: Deal with point tests (ray with length of 0).
     rAssert(
                 (!bounds.boxMin && !bounds.boxMax) ||
                 (bounds.boxMin && bounds.boxMax && !bounds.sphereRadius)
@@ -427,6 +465,12 @@ TraceResult Trace(const Bsp::CollisionBsp &bsp,
         };
 
         pExtents = &extents;
+
+        // RAM: Calculate symmetrical bounding box from extents
+        // cos that's what they do in Q3.
+        Vec3 offset = Multiply(Add(*bounds.boxMin, *bounds.boxMax), 0.5f);
+        Vec3 boundOffset0 = Subtract(*bounds.boxMin, offset);
+        Vec3 boundOffset1 = Subtract(*bounds.boxMax, offset);
     }
 
     // RAM: Calculate the axis aligned bounding box for a speedup.
