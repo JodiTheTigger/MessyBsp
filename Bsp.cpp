@@ -108,6 +108,7 @@ void GetCollisionBsp(
         };
 
         // Grrr, not DRY enough (how to not repeat the enum and type?)
+        // Also note that brushes is a special case it has an extented structure.
         if (!readTypes(Textures,    bsp.textures,       sizeof(Texture)))  continue;
         if (!readTypes(Planes,      bsp.planes,         sizeof(Plane)))     continue;
         if (!readTypes(Nodes,       bsp.nodes,          sizeof(Node)))      continue;
@@ -115,6 +116,33 @@ void GetCollisionBsp(
         if (!readTypes(LeafBrushes, bsp.leafBrushes,    sizeof(LeafBrush))) continue;
         if (!readTypes(Brushes,     bsp.brushes,        sizeof(Brush)))     continue;
         if (!readTypes(BrushSides,  bsp.brushSides,     sizeof(BrushSide))) continue;
+
+        // Calculate Brush AABB
+        // Q3 BSP has the first 6 sides as AABB planes.
+        for (auto& brushAabb : bsp.brushes)
+        {
+            const auto& brush = brushAabb.brush;
+
+            if (brush.sideCount < 6)
+            {
+                // Shouldn't happen?
+                continue;
+            }
+
+            auto sideDistance = [&] (auto index)
+            {
+                return bsp.planes[bsp.brushSides[index].planeIndex].distance;
+            };
+
+            brushAabb.aabbMin[0] = -sideDistance(brush.firstBrushSideIndex + 0);
+            brushAabb.aabbMax[0] =  sideDistance(brush.firstBrushSideIndex + 1);
+
+            brushAabb.aabbMin[1] = -sideDistance(brush.firstBrushSideIndex + 2);
+            brushAabb.aabbMax[1] =  sideDistance(brush.firstBrushSideIndex + 3);
+
+            brushAabb.aabbMin[2] = -sideDistance(brush.firstBrushSideIndex + 4);
+            brushAabb.aabbMax[2] =  sideDistance(brush.firstBrushSideIndex + 5);
+        }
 
     } while(false);
 

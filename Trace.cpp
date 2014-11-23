@@ -294,7 +294,7 @@ TraceResult CheckNode(
         for (int i = 0; i < leaf.leafBrushCount; i++)
         {
             const auto& brush =
-                    bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex];
+                    bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex].brush;
 
             // 1 == CONTENTS_SOLID
             if  (
@@ -302,7 +302,16 @@ TraceResult CheckNode(
                     (bsp.textures[brush.textureIndex].contentFlags & 1)
                 )
             {
+                // RAM: DEBUG
+                {
+                    if (brush.sideCount < 6)
+                    {
+                        continue;
+                    }
+                }
                 result = CheckBrush(bsp, brush, bounds, result);
+
+
             }
         }
 
