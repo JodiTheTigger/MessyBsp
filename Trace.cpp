@@ -126,6 +126,22 @@ inline float Clamp0To1(float toClamp)
     return toClamp > 0.0f ? (toClamp < 1.0f ? toClamp : 1.0f) : 0.0f;
 }
 
+inline bool IsGreater(const Vec3& a, const float* b)
+{
+    return
+            a.data[0] > b[0] &&
+            a.data[1] > b[1] &&
+            a.data[2] > b[2];
+}
+
+inline bool IsLess(const Vec3& a, const float* b)
+{
+    return
+            a.data[0] < b[0] &&
+            a.data[1] < b[1] &&
+            a.data[2] < b[2];
+}
+
 // /////////////////////
 // Trace Functions
 // /////////////////////
@@ -141,6 +157,8 @@ TraceResult CheckBrush(
     // as that defines the brush struct that
     // fills in the bounds structure.
     // Hint: CM_BoundBrush, CMod_LoadBrushes
+    // Hint: First 6 sides are AABB, so don't
+    // need to recheck them if this fails (start loop at 6)
     /*
     if ( tw->bounds[0][0] > brush->bounds[1][0]
         || tw->bounds[0][1] > brush->bounds[1][1]
