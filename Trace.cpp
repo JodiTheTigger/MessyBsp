@@ -140,15 +140,30 @@ inline float Clamp0To1(float toClamp)
 // /////////////////////
 TraceResult CheckBrush(
         const Bsp::CollisionBsp& bsp,
-        const Bsp::Brush& brush,
-        const Bounds& bounds,
+        const Bsp::BrushAabb& brushAabb,
+        const TraceBounds& boundsAabb,
         const TraceResult& currentResult)
 {
+    // Early exit if the AABB doesn't collide.
+    if  (
+            (boundsAabb.aabbMin.data[0] > brushAabb.aabbMax[0]) ||
+            (boundsAabb.aabbMin.data[1] > brushAabb.aabbMax[1]) ||
+            (boundsAabb.aabbMin.data[2] > brushAabb.aabbMax[2]) ||
+            (boundsAabb.aabbMax.data[0] < brushAabb.aabbMin[0]) ||
+            (boundsAabb.aabbMax.data[1] < brushAabb.aabbMin[1]) ||
+            (boundsAabb.aabbMax.data[2] < brushAabb.aabbMin[2])
+        )
+    {
+        return currentResult;
+    }
+
     float startFraction                 = -1.0f;
     float endFraction                   = 1.0f;
     bool startsOut                      = false;
     bool endsOut                        = false;
     const Bsp::Plane* collisionPlane    = nullptr;
+    const auto& bounds                  = boundsAabb.bounds;
+    const auto& brush                   = brushAabb.brush;
 
     // Start at 6 since the first 6 are AABB planes.
     // And since we're here, we obviously intersect those already.
@@ -296,21 +311,8 @@ TraceResult CheckNode(
                     (brush.brush.sideCount >= 6) &&
                     (bsp.textures[brush.brush.textureIndex].contentFlags & 1)
                 )
-            {
-                // Early exit if the AABB doesn't collide.
-                if  (
-                        (boundsAabb.aabbMin.data[0] > brush.aabbMax[0]) ||
-                        (boundsAabb.aabbMin.data[1] > brush.aabbMax[1]) ||
-                        (boundsAabb.aabbMin.data[2] > brush.aabbMax[2]) ||
-                        (boundsAabb.aabbMax.data[0] < brush.aabbMin[0]) ||
-                        (boundsAabb.aabbMax.data[1] < brush.aabbMin[1]) ||
-                        (boundsAabb.aabbMax.data[2] < brush.aabbMin[2])
-                    )
-                {
-                    continue;
-                }
-
-                result = CheckBrush(bsp, brush.brush, boundsAabb.bounds, result);
+            {                
+                result = CheckBrush(bsp, brush, boundsAabb, result);
             }
         }
 
