@@ -435,7 +435,7 @@ TraceResult CheckNode(
 // /////////////////////
 TraceResult Trace(
         const Bsp::CollisionBsp &bsp,
-        Bounds bounds)
+        const Bounds &bounds)
 {    
     // Important NOTE:
     // I've confused myself with the way Q3 does it's traces.
@@ -447,13 +447,18 @@ TraceResult Trace(
     // Verify AABB bounds calculation
     // Traceextents takes care of symmetry by recording the max
     // distance from origin to each axis, keep that.
+    // calculate the AABB of the path myself:
 
+    auto aabbMin2 = Mins(bounds.start, bounds.end);
+    auto aabbMax2 = Maxs(bounds.start, bounds.end);
+    aabbMin2 = Add(aabbMin2, -bounds.sphereRadius);
+    aabbMax2 = Add(aabbMax2,  bounds.sphereRadius);
+
+    // RAM: TODO: figure out how to add box to AABB.
 
     // Calculate symmetrical bounding box from extents
     // cos that's what they do in Q3.
     auto offset = Multiply(Add(bounds.boxMin, bounds.boxMax), 0.5f);
-    bounds.start = Add(bounds.start, offset);
-    bounds.end = Add(bounds.end, offset);
 
     auto boundOffset0 = Subtract(bounds.boxMin, offset);
     auto boundOffset1 = Subtract(bounds.boxMax, offset);

@@ -77,4 +77,4 @@ struct TraceResult
 //       write some unit tests.
 TraceResult Trace(
         const Bsp::CollisionBsp& bsp,
-        Bounds bounds);
+        const Bounds& bounds);
