@@ -121,7 +121,7 @@ struct Brush
     int32_t textureIndex;
 };
 
-struct BrushAABB
+struct BrushAabb
 {
     Brush brush;
     float aabbMin[3];
@@ -142,7 +142,7 @@ struct CollisionBsp
     std::vector<Node>       nodes;
     std::vector<Leaf>       leaves;
     std::vector<LeafBrush>  leafBrushes;
-    std::vector<BrushAABB>  brushes;
+    std::vector<BrushAabb>  brushes;
     std::vector<BrushSide>  brushSides;
 };
 

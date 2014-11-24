@@ -32,6 +32,7 @@
 // for std::abs(float)
 #include <cmath>
 
+
 // /////////////////////
 // Constants
 // /////////////////////
@@ -40,6 +41,16 @@
 // keep 1/8 unit away to keep the position valid before network snapping
 // and to avoid various numeric issues
 static const float EPSILON = 0.125f;
+
+// /////////////////////
+// Structs
+// /////////////////////
+struct TraceBounds
+{
+    Bounds  bounds;
+    Vec3    aabbMin;
+    Vec3    aabbMax;
+};
 
 // /////////////////////
 // Helpers
@@ -126,22 +137,6 @@ inline float Clamp0To1(float toClamp)
     return toClamp > 0.0f ? (toClamp < 1.0f ? toClamp : 1.0f) : 0.0f;
 }
 
-inline bool IsGreater(const Vec3& a, const float* b)
-{
-    return
-            a.data[0] > b[0] &&
-            a.data[1] > b[1] &&
-            a.data[2] > b[2];
-}
-
-inline bool IsLess(const Vec3& a, const float* b)
-{
-    return
-            a.data[0] < b[0] &&
-            a.data[1] < b[1] &&
-            a.data[2] < b[2];
-}
-
 // /////////////////////
 // Trace Functions
 // /////////////////////
@@ -151,32 +146,15 @@ TraceResult CheckBrush(
         const Bounds& bounds,
         const TraceResult& currentResult)
 {
-    // Early exit if the AABB doesn't collide.
-    // special test for axial
-    // RAM: Ugh, where does Q3 get cm struct from?
-    // as that defines the brush struct that
-    // fills in the bounds structure.
-    // Hint: CM_BoundBrush, CMod_LoadBrushes
-    // Hint: First 6 sides are AABB, so don't
-    // need to recheck them if this fails (start loop at 6)
-    /*
-    if ( tw->bounds[0][0] > brush->bounds[1][0]
-        || tw->bounds[0][1] > brush->bounds[1][1]
-        || tw->bounds[0][2] > brush->bounds[1][2]
-        || tw->bounds[1][0] < brush->bounds[0][0]
-        || tw->bounds[1][1] < brush->bounds[0][1]
-        || tw->bounds[1][2] < brush->bounds[0][2]
-        ) {
-        return;
-    }*/
-
     float startFraction                 = -1.0f;
     float endFraction                   = 1.0f;
     bool startsOut                      = false;
     bool endsOut                        = false;
     const Bsp::Plane* collisionPlane    = nullptr;
 
-    for (int i = 0; i < brush.sideCount; ++i)
+    // Start at 6 since the first 6 are AABB planes.
+    // And since we're here, we obviously intersect those already.
+    for (int i = 6; i < brush.sideCount; ++i)
     {
         const auto& brushSide   = bsp.brushSides[brush.firstBrushSideIndex + i];
         const auto& plane       = bsp.planes[brushSide.planeIndex];
@@ -299,7 +277,7 @@ TraceResult CheckNode(
     const Vec3& start,
     const Vec3& end,
     const Vec3* extents,
-    const Bounds& bounds,
+    const TraceBounds& boundsAabb,
 
     TraceResult result,
     const Bsp::CollisionBsp& bsp)
@@ -312,24 +290,37 @@ TraceResult CheckNode(
         for (int i = 0; i < leaf.leafBrushCount; i++)
         {
             const auto& brush =
-                    bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex].brush;
+                    bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex];
 
             // 1 == CONTENTS_SOLID
+            // The brush needs at least 6 sides (first 6 are AABB planes).
             if  (
-                    (brush.sideCount > 0) &&
-                    (bsp.textures[brush.textureIndex].contentFlags & 1)
+                    (brush.brush.sideCount >= 6) &&
+                    (bsp.textures[brush.brush.textureIndex].contentFlags & 1)
                 )
             {
                 // RAM: DEBUG
                 {
-                    if (brush.sideCount < 6)
+                    if (brush.brush.sideCount < 6)
                     {
                         continue;
                     }
                 }
-                result = CheckBrush(bsp, brush, bounds, result);
 
+                // Early exit if the AABB doesn't collide.
+                if  (
+                        (boundsAabb.aabbMin.data[0] > brush.aabbMax[0]) ||
+                        (boundsAabb.aabbMin.data[1] > brush.aabbMax[1]) ||
+                        (boundsAabb.aabbMin.data[2] > brush.aabbMax[2]) ||
+                        (boundsAabb.aabbMax.data[0] < brush.aabbMin[0]) ||
+                        (boundsAabb.aabbMax.data[1] < brush.aabbMin[1]) ||
+                        (boundsAabb.aabbMax.data[2] < brush.aabbMin[2])
+                    )
+                {
+                    continue;
+                }
 
+                result = CheckBrush(bsp, brush.brush, boundsAabb.bounds, result);
             }
         }
 
@@ -345,6 +336,7 @@ TraceResult CheckNode(
     float endDistance   = DotProduct(end, plane.normal) - plane.distance;
 
     // Offset used for non-ray tests.
+    const auto& bounds = boundsAabb.bounds;
     float offset = bounds.sphereRadius;
 
     if (bounds.boxMin && bounds.boxMax)
@@ -366,7 +358,7 @@ TraceResult CheckNode(
             start,
             end,
             extents,
-            bounds,
+            boundsAabb,
             result,
             bsp);
     }
@@ -382,7 +374,7 @@ TraceResult CheckNode(
             start,
             end,
             extents,
-            bounds,
+            boundsAabb,
             result,
             bsp);
     }
@@ -430,7 +422,7 @@ TraceResult CheckNode(
             start,
             middle,
             extents,
-            bounds,
+            boundsAabb,
             result,
             bsp);
     }
@@ -450,7 +442,7 @@ TraceResult CheckNode(
             middle,
             end,
             extents,
-            bounds,
+            boundsAabb,
             result,
             bsp);
     }
@@ -461,7 +453,8 @@ TraceResult CheckNode(
 // /////////////////////
 // Trace
 // /////////////////////
-TraceResult Trace(const Bsp::CollisionBsp &bsp,
+TraceResult Trace(
+        const Bsp::CollisionBsp &bsp,
         const Bounds& bounds)
 {
     // RAM: TODO: Deal with point tests (ray with length of 0).
@@ -472,6 +465,8 @@ TraceResult Trace(const Bsp::CollisionBsp &bsp,
 
     Vec3 extents;
     Vec3* pExtents = nullptr;
+    Vec3 aabbMin;
+    Vec3 aabbMax;
 
     if (bounds.boxMin && bounds.boxMax)
     {
@@ -492,17 +487,21 @@ TraceResult Trace(const Bsp::CollisionBsp &bsp,
 
         pExtents = &extents;
 
-        // RAM: Calculate symmetrical bounding box from extents
+        // Calculate symmetrical bounding box from extents
         // cos that's what they do in Q3.
-        Vec3 offset = Multiply(Add(*bounds.boxMin, *bounds.boxMax), 0.5f);
-        Vec3 boundOffset0 = Subtract(*bounds.boxMin, offset);
-        Vec3 boundOffset1 = Subtract(*bounds.boxMax, offset);
-    }
+        auto offset = Multiply(Add(*bounds.boxMin, *bounds.boxMax), 0.5f);
+        auto boundOffset0 = Subtract(*bounds.boxMin, offset);
+        auto boundOffset1 = Subtract(*bounds.boxMax, offset);
 
-    // RAM: Calculate the axis aligned bounding box for a speedup.
-    // First for sphere/ray.
-    Vec3 bounds0 = Add(Mins(bounds.start, bounds.end), -bounds.sphereRadius);
-    Vec3 bounds1 = Add(Maxs(bounds.start, bounds.end),  bounds.sphereRadius);
+        // Adjust
+        aabbMin = Add(Mins(bounds.start, bounds.end), boundOffset0);
+        aabbMax = Add(Mins(bounds.start, bounds.end), boundOffset1);
+    }
+    else
+    {
+        aabbMin = Add(Mins(bounds.start, bounds.end), -bounds.sphereRadius);
+        aabbMax = Add(Maxs(bounds.start, bounds.end),  bounds.sphereRadius);
+    }
 
     return CheckNode(
                 0,
@@ -511,7 +510,11 @@ TraceResult Trace(const Bsp::CollisionBsp &bsp,
                 bounds.start,
                 bounds.end,
                 pExtents,
-                bounds,
+                {
+                    bounds,
+                    aabbMin,
+                    aabbMax,
+                },
                 {
                     nullptr,
                     1.0f,
