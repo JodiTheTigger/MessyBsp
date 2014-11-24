@@ -40,12 +40,12 @@ struct Bounds
     Vec3    end;
 
     // Trace type:
-    // Ray      : boxMin == boxMax == nullptr, sphereRadius == 0
-    // Sphere   : boxMin == boxMax == nullptr, sphereRadius > 0
-    // Box      : boxMin != nullptr, boxMax != nullptr, sphereRadius == 0
+    // Ray      : boxMin == boxMax == {0, 0, 0}, sphereRadius == 0
+    // Sphere   : boxMin == boxMax == {0, 0, 0}, sphereRadius > 0
+    // Box      : boxMin != {0, 0, 0}, boxMax != {0, 0, 0}, sphereRadius == 0
     float   sphereRadius;
-    Vec3*   boxMin;
-    Vec3*   boxMax;
+    Vec3    boxMin;
+    Vec3    boxMax;
 };
 
 enum class PathInfo
@@ -77,4 +77,4 @@ struct TraceResult
 //       write some unit tests.
 TraceResult Trace(
         const Bsp::CollisionBsp& bsp,
-        const Bounds& bounds);
+        Bounds bounds);

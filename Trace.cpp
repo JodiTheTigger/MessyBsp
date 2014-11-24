@@ -174,20 +174,10 @@ TraceResult CheckBrush(
 
         Vec3 offset =
         {
-            0.0f,
-            0.0f,
-            0.0f,
+            plane.normal[0] < 0 ? bounds.boxMax.data[0] : bounds.boxMin.data[0],
+            plane.normal[1] < 0 ? bounds.boxMax.data[1] : bounds.boxMin.data[1],
+            plane.normal[2] < 0 ? bounds.boxMax.data[2] : bounds.boxMin.data[2],
         };
-
-        if (bounds.boxMin && bounds.boxMax)
-        {
-            offset =
-            {
-                plane.normal[0] < 0 ? bounds.boxMax->data[0] : bounds.boxMin->data[0],
-                plane.normal[1] < 0 ? bounds.boxMax->data[1] : bounds.boxMin->data[1],
-                plane.normal[2] < 0 ? bounds.boxMax->data[2] : bounds.boxMin->data[2],
-            };
-        }
 
         // Ray is just a Sphere with a sphereRadius of 0, and a box offset of 0.
         // A sphere has a box offset of 0 as well.
@@ -289,7 +279,7 @@ TraceResult CheckNode(
 
     const Vec3& start,
     const Vec3& end,
-    const Vec3* extents,
+    const Vec3& extents,
     const TraceBounds& boundsAabb,
 
     TraceResult result,
@@ -331,13 +321,11 @@ TraceResult CheckNode(
     const auto& bounds = boundsAabb.bounds;
     float offset = bounds.sphereRadius;
 
-    if (bounds.boxMin && bounds.boxMax)
-    {
-        offset +=
-            std::abs(extents->data[0] * plane.normal[0]) +
-            std::abs(extents->data[1] * plane.normal[1]) +
-            std::abs(extents->data[2] * plane.normal[2]);
-    }
+    // extents are zero for ray or sphere tests.
+    offset +=
+        std::abs(extents.data[0] * plane.normal[0]) +
+        std::abs(extents.data[1] * plane.normal[1]) +
+        std::abs(extents.data[2] * plane.normal[2]);
 
     if (startDistance >= offset && endDistance >= offset)
     {
@@ -447,55 +435,41 @@ TraceResult CheckNode(
 // /////////////////////
 TraceResult Trace(
         const Bsp::CollisionBsp &bsp,
-        const Bounds& bounds)
-{
+        Bounds bounds)
+{    
+    // Calculate symmetrical bounding box from extents
+    // cos that's what they do in Q3.
+    auto offset = Multiply(Add(bounds.boxMin, bounds.boxMax), 0.5f);
+    bounds.start = Add(bounds.start, offset);
+    bounds.end = Add(bounds.end, offset);
+
+    auto boundOffset0 = Subtract(bounds.boxMin, offset);
+    auto boundOffset1 = Subtract(bounds.boxMax, offset);
+
+    // Calculate the AABB for the box
+    auto aabbMin = Add(Mins(bounds.start, bounds.end), boundOffset0);
+    auto aabbMax = Add(Mins(bounds.start, bounds.end), boundOffset1);
+
+    // Then for the Sphere
+    aabbMin = Add(aabbMin, -bounds.sphereRadius);
+    aabbMin = Add(aabbMax,  bounds.sphereRadius);
+
+    Vec3 extents =
+    {
+        -bounds.boxMin.data[0] > bounds.boxMax.data[0] ?
+        -bounds.boxMin.data[0] :
+         bounds.boxMax.data[0],
+
+        -bounds.boxMin.data[1] > bounds.boxMax.data[1] ?
+        -bounds.boxMin.data[1] :
+         bounds.boxMax.data[1],
+
+        -bounds.boxMin.data[2] > bounds.boxMax.data[2] ?
+        -bounds.boxMin.data[2] :
+         bounds.boxMax.data[2],
+    };
+
     // TODO: Deal with point tests (ray with length of 0).
-    rAssert(
-                (!bounds.boxMin && !bounds.boxMax) ||
-                (bounds.boxMin && bounds.boxMax && !bounds.sphereRadius)
-           );
-
-    Vec3 extents;
-    Vec3* pExtents = nullptr;
-    Vec3 aabbMin;
-    Vec3 aabbMax;
-
-    if (bounds.boxMin && bounds.boxMax)
-    {
-        extents =
-        {
-            -bounds.boxMin->data[0] > bounds.boxMax->data[0] ?
-            -bounds.boxMin->data[0] :
-             bounds.boxMax->data[0],
-
-            -bounds.boxMin->data[1] > bounds.boxMax->data[1] ?
-            -bounds.boxMin->data[1] :
-             bounds.boxMax->data[1],
-
-            -bounds.boxMin->data[2] > bounds.boxMax->data[2] ?
-            -bounds.boxMin->data[2] :
-             bounds.boxMax->data[2],
-        };
-
-        pExtents = &extents;
-
-        // Calculate symmetrical bounding box from extents
-        // cos that's what they do in Q3.
-        auto offset = Multiply(Add(*bounds.boxMin, *bounds.boxMax), 0.5f);
-        auto boundOffset0 = Subtract(*bounds.boxMin, offset);
-        auto boundOffset1 = Subtract(*bounds.boxMax, offset);
-
-        // Adjust
-        aabbMin = Add(Mins(bounds.start, bounds.end), boundOffset0);
-        aabbMax = Add(Mins(bounds.start, bounds.end), boundOffset1);
-    }
-    else
-    {
-        aabbMin = Add(Mins(bounds.start, bounds.end), -bounds.sphereRadius);
-        aabbMax = Add(Maxs(bounds.start, bounds.end),  bounds.sphereRadius);
-    }
-
-    // TODO: Adjust the start and end vectors to take into account
     // The bounding boxes, like they do in Q3.
 
     return CheckNode(
@@ -504,7 +478,7 @@ TraceResult Trace(
                 1.0f,
                 bounds.start,
                 bounds.end,
-                pExtents,
+                extents,
                 {
                     bounds,
                     aabbMin,

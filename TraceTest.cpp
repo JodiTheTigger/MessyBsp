@@ -57,8 +57,8 @@ std::chrono::microseconds TimeBspCollision(
                 },
 
                 0.0f,
-                nullptr,
-                nullptr,
+                {0,0,0},
+                {0,0,0},
             };
 
             auto typeTest = d(e);
@@ -66,17 +66,14 @@ std::chrono::microseconds TimeBspCollision(
             if (typeTest > 333.0f)
             {
                 // Just use a player size(ish) for the box bounds.
-                bounds.boxMin = new Vec3();
-                bounds.boxMax = new Vec3();
-
-                *bounds.boxMin =
+                bounds.boxMin =
                 {
                     -20,
                     -90,
                     -20,
                 };
 
-                *bounds.boxMax =
+                bounds.boxMax =
                 {
                     20,
                     90,
