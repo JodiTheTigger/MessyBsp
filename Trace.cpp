@@ -167,6 +167,8 @@ TraceResult CheckBrush(
 
     // Start at 6 since the first 6 are AABB planes.
     // And since we're here, we obviously intersect those already.
+    // I don't know how this works, but I tested going thought
+    // all sides, and the intersection side index was always >= 6.
     for (int i = 6; i < brush.sideCount; ++i)
     {
         const auto& brushSide   = bsp.brushSides[brush.firstBrushSideIndex + i];
@@ -436,58 +438,36 @@ TraceResult CheckNode(
 TraceResult Trace(
         const Bsp::CollisionBsp &bsp,
         const Bounds &bounds)
-{    
-    // Important NOTE:
-    // I've confused myself with the way Q3 does it's traces.
-    // This has resulted in dodgy maths on my half. I need to
-    // audit all this bounding offset stuff to make sure I haven't
-    // screwed up.
+{
+    // TODO: Deal with point tests (ray with length of 0).
 
-    // TODO: Fixups: Remove makeing bounding box symetrical.
-    // Verify AABB bounds calculation
-    // Traceextents takes care of symmetry by recording the max
-    // distance from origin to each axis, keep that.
-    // calculate the AABB of the path myself:
-
-    auto aabbMin2 = Mins(bounds.start, bounds.end);
-    auto aabbMax2 = Maxs(bounds.start, bounds.end);
-    aabbMin2 = Add(aabbMin2, -bounds.sphereRadius);
-    aabbMax2 = Add(aabbMax2,  bounds.sphereRadius);
-
-    // RAM: TODO: figure out how to add box to AABB.
-
-    // Calculate symmetrical bounding box from extents
-    // cos that's what they do in Q3.
-    auto offset = Multiply(Add(bounds.boxMin, bounds.boxMax), 0.5f);
-
-    auto boundOffset0 = Subtract(bounds.boxMin, offset);
-    auto boundOffset1 = Subtract(bounds.boxMax, offset);
-
-    // Calculate the AABB for the box
-    auto aabbMin = Add(Mins(bounds.start, bounds.end), boundOffset0);
-    auto aabbMax = Add(Mins(bounds.start, bounds.end), boundOffset1);
-
-    // Then for the Sphere
-    aabbMin = Add(aabbMin, -bounds.sphereRadius);
-    aabbMin = Add(aabbMax,  bounds.sphereRadius);
-
+    // Find the maximum distance per axis from the bounds.
     Vec3 extents =
     {
-        -bounds.boxMin.data[0] > bounds.boxMax.data[0] ?
-        -bounds.boxMin.data[0] :
-         bounds.boxMax.data[0],
+        std::abs(bounds.boxMin.data[0]) > std::abs(bounds.boxMax.data[0]) ?
+        std::abs(bounds.boxMin.data[0]) :
+        std::abs(bounds.boxMax.data[0]),
 
-        -bounds.boxMin.data[1] > bounds.boxMax.data[1] ?
-        -bounds.boxMin.data[1] :
-         bounds.boxMax.data[1],
+        std::abs(bounds.boxMin.data[1]) > std::abs(bounds.boxMax.data[1]) ?
+        std::abs(bounds.boxMin.data[1]) :
+        std::abs(bounds.boxMax.data[1]),
 
-        -bounds.boxMin.data[2] > bounds.boxMax.data[2] ?
-        -bounds.boxMin.data[2] :
-         bounds.boxMax.data[2],
-    };
+        std::abs(bounds.boxMin.data[2]) > std::abs(bounds.boxMax.data[2]) ?
+        std::abs(bounds.boxMin.data[2]) :
+        std::abs(bounds.boxMax.data[2]),
+    };    
 
-    // TODO: Deal with point tests (ray with length of 0).
-    // The bounding boxes, like they do in Q3.
+    // Create an Axis Aligned Bounding Box (AABB)
+    // along the path of the trace, taking into
+    // consideration the sphere radius and the
+    // bounds extents.
+    auto aabbMin = Mins(bounds.start, bounds.end);
+    aabbMin = Add(aabbMin,-bounds.sphereRadius);
+    aabbMin = Subtract(aabbMin, extents);
+
+    auto aabbMax = Maxs(bounds.start, bounds.end);
+    aabbMax = Add(aabbMax, bounds.sphereRadius);
+    aabbMax = Add(aabbMax, extents);
 
     return CheckNode(
                 0,
