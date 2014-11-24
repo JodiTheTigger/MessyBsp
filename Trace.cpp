@@ -443,6 +443,12 @@ TraceResult Trace(
     // audit all this bounding offset stuff to make sure I haven't
     // screwed up.
 
+    // TODO: Fixups: Remove makeing bounding box symetrical.
+    // Verify AABB bounds calculation
+    // Traceextents takes care of symmetry by recording the max
+    // distance from origin to each axis, keep that.
+
+
     // Calculate symmetrical bounding box from extents
     // cos that's what they do in Q3.
     auto offset = Multiply(Add(bounds.boxMin, bounds.boxMax), 0.5f);
