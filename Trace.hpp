@@ -72,6 +72,9 @@ struct TraceResult
 // /////////////////////
 // Trace
 // /////////////////////
+// NOTE: Haven't actually numerically verified this function
+//       So you'll to assume it's wrong somehow. Guess I better
+//       write some unit tests.
 TraceResult Trace(
         const Bsp::CollisionBsp& bsp,
         const Bounds& bounds);

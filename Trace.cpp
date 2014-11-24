@@ -22,8 +22,6 @@
 // return statements).
 //
 // http://openzone.googlecode.com/git-history/f73bb8dfe8e6a16c13d39aba1c8f6537ee263d07/doc/Quake3BSP.html
-//
-// TODO: Axials speedups cm_trace.c:176, 929
 
 #include "Trace.hpp"
 #include "Bsp.hpp"
