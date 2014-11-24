@@ -437,6 +437,12 @@ TraceResult Trace(
         const Bsp::CollisionBsp &bsp,
         Bounds bounds)
 {    
+    // Important NOTE:
+    // I've confused myself with the way Q3 does it's traces.
+    // This has resulted in dodgy maths on my half. I need to
+    // audit all this bounding offset stuff to make sure I haven't
+    // screwed up.
+
     // Calculate symmetrical bounding box from extents
     // cos that's what they do in Q3.
     auto offset = Multiply(Add(bounds.boxMin, bounds.boxMax), 0.5f);
