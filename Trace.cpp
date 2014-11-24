@@ -299,14 +299,6 @@ TraceResult CheckNode(
                     (bsp.textures[brush.brush.textureIndex].contentFlags & 1)
                 )
             {
-                // RAM: DEBUG
-                {
-                    if (brush.brush.sideCount < 6)
-                    {
-                        continue;
-                    }
-                }
-
                 // Early exit if the AABB doesn't collide.
                 if  (
                         (boundsAabb.aabbMin.data[0] > brush.aabbMax[0]) ||
@@ -457,7 +449,7 @@ TraceResult Trace(
         const Bsp::CollisionBsp &bsp,
         const Bounds& bounds)
 {
-    // RAM: TODO: Deal with point tests (ray with length of 0).
+    // TODO: Deal with point tests (ray with length of 0).
     rAssert(
                 (!bounds.boxMin && !bounds.boxMax) ||
                 (bounds.boxMin && bounds.boxMax && !bounds.sphereRadius)
@@ -502,6 +494,9 @@ TraceResult Trace(
         aabbMin = Add(Mins(bounds.start, bounds.end), -bounds.sphereRadius);
         aabbMax = Add(Maxs(bounds.start, bounds.end),  bounds.sphereRadius);
     }
+
+    // TODO: Adjust the start and end vectors to take into account
+    // The bounding boxes, like they do in Q3.
 
     return CheckNode(
                 0,
