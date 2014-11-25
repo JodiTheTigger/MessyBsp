@@ -166,13 +166,11 @@ TraceResult CheckBrush(
     bool endsOut                        = false;
     const Bsp::Plane* collisionPlane    = nullptr;
 
-    // Start at 6 since the first 6 are AABB planes.
-    // And since we're here, we obviously intersect those already.
-    // I don't know how this works, but I tested going thought
-    // all sides, and the intersection side index was always >= 6.
-    // RAM: TODO: The Q3 code doesn't actually do this. Are you sure
-    // this works? cm_trace.c:482
-    for (int i = 6; i < brush.sideCount; ++i)
+    // NOTE: In Q3 CM_TestBoundingBoxInCapsule
+    // Seems to skip the first 6 sides of a brush
+    // due to some sort of AABB thing. Find out why
+    // they could do that.
+    for (int i = 0; i < brush.sideCount; ++i)
     {
         const auto& brushSide   = bsp.brushSides[brush.firstBrushSideIndex + i];
         const auto& plane       = bsp.planes[brushSide.planeIndex];
@@ -308,8 +306,7 @@ TraceResult CheckNode(
             const auto& brush =
                     bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex];
 
-            // Don't even bother if there are no brush sides
-            // RAM: TODO: Investigate if brushes have < 6 sides but more than 0.
+            // Don't even bother if there are no brush sides.
             if (brush.brush.sideCount <= 0)
             {
                 continue;
@@ -317,7 +314,7 @@ TraceResult CheckNode(
 
             // Only test solid brushes
             // 1 == CONTENTS_SOLID
-            if (bsp.textures[brush.brush.textureIndex].contentFlags & 1)
+            if (!(bsp.textures[brush.brush.textureIndex].contentFlags & 1))
             {
                 continue;
             }
