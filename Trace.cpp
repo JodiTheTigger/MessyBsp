@@ -287,6 +287,12 @@ TraceResult CheckNode(
     TraceResult result,
     const Bsp::CollisionBsp& bsp)
 {
+    if (result.pathFraction <= startFraction)
+    {
+        // already hit something nearer
+        return result;
+    }
+
     if (nodeIndex < 0)
     {
         // this is a leaf
