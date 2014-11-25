@@ -113,7 +113,7 @@ Vec3 inline Maxs(const Vec3&a, const Vec3&b)
     };
 }
 
-float inline DotProduct(const Vec3& a, const float* b)
+float inline DotProduct(const Vec3& a, const float(& b)[3])
 {
     return  (a.data[0] * b[0]) +
             (a.data[1] * b[1]) +
@@ -135,40 +135,43 @@ inline float Clamp0To1(float toClamp)
     return toClamp > 0.0f ? (toClamp < 1.0f ? toClamp : 1.0f) : 0.0f;
 }
 
+bool inline AabbDontIntersect(
+        const Vec3& mina,
+        const Vec3& maxa,
+        const float(& minb)[3],
+        const float(& maxb)[3])
+{
+    return
+        (mina.data[0] > (maxb[0] + EPSILON)) ||
+        (mina.data[1] > (maxb[1] + EPSILON)) ||
+        (mina.data[2] > (maxb[2] + EPSILON)) ||
+        (maxa.data[0] < (minb[0] - EPSILON)) ||
+        (maxa.data[1] < (minb[1] - EPSILON)) ||
+        (maxa.data[2] < (minb[2] - EPSILON));
+
+}
+
 // /////////////////////
 // Trace Functions
 // /////////////////////
 TraceResult CheckBrush(
         const Bsp::CollisionBsp& bsp,
-        const Bsp::BrushAabb& brushAabb,
-        const TraceBounds& boundsAabb,
+        const Bsp::Brush& brush,
+        const Bounds& bounds,
         const TraceResult& currentResult)
 {
-    // Early exit if the AABB doesn't collide.
-    if  (
-            (boundsAabb.aabbMin.data[0] > brushAabb.aabbMax[0]) ||
-            (boundsAabb.aabbMin.data[1] > brushAabb.aabbMax[1]) ||
-            (boundsAabb.aabbMin.data[2] > brushAabb.aabbMax[2]) ||
-            (boundsAabb.aabbMax.data[0] < brushAabb.aabbMin[0]) ||
-            (boundsAabb.aabbMax.data[1] < brushAabb.aabbMin[1]) ||
-            (boundsAabb.aabbMax.data[2] < brushAabb.aabbMin[2])
-        )
-    {
-        return currentResult;
-    }
-
     float startFraction                 = -1.0f;
     float endFraction                   = 1.0f;
     bool startsOut                      = false;
     bool endsOut                        = false;
     const Bsp::Plane* collisionPlane    = nullptr;
-    const auto& bounds                  = boundsAabb.bounds;
-    const auto& brush                   = brushAabb.brush;
 
     // Start at 6 since the first 6 are AABB planes.
     // And since we're here, we obviously intersect those already.
     // I don't know how this works, but I tested going thought
     // all sides, and the intersection side index was always >= 6.
+    // RAM: TODO: The Q3 code doesn't actually do this. Are you sure
+    // this works? cm_trace.c:482
     for (int i = 6; i < brush.sideCount; ++i)
     {
         const auto& brushSide   = bsp.brushSides[brush.firstBrushSideIndex + i];
@@ -203,6 +206,8 @@ TraceResult CheckBrush(
         }
 
         // make sure the trace isn't completely on one side of the brush
+        // NOTE: Q3 does an episilone compare here. Dunno if we need to.
+        // if (d1 > 0 && ( d2 >= SURFACE_CLIP_EPSILON || d2 >= d1 )  )
         if (startDistance > 0 && endDistance > 0)
         {
             // both are in front of the plane, its outside of this brush
@@ -303,15 +308,31 @@ TraceResult CheckNode(
             const auto& brush =
                     bsp.brushes[bsp.leafBrushes[leaf.firstLeafBrushIndex + i].brushIndex];
 
-            // 1 == CONTENTS_SOLID
-            // The brush needs at least 6 sides (first 6 are AABB planes).
-            if  (
-                    (brush.brush.sideCount >= 6) &&
-                    (bsp.textures[brush.brush.textureIndex].contentFlags & 1)
-                )
-            {                
-                result = CheckBrush(bsp, brush, boundsAabb, result);
+            // Don't even bother if there are no brush sides
+            // RAM: TODO: Investigate if brushes have < 6 sides but more than 0.
+            if (brush.brush.sideCount <= 0)
+            {
+                continue;
             }
+
+            // Only test solid brushes
+            // 1 == CONTENTS_SOLID
+            if (bsp.textures[brush.brush.textureIndex].contentFlags & 1)
+            {
+                continue;
+            }
+
+            // Early exit if the AABB doesn't collide.
+            if (AabbDontIntersect(
+                        boundsAabb.aabbMin,
+                        boundsAabb.aabbMax,
+                        brush.aabbMin,
+                        brush.aabbMax))
+            {
+                continue;
+            }
+
+            result = CheckBrush(bsp, brush.brush, boundsAabb.bounds, result);
         }
 
         // don't have to do anything else for leaves
