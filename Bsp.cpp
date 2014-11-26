@@ -95,7 +95,7 @@ void GetCollisionBsp(
 
             for (unsigned i = 0; i < Counts[lumpEnum]; ++i)
             {
-                vector.push_back({});
+                vector.emplace_back();
 
                 if (!fread(&vector.back(), 1, typeSize, fileHandle))
                 {
