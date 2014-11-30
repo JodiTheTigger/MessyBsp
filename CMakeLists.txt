@@ -124,6 +124,7 @@ set(
     main.cpp
     Bsp.hpp
     Bsp.cpp
+    Plane.hpp
     Trace.cpp
     Trace.hpp
     TraceTest.cpp
