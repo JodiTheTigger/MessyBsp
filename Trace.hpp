@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "Vec3.hpp"
+
 // /////////////////////
 // Forward Declarations
 // /////////////////////
@@ -24,14 +26,6 @@ namespace Bsp
     class CollisionBsp;
     class Plane;
 }
-
-// /////////////////////
-// Stucts and Enums
-// /////////////////////
-struct alignas(16) Vec3
-{
-    float data[3];
-};
 
 struct Bounds
 {
