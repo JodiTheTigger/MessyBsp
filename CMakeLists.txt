@@ -30,6 +30,7 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag("-std=c++14" HAS_CPP14)
 check_cxx_compiler_flag("-march=native" HAS_NATIVE)
 check_cxx_compiler_flag("-fno-rtti" CAN_DISABLE_RTTI)
+check_cxx_compiler_flag("-fno-exceptions" CAN_DISABLE_EXCEPTIONS)
 check_cxx_compiler_flag(-Wall HAS_WALL)
 check_cxx_compiler_flag(-W4 HAS_W4)
 check_cxx_compiler_flag(-Wextra HAS_WEXTRA)
@@ -69,6 +70,10 @@ endif()
 
 if (CAN_DISABLE_RTTI)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+endif()
+
+if (CAN_DISABLE_EXCEPTIONS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 endif()
 
 # prefer W4 over WALL for MSVC at least.
