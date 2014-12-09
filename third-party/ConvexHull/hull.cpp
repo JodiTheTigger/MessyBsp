@@ -890,7 +890,7 @@ float3 operator*( const Quaternion& q, const float3& v )
 		(2*(qxqz-qyqw))*v.x + (2*(qyqz+qxqw))*v.y + (1-2*(qx2+qy2))*v.z  );
 }
 
-float3 operator*( const float3& v, const Quaternion& q )
+float3 operator*( const float3&, const Quaternion&)
 {
 	assert(0);  // must multiply with the quat on the left
 	return float3(0.0f,0.0f,0.0f);
@@ -1687,7 +1687,7 @@ int AssertIntact(ConvexH &convex) {
 			inext = estart;
 		}
         assert(convex.edges[inext].p == convex.edges[i].p);
-        HalfEdge &edge = convex.edges[i];
+
 		int nb = convex.edges[i].ea;
 		assert(nb!=255);
 		if(nb==255 || nb==-1) return 0;
@@ -1814,10 +1814,10 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 	int i;
 	int vertcountunder=0;
     int vertcountover =0;
-    int edgecountunder=0;
-    int edgecountover =0;
-    int planecountunder=0;
-    int planecountover =0;
+
+
+
+
 	static Array<int> vertscoplanar;  // existing vertex members of convex that are coplanar
 	vertscoplanar.count=0;
 	static Array<int> edgesplit;  // existing edges that members of convex that cross the splitplane
@@ -1826,8 +1826,8 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 	assert(convex.edges.count<480);
 
 	EdgeFlag  edgeflag[512];
-	VertFlag  vertflag[256];
-	PlaneFlag planeflag[128];
+    VertFlag  vertflag[256];
+
 	HalfEdge  tmpunderedges[512];
 	Plane	  tmpunderplanes[128];
 	Coplanar coplanaredges[512];
@@ -1862,8 +1862,8 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 		int enextface;
 		int planeside = 0;
         int e1 = e0+1;
-        int eus=-1;
-        int ecop=-1;
+
+
 		int vout=-1;
 		int vin =-1;
 		int coplanaredge = -1;
@@ -2048,13 +2048,13 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 
 		} while(e0!=estart) ;
 		e0 = enextface;
-		if(planeside&UNDER) {
-			planeflag[currentplane].undermap = underplanescount;
+        if(planeside&UNDER) {
+
 			tmpunderplanes[underplanescount] = convex.facets[currentplane];
 			underplanescount++;
 		}
-		else {
-			planeflag[currentplane].undermap = 0;
+        else {
+
 		}
 		if(vout>=0 && (planeside&UNDER)) {
 			assert(vin>=0);
@@ -2475,14 +2475,14 @@ int calchullgen(float3 *verts,int verts_count, int vlimit)
 	Tri *te;
 	vlimit-=4;
 	while(vlimit >0 && (te=extrudable(epsilon)))
-	{
-		int3 ti=*te;
+    {
+
 		int v=te->vmax;
 		assert(!isextreme[v]);  // wtf we've already done this vertex
 		isextreme[v]=1;
 		//if(v==p0 || v==p1 || v==p2 || v==p3) continue; // done these already
-		j=tris.count;
-		int newstart=j;
+        j=tris.count;
+
 		while(j--) {
 			if(!tris[j]) continue;
 			int3 t=*tris[j];
@@ -2581,15 +2581,15 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
 			 float3 *&verts_out, int &verts_count_out,  int *&faces_out, int &faces_count_out ,float inflate)
 {
 	int i,j;
-	if(verts_count <4) return NULL;
+    if(verts_count <4) return 0;
 	maxplanes = Min(maxplanes,planes_count);
 	float3 bmin(verts[0]),bmax(verts[0]);
 	for(i=0;i<verts_count;i++) 
 	{
 		bmin = VectorMin(bmin,verts[i]);
 		bmax = VectorMax(bmax,verts[i]);
-	}
-	float diameter = magnitude(bmax-bmin);
+    }
+
 //	inflate *=diameter;   // RELATIVE INFLATION
 	bmin -= float3(inflate,inflate,inflate);
 	bmax += float3(inflate,inflate,inflate);
@@ -2921,7 +2921,7 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 
 	#define EPSILON 0.000001f // close enough to consider two floating point numbers to be 'the same'.
 
-	bool ret = false;
+
 
 	vcount = 0;
 
@@ -3176,7 +3176,7 @@ void HullLibrary::BringOutYourDead(const float *verts,unsigned int vcount, float
 	{
 		unsigned int v = indices[i]; // original array index
 
-		assert( v >= 0 && v < vcount );
+        assert( v < vcount );
 
 		if ( used[v] ) // if already remapped
 		{
@@ -3193,7 +3193,7 @@ void HullLibrary::BringOutYourDead(const float *verts,unsigned int vcount, float
 
 			ocount++; // increment output vert count
 
-			assert( ocount >=0 && ocount <= vcount );
+            assert( ocount <= vcount );
 
 			used[v] = ocount; // assign new index remapping
 		}
