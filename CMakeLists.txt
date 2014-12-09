@@ -129,6 +129,8 @@ set(
     main.cpp
     Bsp.hpp
     Bsp.cpp
+    BspBrushToMesh.cpp
+    BspBrushToMesh.hpp
     Plane.hpp
     Trace.cpp
     Trace.hpp
