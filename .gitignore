@@ -3,3 +3,5 @@ b/
 *.user
 final_debug.txt
 callgrind.out*
+*.obj
+*.o
