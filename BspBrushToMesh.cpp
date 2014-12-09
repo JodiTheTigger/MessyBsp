@@ -17,7 +17,112 @@
 #include "BspBrushToMesh.hpp"
 #include "Bsp.hpp"
 
+#include <cmath> // abs
+
 namespace Bsp {
+
+Vec3 inline Cross(const float(& a)[3], const float(& b)[3])
+{
+    return
+    {
+        (a[1] * b[2]) - (a[2] * b[1]),
+        (a[2] * b[0]) - (a[0] * b[2]),
+        (a[0] * b[1]) - (a[1] * b[0]),
+    };
+}
+
+float inline DotProduct(const Vec3 &a)
+{
+    return
+        a.data[0] * a.data[0] +
+        a.data[1] * a.data[1] +
+        a.data[2] * a.data[2];
+}
+
+
+Vec3 inline Multiply(const Vec3& a, const float(& b)[3])
+{
+    return
+    {
+        a.data[0] * b[0],
+        a.data[1] * b[1],
+        a.data[2] * b[2],
+    };
+}
+
+std::vector<Vec3> VerticiesFromIntersectingPlanes(
+        const std::vector<Plane> planes)
+{
+    const auto planeCount = planes.size();
+    std::vector<Vec3> result;
+
+    // Ugh, brute force.
+    for (unsigned i = 0; i < planeCount; ++i)
+    {
+        const auto& n1 = planes[i];
+
+        for (unsigned j = i; j < planeCount; ++j)
+        {
+            const auto& n2 = planes[j];
+
+            for (unsigned k = j; k < planeCount; ++k)
+            {
+                const auto& n3 = planes[k];
+
+                auto n2n3 = Cross(n2.normal, n3.normal);
+                auto n3n1 = Cross(n3.normal, n1.normal);
+                auto n1n2 = Cross(n1.normal, n2.normal);
+
+                // Don't bother if the lengths are too small.
+                if  (
+                        ( DotProduct(n2n3) < 0.0001f) ||
+                        ( DotProduct(n3n1) < 0.0001f) ||
+                        ( DotProduct(n1n2) < 0.0001f)
+                    )
+                {
+                    continue;
+                }
+
+                // From bullet physics:
+
+                // point P out of 3 plane equations:
+                // (. == Dot(), * = Cross())
+
+                //	     d1(N2 * N3) + d2(N3 * N1) + d3(N1 * N2)
+                //  P =  ---------------------------------------
+                //       N1 . (N2 * N3)
+
+                auto quotient = DotProduct(n2n3, n1.normal);
+
+                if (std::abs(quotient) <= 0.000001f)
+                {
+                    continue;
+                }
+
+                // Bullet makes the quotent -ve, dunno why (yet).
+                quotient = 1.0f / quotient;
+
+                auto d1n2n3 = Multiply(n2n3, n1.normal);
+                auto d2n3n1 = Multiply(n3n1, n2.normal);
+                auto d3n1n2 = Multiply(n1n2, n3.normal);
+
+                auto point = Add(d2n3n1, d3n1n2);
+                point = Add(point, d1n2n3);
+                point = Multiply(point, quotient);
+
+                // RAM: TODO
+//                if (!PointInPlane(planes, point, 0.01f))
+//                {
+//                    continue;
+//                }
+
+                result.push_back(point);
+            }
+        }
+    }
+
+    return result;
+}
 
 std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
 {
@@ -68,9 +173,8 @@ std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
             if (!planes.empty())
             {
                 // Get verticies from plane equations.
-
-                // TODO: Move this function into it's own file.
-                // plane equations to verticies function.
+                // Get hull from verticies
+                // Get triangle mesh from hull.
             }
         }
     }
