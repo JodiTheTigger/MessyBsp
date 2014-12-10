@@ -17,105 +17,119 @@
 #pragma once
 
 #include "Geometry.hpp"
+#include <cmath>
 
 // ///////////////////
-// Simple Maths
+// Operators
 // ///////////////////
-inline Vector4& operator+=(Vector4& lhs, const Vector4& rhs)
+inline Vec4& operator+=(Vec4& lhs, const Vec4& rhs)
 {
-    lhs.values[0] += rhs.values[0];
-    lhs.values[1] += rhs.values[1];
-    lhs.values[2] += rhs.values[2];
-    lhs.values[3] += rhs.values[3];
+    lhs.data[0] += rhs.data[0];
+    lhs.data[1] += rhs.data[1];
+    lhs.data[2] += rhs.data[2];
+    lhs.data[3] += rhs.data[3];
     return lhs;
 }
 
-inline Vector4& operator-=(Vector4& lhs, const Vector4& rhs)
+inline Vec4& operator-=(Vec4& lhs, const Vec4& rhs)
 {
-    lhs.values[0] -= rhs.values[0];
-    lhs.values[1] -= rhs.values[1];
-    lhs.values[2] -= rhs.values[2];
-    lhs.values[3] -= rhs.values[3];
+    lhs.data[0] -= rhs.data[0];
+    lhs.data[1] -= rhs.data[1];
+    lhs.data[2] -= rhs.data[2];
+    lhs.data[3] -= rhs.data[3];
     return lhs;
 }
 
-inline Vector4& operator*=(Vector4& lhs, const Vector4& rhs)
+inline Vec4& operator*=(Vec4& lhs, const Vec4& rhs)
 {
-    lhs.values[0] *= rhs.values[0];
-    lhs.values[1] *= rhs.values[1];
-    lhs.values[2] *= rhs.values[2];
-    lhs.values[3] *= rhs.values[3];
+    lhs.data[0] *= rhs.data[0];
+    lhs.data[1] *= rhs.data[1];
+    lhs.data[2] *= rhs.data[2];
+    lhs.data[3] *= rhs.data[3];
     return lhs;
 }
 
-inline Vector4& operator/=(Vector4& lhs, const Vector4& rhs)
+inline Vec4& operator/=(Vec4& lhs, const Vec4& rhs)
 {
-    lhs.values[0] /= rhs.values[0];
-    lhs.values[1] /= rhs.values[1];
-    lhs.values[2] /= rhs.values[2];
-    lhs.values[3] /= rhs.values[3];
+    lhs.data[0] /= rhs.data[0];
+    lhs.data[1] /= rhs.data[1];
+    lhs.data[2] /= rhs.data[2];
+    lhs.data[3] /= rhs.data[3];
     return lhs;
 }
 
-inline constexpr Vector4 operator-(const Vector4& lhs)
+inline constexpr Vec4 operator-(const Vec4& lhs)
 {
-    return Vector4
+    return Vec4
     {
-        -lhs.values[0],
-        -lhs.values[1],
-        -lhs.values[2],
-        -lhs.values[3],
+        -lhs.data[0],
+        -lhs.data[1],
+        -lhs.data[2],
+        -lhs.data[3],
     };
 }
 
-inline Vector4 operator+(Vector4 lhs, const Vector4& rhs){ lhs += rhs;  return lhs; }
-inline Vector4 operator-(Vector4 lhs, const Vector4& rhs){ lhs -= rhs;  return lhs; }
-inline Vector4 operator*(Vector4 lhs, const Vector4& rhs){ lhs *= rhs;  return lhs; }
-inline Vector4 operator/(Vector4 lhs, const Vector4& rhs){ lhs /= rhs;  return lhs; }
+inline Vec4 operator+(Vec4 lhs, const Vec4& rhs){ lhs += rhs;  return lhs; }
+inline Vec4 operator-(Vec4 lhs, const Vec4& rhs){ lhs -= rhs;  return lhs; }
+inline Vec4 operator*(Vec4 lhs, const Vec4& rhs){ lhs *= rhs;  return lhs; }
+inline Vec4 operator/(Vec4 lhs, const Vec4& rhs){ lhs /= rhs;  return lhs; }
 
-inline Vector4& operator*=(Vector4& lhs, float rhs)
+inline Vec4& operator*=(Vec4& lhs, float rhs)
 {
-    lhs.values[0] *= rhs;
-    lhs.values[1] *= rhs;
-    lhs.values[2] *= rhs;
-    lhs.values[3] *= rhs;
+    lhs.data[0] *= rhs;
+    lhs.data[1] *= rhs;
+    lhs.data[2] *= rhs;
+    lhs.data[3] *= rhs;
     return lhs;
 }
 
-inline Vector4& operator/=(Vector4& lhs, float rhs)
+inline Vec4& operator/=(Vec4& lhs, float rhs)
 {
     return lhs *= 1.0f / rhs;
 }
 
-inline Vector4 operator*(Vector4 lhs, float rhs){ lhs *= rhs;  return lhs; }
-inline Vector4 operator/(Vector4 lhs, float rhs){ lhs /= rhs;  return lhs; }
+inline Vec4 operator*(Vec4 lhs, float rhs){ lhs *= rhs;  return lhs; }
+inline Vec4 operator/(Vec4 lhs, float rhs){ lhs /= rhs;  return lhs; }
 
 // ///////////////////
-// Complicated Maths (vector return)
+// Vector Return Maths
 // ///////////////////
-inline constexpr Vector4 Sqrt(const Vector4& lhs)
+inline constexpr Vec4 Sqrt(const Vec4& lhs)
 {
-    return Vector4
+    return Vec4
     {
-        std::sqrt(lhs.values[0]),
-        std::sqrt(lhs.values[1]),
-        std::sqrt(lhs.values[2]),
-        std::sqrt(lhs.values[3])
+        std::sqrt(lhs.data[0]),
+        std::sqrt(lhs.data[1]),
+        std::sqrt(lhs.data[2]),
+        std::sqrt(lhs.data[3])
     };
 }
 
-inline constexpr Vector4 Absolute(const Vector4& lhs)
+/// If it uses the SIMD invsqrt, then it will be less precision
+/// than explicitly doing 1.0f/Sqrt(lhs)
+inline constexpr Vec4 InvSqrt(const Vec4& lhs)
 {
-    return Vector4
+    return
     {
-        std::fabs(lhs.values[0]),
-        std::fabs(lhs.values[1]),
-        std::fabs(lhs.values[2]),
-        std::fabs(lhs.values[3])
+        1.0f / std::sqrt(lhs.data[0]),
+        1.0f / std::sqrt(lhs.data[1]),
+        1.0f / std::sqrt(lhs.data[2]),
+        1.0f / std::sqrt(lhs.data[3])
     };
 }
 
-inline Vector4 Dot(const Vector4& lhs, const Vector4& rhs)
+inline constexpr Vec4 Absolute(const Vec4& lhs)
+{
+    return Vec4
+    {
+        std::fabs(lhs.data[0]),
+        std::fabs(lhs.data[1]),
+        std::fabs(lhs.data[2]),
+        std::fabs(lhs.data[3])
+    };
+}
+
+inline Vec4 Dot(const Vec4& lhs, const Vec4& rhs)
 {
     // If this compiler is too dumb to do a decent DOT4, then do this instead:
     /*
@@ -125,12 +139,12 @@ inline Vector4 Dot(const Vector4& lhs, const Vector4& rhs)
     //__m128 result = _mm_add_ps(t, _mm_shuffle_ps(t, t, _MM_SHUFFLE(1, 0, 3, 2)));
 
     auto multiply = lhs * rhs;
-    auto shuffle1 = Vector4
+    auto shuffle1 = Vec4
     {
-            multiply.values[1],
-            multiply.values[0],
-            multiply.values[3],
-            multiply.values[2],
+            multiply.data[1],
+            multiply.data[0],
+            multiply.data[3],
+            multiply.data[2],
     };
 
     // x = x + y
@@ -139,12 +153,12 @@ inline Vector4 Dot(const Vector4& lhs, const Vector4& rhs)
     // w = w + z
     auto first = multiply + shuffle1;
 
-    auto shuffle2 = Vector4
+    auto shuffle2 = Vec4
     {
-           first.values[2],
-           first.values[3],
-           first.values[0],
-           first.values[1],
+           first.data[2],
+           first.data[3],
+           first.data[0],
+           first.data[1],
     };
 
     // x = x + y + (z + w)
@@ -157,16 +171,16 @@ inline Vector4 Dot(const Vector4& lhs, const Vector4& rhs)
     // hope the compiler picks up on this pattern and recognises it as a Dot.
     auto mult = lhs * rhs;
 
-    return Vector4
+    return Vec4
     {
-        mult.values[0] + mult.values[1] + mult.values[2] + mult.values[3],
-        mult.values[0] + mult.values[1] + mult.values[2] + mult.values[3],
-        mult.values[0] + mult.values[1] + mult.values[2] + mult.values[3],
-        mult.values[0] + mult.values[1] + mult.values[2] + mult.values[3],
+        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
+        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
+        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
+        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
     };
 }
 
-// Cross product doesn't exist for Vector4, only Vector3 and Vector7.
+// Cross product doesn't exist for Vec4, only Vector3 and Vector7.
 
 inline constexpr Vec4 Square(const Vec4& lhs)
 {
@@ -202,51 +216,51 @@ inline constexpr Vec4N Normalise(const Vec4& lhs)
     return result;
 }
 
-inline constexpr Vector4 Lerp(const Vector4& lhs, const Vector4& rhs, float scale)
+inline constexpr Vec4 Lerp(const Vec4& lhs, const Vec4& rhs, float scale)
 {
-    return Vector4
+    return Vec4
     {
-        lhs.values[0] + (rhs.values[0] - lhs.values[0]) * scale,
-        lhs.values[1] + (rhs.values[1] - lhs.values[1]) * scale,
-        lhs.values[2] + (rhs.values[2] - lhs.values[2]) * scale,
-        lhs.values[3] + (rhs.values[3] - lhs.values[3]) * scale
+        lhs.data[0] + (rhs.data[0] - lhs.data[0]) * scale,
+        lhs.data[1] + (rhs.data[1] - lhs.data[1]) * scale,
+        lhs.data[2] + (rhs.data[2] - lhs.data[2]) * scale,
+        lhs.data[3] + (rhs.data[3] - lhs.data[3]) * scale
     };
 }
 
-inline constexpr Vector4 Max(const Vector4& lhs, const Vector4& rhs)
+inline constexpr Vec4 Max(const Vec4& lhs, const Vec4& rhs)
 {
-    return Vector4
+    return Vec4
     {
-        lhs.values[0] > rhs.values[0] ? lhs.values[0] : rhs.values[0],
-        lhs.values[1] > rhs.values[1] ? lhs.values[1] : rhs.values[1],
-        lhs.values[2] > rhs.values[2] ? lhs.values[2] : rhs.values[2],
-        lhs.values[3] > rhs.values[3] ? lhs.values[3] : rhs.values[3]
+        lhs.data[0] > rhs.data[0] ? lhs.data[0] : rhs.data[0],
+        lhs.data[1] > rhs.data[1] ? lhs.data[1] : rhs.data[1],
+        lhs.data[2] > rhs.data[2] ? lhs.data[2] : rhs.data[2],
+        lhs.data[3] > rhs.data[3] ? lhs.data[3] : rhs.data[3]
     };
 }
 
-inline constexpr Vector4 Min(const Vector4& lhs, const Vector4& rhs)
+inline constexpr Vec4 Min(const Vec4& lhs, const Vec4& rhs)
 {
-    return Vector4
+    return Vec4
     {
-        lhs.values[0] < rhs.values[0] ? lhs.values[0] : rhs.values[0],
-        lhs.values[1] < rhs.values[1] ? lhs.values[1] : rhs.values[1],
-        lhs.values[2] < rhs.values[2] ? lhs.values[2] : rhs.values[2],
-        lhs.values[3] < rhs.values[3] ? lhs.values[3] : rhs.values[3]
+        lhs.data[0] < rhs.data[0] ? lhs.data[0] : rhs.data[0],
+        lhs.data[1] < rhs.data[1] ? lhs.data[1] : rhs.data[1],
+        lhs.data[2] < rhs.data[2] ? lhs.data[2] : rhs.data[2],
+        lhs.data[3] < rhs.data[3] ? lhs.data[3] : rhs.data[3]
     };
 }
 
 // ///////////////////
-// Complicated Maths (single return)
+// Scalar Return Maths
 // ///////////////////
 // Avoid these as they convert from Vectors to floats which
 // apparently is a performance penalty, especially if you then
 // use the value in more vector calculations.
 // http://www.gamasutra.com/view/feature/132636/designing_fast_crossplatform_simd_.php?print=1
-inline constexpr float DotF(const Vector4& lhs, const Vector4& rhs)
+inline constexpr float DotF(const Vec4& lhs, const Vec4& rhs)
 {
     return
-            (lhs.values[0] * rhs.values[0]) +
-            (lhs.values[1] * rhs.values[1]) +
-            (lhs.values[2] * rhs.values[2]) +
-            (lhs.values[3] * rhs.values[3]);
+            (lhs.data[0] * rhs.data[0]) +
+            (lhs.data[1] * rhs.data[1]) +
+            (lhs.data[2] * rhs.data[2]) +
+            (lhs.data[3] * rhs.data[3]);
 }

@@ -17,60 +17,10 @@
 #pragma once
 
 #include "Geometry.hpp"
+#include "VectorMaths3.hpp"
 
 // ///////////////////
-// Conversions
-// ///////////////////
-constexpr inline Matrix3x3 ToMatrix3x3(
-        float xx, float xy, float xz,
-        float yx, float yy, float yz,
-        float zx, float zy, float zz)
-{
-    return Matrix3x3
-    {{{
-        {xx, xy, xz},
-        {yx, yy, yz},
-        {zx, zy, zz}
-    }}};
-}
-
-// RAM: Is there a cleaner way of doing unit conversions?
-inline Matrix3x3 ToMatrix3x3(const Quaternion& rotation)
-{
-    auto xx      = rotation.values[0] * rotation.values[0];
-    auto xy      = rotation.values[0] * rotation.values[1];
-    auto xz      = rotation.values[0] * rotation.values[2];
-    auto xw      = rotation.values[0] * rotation.values[3];
-
-    auto yy      = rotation.values[1] * rotation.values[1];
-    auto yz      = rotation.values[1] * rotation.values[2];
-    auto yw      = rotation.values[1] * rotation.values[3];
-
-    auto zz      = rotation.values[2] * rotation.values[2];
-    auto zw      = rotation.values[2] * rotation.values[3];
-
-    return Matrix3x3
-    {{{
-        {
-            1.0f - 2.0f * ( yy + zz ),
-                   2.0f * ( xy - zw ),
-                   2.0f * ( xz + yw )
-        },
-        {
-                    2.0f * ( xy + zw ),
-             1.0f - 2.0f * ( xx + zz ),
-                    2.0f * ( yz - xw )
-        },
-        {
-                    2.0f * ( xz - yw ),
-                    2.0f * ( yz + xw ),
-             1.0f - 2.0f * ( xx + yy )
-        }
-    }}};
-}
-
-// ///////////////////
-// Simple Maths
+// Operators
 // ///////////////////
 inline Matrix3x3& operator+=(Matrix3x3& lhs, const Matrix3x3& rhs)
 {
@@ -114,7 +64,7 @@ inline Matrix3x3& operator*=(Matrix3x3& lhs, const Matrix3x3& rhs)
 
 inline constexpr Matrix3x3 operator-(const Matrix3x3& lhs)
 {
-    return Matrix3x3
+    return
     {
         -lhs.values[0],
         -lhs.values[1],
@@ -127,11 +77,48 @@ inline Matrix3x3 operator-(Matrix3x3 lhs, const Matrix3x3& rhs){ lhs -= rhs;  re
 inline Matrix3x3 operator*(Matrix3x3 lhs, const Matrix3x3& rhs){ lhs *= rhs;  return lhs; }
 
 // ///////////////////
-// Vector and Matrix maths.
+// Conversions
+// ///////////////////
+inline Matrix3x3 ToMatrix3x3(const Quaternion& rotation)
+{
+    auto xx      = rotation.values[0] * rotation.values[0];
+    auto xy      = rotation.values[0] * rotation.values[1];
+    auto xz      = rotation.values[0] * rotation.values[2];
+    auto xw      = rotation.values[0] * rotation.values[3];
+
+    auto yy      = rotation.values[1] * rotation.values[1];
+    auto yz      = rotation.values[1] * rotation.values[2];
+    auto yw      = rotation.values[1] * rotation.values[3];
+
+    auto zz      = rotation.values[2] * rotation.values[2];
+    auto zw      = rotation.values[2] * rotation.values[3];
+
+    return Matrix3x3
+    {{{
+        {
+            1.0f - 2.0f * ( yy + zz ),
+                   2.0f * ( xy - zw ),
+                   2.0f * ( xz + yw )
+        },
+        {
+                    2.0f * ( xy + zw ),
+             1.0f - 2.0f * ( xx + zz ),
+                    2.0f * ( yz - xw )
+        },
+        {
+                    2.0f * ( xz - yw ),
+                    2.0f * ( yz + xw ),
+             1.0f - 2.0f * ( xx + yy )
+        }
+    }}};
+}
+
+// ///////////////////
+// Vector Maths.
 // ///////////////////
 inline Vec3 operator*(const Matrix3x3& lhs, const Vec3& rhs)
 {
-    return Vec3
+    return
     {
             DotF(lhs.values[0], rhs),
             DotF(lhs.values[1], rhs),
@@ -141,7 +128,7 @@ inline Vec3 operator*(const Matrix3x3& lhs, const Vec3& rhs)
 
 inline Vec3 operator*(const Vec3& lhs, const Matrix3x3& rhs)
 {
-    return Vec3
+    return
     {
             rhs.values[0].values[0] * lhs.values[0] + rhs.values[1].values[0] * lhs.values[1] + rhs.values[2].values[0] * lhs.values[2],
             rhs.values[0].values[1] * lhs.values[0] + rhs.values[1].values[1] * lhs.values[1] + rhs.values[2].values[1] * lhs.values[2],

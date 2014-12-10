@@ -20,7 +20,7 @@
 #include <cmath>
 
 // ///////////////////
-// Simple Maths
+// Operators
 // ///////////////////
 inline Vec3& operator+=(Vec3& lhs, const Vec3& rhs)
 {
@@ -86,7 +86,7 @@ inline Vec3 operator*(Vec3 lhs, float rhs){ lhs *= rhs;  return lhs; }
 inline Vec3 operator/(Vec3 lhs, float rhs){ lhs /= rhs;  return lhs; }
 
 // ///////////////////
-// Complicated Maths (vector return)
+// Vector Return Maths
 // ///////////////////
 inline constexpr Vec3 Sqrt(const Vec3& lhs)
 {
@@ -95,6 +95,18 @@ inline constexpr Vec3 Sqrt(const Vec3& lhs)
         std::sqrt(lhs.data[0]),
         std::sqrt(lhs.data[1]),
         std::sqrt(lhs.data[2])
+    };
+}
+
+/// If it uses the SIMD invsqrt, then it will be less precision
+/// than explicitly doing 1.0f/Sqrt(lhs)
+inline constexpr Vec3 InvSqrt(const Vec3& lhs)
+{
+    return
+    {
+        1.0f / std::sqrt(lhs.data[0]),
+        1.0f / std::sqrt(lhs.data[1]),
+        1.0f / std::sqrt(lhs.data[2])
     };
 }
 
@@ -110,7 +122,8 @@ inline constexpr Vec3 Absolute(const Vec3& lhs)
 
 inline Vec3 Dot(const Vec3& lhs, const Vec3& rhs)
 {
-    // If this compiler is too dumb to do a decent DOT4, then use the Vector4 version instead.
+    // If this compiler is too dumb to do a decent DOT4,
+    // then use the Vector4 version instead.
     auto mult = lhs * rhs;
 
     return
@@ -131,6 +144,8 @@ inline constexpr Vec3 Cross(const Vec3& lhs, const Vec3& rhs)
     };
 }
 
+/// Returns the area of the square formed with one corner
+/// at origin and the other at the point lhs.
 inline constexpr Vec3 Square(const Vec3& lhs)
 {
     return Dot(lhs, lhs);
@@ -207,7 +222,7 @@ inline constexpr Vec3 Min(const Vec3& lhs, const Vec3& rhs)
 }
 
 // ///////////////////
-// Complicated Maths (single return)
+// Scalar Return Maths
 // ///////////////////
 inline constexpr float DotF(const Vec3& lhs, const Vec3& rhs)
 {
