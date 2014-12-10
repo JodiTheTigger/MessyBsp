@@ -138,7 +138,6 @@ set(
     TraceTest.hpp
     rAssert.hpp
     rAssert.cpp
-    Vec3.hpp
     Geometry.hpp
     Matrix3x3Maths.hpp
     PlaneMaths.hpp
