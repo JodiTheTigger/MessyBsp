@@ -107,6 +107,13 @@ float inline DotProduct(const Vec3& a, const Vec3& b)
             (a.data[2] * b.data[2]);
 }
 
+float inline Square(const Vec3& a)
+{
+    return  (a.data[0] * b.data[0]) +
+            (a.data[1] * b.data[1]) +
+            (a.data[2] * b.data[2]);
+}
+
 Vec3 inline Lerp(const Vec3& start, const Vec3& end, float fraction)
 {
     return
