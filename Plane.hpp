@@ -33,7 +33,10 @@ struct alignas(16) Plane
 // Helpers
 // /////////////////////
 // RAM: TODO: Rename this, it not describing what it does.
-bool inline PointInPlane(const std::vector<Plane>& planes, const Vec3& point, float epislon = 0.0f)
+bool inline PointInPlane(
+        const std::vector<Plane>& planes,
+        const Vec3& point,
+        float epislon = 0.0f)
 {
     for (const auto& plane : planes)
     {
@@ -47,4 +50,6 @@ bool inline PointInPlane(const std::vector<Plane>& planes, const Vec3& point, fl
             return false;
         }
     }
+
+    return true;
 }
