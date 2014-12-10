@@ -50,6 +50,34 @@ Vec3 inline Multiply(const Vec3& a, const float(& b)[3])
     };
 }
 
+float inline DotProduct(const float* a, const float* b)
+{
+    return  (a[0] * b[0]) +
+            (a[1] * b[1]) +
+            (a[2] * b[2]);
+}
+
+bool inline PointInPlane(
+        const std::vector<Plane>& planes,
+        const Vec3& point,
+        float epislon = 0.0f)
+{
+    for (const auto& plane : planes)
+    {
+        auto distance =
+                DotProduct(plane.normal, point) +
+                plane.distance -
+                epislon;
+
+        if (distance > 0.0f)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 std::vector<Vec3> VerticiesFromIntersectingPlanes(
         const std::vector<Plane> planes)
 {
@@ -110,11 +138,10 @@ std::vector<Vec3> VerticiesFromIntersectingPlanes(
                 point = Add(point, d1n2n3);
                 point = Multiply(point, quotient);
 
-                // RAM: TODO
-//                if (!PointInPlane(planes, point, 0.01f))
-//                {
-//                    continue;
-//                }
+                if (!PointInPlane(planes, point, 0.01f))
+                {
+                    continue;
+                }
 
                 result.push_back(point);
             }
