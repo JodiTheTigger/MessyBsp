@@ -139,6 +139,12 @@ set(
     rAssert.hpp
     rAssert.cpp
     Vec3.hpp
+    Geometry.hpp
+    Matrix3x3Maths.hpp
+    PlaneMaths.hpp
+    QuaternionMaths.hpp
+    VectorMaths3.hpp
+    VectorMaths4.hpp
     third-party/ConvexHull/hull.cpp
     third-party/ConvexHull/hull.h)
 
