@@ -16,46 +16,11 @@
 
 #include "BspBrushToMesh.hpp"
 #include "Bsp.hpp"
+#include "VectorMaths3.hpp"
 
 #include <cmath> // abs
 
 namespace Bsp {
-
-Vec3 inline Cross(const float(& a)[3], const float(& b)[3])
-{
-    return
-    {
-        (a[1] * b[2]) - (a[2] * b[1]),
-        (a[2] * b[0]) - (a[0] * b[2]),
-        (a[0] * b[1]) - (a[1] * b[0]),
-    };
-}
-
-float inline DotProduct(const Vec3 &a)
-{
-    return
-        a.data[0] * a.data[0] +
-        a.data[1] * a.data[1] +
-        a.data[2] * a.data[2];
-}
-
-
-Vec3 inline Multiply(const Vec3& a, const float(& b)[3])
-{
-    return
-    {
-        a.data[0] * b[0],
-        a.data[1] * b[1],
-        a.data[2] * b[2],
-    };
-}
-
-float inline DotProduct(const float* a, const float* b)
-{
-    return  (a[0] * b[0]) +
-            (a[1] * b[1]) +
-            (a[2] * b[2]);
-}
 
 bool inline PointInPlane(
         const std::vector<Plane>& planes,
@@ -65,7 +30,7 @@ bool inline PointInPlane(
     for (const auto& plane : planes)
     {
         auto distance =
-                DotProduct(plane.normal, point) +
+                DotF(plane.normal, point) +
                 plane.distance -
                 epislon;
 
@@ -103,9 +68,9 @@ std::vector<Vec3> VerticiesFromIntersectingPlanes(
 
                 // Don't bother if the lengths are too small.
                 if  (
-                        ( DotProduct(n2n3) < 0.0001f) ||
-                        ( DotProduct(n3n1) < 0.0001f) ||
-                        ( DotProduct(n1n2) < 0.0001f)
+                        ( SquareF(n2n3) < 0.0001f) ||
+                        ( SquareF(n3n1) < 0.0001f) ||
+                        ( SquareF(n1n2) < 0.0001f)
                     )
                 {
                     continue;
@@ -120,7 +85,7 @@ std::vector<Vec3> VerticiesFromIntersectingPlanes(
                 //  P =  ---------------------------------------
                 //       N1 . (N2 * N3)
 
-                auto quotient = DotProduct(n2n3, n1.normal);
+                auto quotient = DotF(n2n3, n1.normal);
 
                 if (std::abs(quotient) <= 0.000001f)
                 {
@@ -130,13 +95,13 @@ std::vector<Vec3> VerticiesFromIntersectingPlanes(
                 // Bullet makes the quotent -ve, dunno why (yet).
                 quotient = 1.0f / quotient;
 
-                auto d1n2n3 = Multiply(n2n3, n1.normal);
-                auto d2n3n1 = Multiply(n3n1, n2.normal);
-                auto d3n1n2 = Multiply(n1n2, n3.normal);
+                auto d1n2n3 = n2n3 * n1.normal;
+                auto d2n3n1 = n3n1 * n2.normal;
+                auto d3n1n2 = n1n2 * n3.normal;
 
-                auto point = Add(d2n3n1, d3n1n2);
-                point = Add(point, d1n2n3);
-                point = Multiply(point, quotient);
+                auto point = d2n3n1 + d3n1n2;
+                point = point + d1n2n3;
+                point = point * quotient;
 
                 if (!PointInPlane(planes, point, 0.01f))
                 {

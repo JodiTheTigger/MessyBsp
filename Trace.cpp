@@ -26,6 +26,7 @@
 #include "Trace.hpp"
 #include "Bsp.hpp"
 #include "rAssert.hpp"
+#include "VectorMaths3.hpp"
 
 // for std::abs(float)
 #include <cmath>
@@ -61,16 +62,16 @@ inline float Clamp0To1(float toClamp)
 bool inline AabbDontIntersect(
         const Vec3& mina,
         const Vec3& maxa,
-        const float(& minb)[3],
-        const float(& maxb)[3])
+        const Vec3& minb,
+        const Vec3& maxb)
 {
     return
-        (mina.data[0] > (maxb[0] + EPSILON)) ||
-        (mina.data[1] > (maxb[1] + EPSILON)) ||
-        (mina.data[2] > (maxb[2] + EPSILON)) ||
-        (maxa.data[0] < (minb[0] - EPSILON)) ||
-        (maxa.data[1] < (minb[1] - EPSILON)) ||
-        (maxa.data[2] < (minb[2] - EPSILON));
+        (mina.data[0] > (maxb.data[0] + EPSILON)) ||
+        (mina.data[1] > (maxb.data[1] + EPSILON)) ||
+        (mina.data[2] > (maxb.data[2] + EPSILON)) ||
+        (maxa.data[0] < (minb.data[0] - EPSILON)) ||
+        (maxa.data[1] < (minb.data[1] - EPSILON)) ||
+        (maxa.data[2] < (minb.data[2] - EPSILON));
 
 }
 
@@ -83,11 +84,11 @@ TraceResult CheckBrush(
         const Bounds& bounds,
         const TraceResult& currentResult)
 {
-    float startFraction                 = -1.0f;
-    float endFraction                   = 1.0f;
-    bool startsOut                      = false;
-    bool endsOut                        = false;
-    const Bsp::Plane* collisionPlane    = nullptr;
+    float startFraction         = -1.0f;
+    float endFraction           = 1.0f;
+    bool startsOut              = false;
+    bool endsOut                = false;
+    const Plane* collisionPlane = nullptr;
 
     // NOTE: In Q3 CM_TestBoundingBoxInCapsule
     // Seems to skip the first 6 sides of a brush
@@ -100,20 +101,20 @@ TraceResult CheckBrush(
 
         Vec3 offset =
         {
-            plane.normal[0] < 0 ? bounds.boxMax.data[0] : bounds.boxMin.data[0],
-            plane.normal[1] < 0 ? bounds.boxMax.data[1] : bounds.boxMin.data[1],
-            plane.normal[2] < 0 ? bounds.boxMax.data[2] : bounds.boxMin.data[2],
+            plane.normal.data[0] < 0 ? bounds.boxMax.data[0] : bounds.boxMin.data[0],
+            plane.normal.data[1] < 0 ? bounds.boxMax.data[1] : bounds.boxMin.data[1],
+            plane.normal.data[2] < 0 ? bounds.boxMax.data[2] : bounds.boxMin.data[2],
         };
 
         // Ray is just a Sphere with a sphereRadius of 0, and a box offset of 0.
         // A sphere has a box offset of 0 as well.
         // A box just has a sphereRadius, like the ray, of 0.
         float startDistance =
-                DotProduct(Add(bounds.start, offset), plane.normal) -
+                DotF(bounds.start + offset, plane.normal) -
                 (bounds.sphereRadius + plane.distance);
 
         float endDistance =
-                DotProduct(Add(bounds.end, offset), plane.normal) -
+                DotF(bounds.end + offset, plane.normal) -
                 (bounds.sphereRadius + plane.distance);
 
         if (startDistance > 0)
@@ -263,8 +264,8 @@ TraceResult CheckNode(
     const auto& node = bsp.nodes[nodeIndex];
     const auto& plane = bsp.planes[node.planeIndex];
 
-    float startDistance = DotProduct(start, plane.normal) - plane.distance;
-    float endDistance   = DotProduct(end, plane.normal) - plane.distance;
+    float startDistance = DotF(start, plane.normal) - plane.distance;
+    float endDistance   = DotF(end, plane.normal) - plane.distance;
 
     // Offset used for non-ray tests.
     const auto& bounds = boundsAabb.bounds;
@@ -272,9 +273,9 @@ TraceResult CheckNode(
 
     // extents are zero for ray or sphere tests.
     offset +=
-        std::abs(extents.data[0] * plane.normal[0]) +
-        std::abs(extents.data[1] * plane.normal[1]) +
-        std::abs(extents.data[2] * plane.normal[2]);
+        std::abs(extents.data[0] * plane.normal.data[0]) +
+        std::abs(extents.data[1] * plane.normal.data[1]) +
+        std::abs(extents.data[2] * plane.normal.data[2]);
 
     if (startDistance >= offset && endDistance >= offset)
     {
@@ -408,13 +409,13 @@ TraceResult Trace(
     // along the path of the trace, taking into
     // consideration the sphere radius and the
     // bounds extents.
-    auto aabbMin = Mins(bounds.start, bounds.end);
-    aabbMin = Add(aabbMin,-bounds.sphereRadius);
-    aabbMin = Subtract(aabbMin, extents);
+    auto aabbMin = Min(bounds.start, bounds.end);
+    aabbMin = aabbMin + -bounds.sphereRadius;
+    aabbMin = aabbMin - extents;
 
-    auto aabbMax = Maxs(bounds.start, bounds.end);
-    aabbMax = Add(aabbMax, bounds.sphereRadius);
-    aabbMax = Add(aabbMax, extents);
+    auto aabbMax = Max(bounds.start, bounds.end);
+    aabbMax = aabbMax + bounds.sphereRadius;
+    aabbMax = aabbMax + extents;
 
     return CheckNode(
                 0,

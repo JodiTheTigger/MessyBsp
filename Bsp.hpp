@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "Geometry.hpp"
+
 #include <vector>
 #include <cstdint>
 #include <string>
@@ -76,16 +78,6 @@ struct Texture
     int32_t contentFlags;
 };
 
-/// Note that planes are paired. The pair of planes with indices i and i ^ 1
-/// are coincident planes with opposing normals.
-struct alignas(16) Plane
-{
-    float normal[3];
-
-    /// Distance from origin to plane along normal.
-    float distance;
-};
-
 struct Node
 {
     int32_t planeIndex;
@@ -124,8 +116,8 @@ struct Brush
 struct BrushAabb
 {
     Brush brush;
-    float aabbMin[3];
-    float aabbMax[3];
+    Vec3 aabbMin;
+    Vec3 aabbMax;
 };
 
 struct BrushSide
@@ -134,11 +126,13 @@ struct BrushSide
     int32_t textureIndex;
 };
 
+/// Note that planes are paired. The pair of planes with indices i and i ^ 1
+/// are coincident planes with opposing normals.
 struct CollisionBsp
 {
     Header                  header;
     std::vector<Texture>    textures;
-    std::vector<Plane>      planes;
+    std::vector<::Plane>      planes;
     std::vector<Node>       nodes;
     std::vector<Leaf>       leaves;
     std::vector<LeafBrush>  leafBrushes;

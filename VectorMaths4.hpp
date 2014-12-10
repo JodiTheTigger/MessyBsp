@@ -74,6 +74,24 @@ inline Vec4 operator-(Vec4 lhs, const Vec4& rhs){ lhs -= rhs;  return lhs; }
 inline Vec4 operator*(Vec4 lhs, const Vec4& rhs){ lhs *= rhs;  return lhs; }
 inline Vec4 operator/(Vec4 lhs, const Vec4& rhs){ lhs /= rhs;  return lhs; }
 
+inline Vec4& operator+=(Vec3& lhs, float rhs)
+{
+    lhs.data[0] += rhs;
+    lhs.data[1] += rhs;
+    lhs.data[2] += rhs;
+    lhs.data[3] += rhs;
+    return lhs;
+}
+
+inline Vec4& operator-=(Vec3& lhs, float rhs)
+{
+    lhs.data[0] -= rhs;
+    lhs.data[1] -= rhs;
+    lhs.data[2] -= rhs;
+    lhs.data[3] -= rhs;
+    return lhs;
+}
+
 inline Vec4& operator*=(Vec4& lhs, float rhs)
 {
     lhs.data[0] *= rhs;
@@ -88,6 +106,8 @@ inline Vec4& operator/=(Vec4& lhs, float rhs)
     return lhs *= 1.0f / rhs;
 }
 
+inline Vec3 operator+(Vec4 lhs, float rhs){ lhs += rhs;  return lhs; }
+inline Vec3 operator-(Vec4 lhs, float rhs){ lhs -= rhs;  return lhs; }
 inline Vec4 operator*(Vec4 lhs, float rhs){ lhs *= rhs;  return lhs; }
 inline Vec4 operator/(Vec4 lhs, float rhs){ lhs /= rhs;  return lhs; }
 
@@ -263,4 +283,11 @@ inline constexpr float DotF(const Vec4& lhs, const Vec4& rhs)
             (lhs.data[1] * rhs.data[1]) +
             (lhs.data[2] * rhs.data[2]) +
             (lhs.data[3] * rhs.data[3]);
+}
+
+/// Returns the area of the square formed with one corner
+/// at origin and the other at the point lhs.
+inline constexpr float SquareF(const Vec4& lhs)
+{
+    return DotF(lhs, lhs);
 }

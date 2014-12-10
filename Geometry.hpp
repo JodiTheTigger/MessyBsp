@@ -23,23 +23,44 @@ struct alignas(16) Vec3
 
 struct alignas(16) Vec4
 {
-    float data[3];
+    float data[4];
 };
 
 struct alignas(16) Quaternion
 {
-    float data[3];
+    float data[4];
 };
 
 /// Normalised Vector, ie Length == 1.0
 struct alignas(16) Vec3N
 {
     float data[3];
+
+    constexpr operator Vec3() const
+    {
+        return
+        {
+            data[0],
+            data[1],
+            data[2],
+        };
+    }
 };
 
 struct alignas(16) Vec4N
 {
-    float data[3];
+    float data[4];
+
+    constexpr operator Vec4() const
+    {
+        return
+        {
+            data[0],
+            data[1],
+            data[2],
+            data[3],
+        };
+    }
 };
 
 struct alignas(16) Plane
@@ -53,16 +74,9 @@ struct Radians
     float data;
 };
 
-// Gotya if using brace initilisation.
-// {x,y,z,a,b,c,d,e,f} will fail as each row
-// is actually 4 along, not 3 (for alignment/speed reasons)
-// so you'll need to remember to use a padding 0.0f, or use:
-// {Vector3{}, Vector3{}, Vector{}}
-// Or just use ToMatrix3x3(float, float, float,...).
-// RAM: TODO: Fix.
 struct alignas(16) Matrix3x3
 {
-    std::array<Vector3, 3> values;
+    Vec3 data[3];
 };
 
 

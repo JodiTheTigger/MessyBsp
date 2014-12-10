@@ -134,14 +134,14 @@ void GetCollisionBsp(
                 return bsp.planes[bsp.brushSides[index].planeIndex].distance;
             };
 
-            brushAabb.aabbMin[0] = -sideDistance(brush.firstBrushSideIndex + 0);
-            brushAabb.aabbMax[0] =  sideDistance(brush.firstBrushSideIndex + 1);
+            brushAabb.aabbMin.data[0] = -sideDistance(brush.firstBrushSideIndex + 0);
+            brushAabb.aabbMax.data[0] =  sideDistance(brush.firstBrushSideIndex + 1);
 
-            brushAabb.aabbMin[1] = -sideDistance(brush.firstBrushSideIndex + 2);
-            brushAabb.aabbMax[1] =  sideDistance(brush.firstBrushSideIndex + 3);
+            brushAabb.aabbMin.data[1] = -sideDistance(brush.firstBrushSideIndex + 2);
+            brushAabb.aabbMax.data[1] =  sideDistance(brush.firstBrushSideIndex + 3);
 
-            brushAabb.aabbMin[2] = -sideDistance(brush.firstBrushSideIndex + 4);
-            brushAabb.aabbMax[2] =  sideDistance(brush.firstBrushSideIndex + 5);
+            brushAabb.aabbMin.data[2] = -sideDistance(brush.firstBrushSideIndex + 4);
+            brushAabb.aabbMax.data[2] =  sideDistance(brush.firstBrushSideIndex + 5);
         }
 
     } while(false);

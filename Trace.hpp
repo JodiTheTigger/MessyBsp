@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "Vec3.hpp"
+#include "Geometry.hpp"
 
 // /////////////////////
 // Forward Declarations
@@ -53,7 +53,7 @@ enum class PathInfo
 
 struct TraceResult
 {
-    const Bsp::Plane* collisionPlane;
+    const Plane* collisionPlane;
 
     /// 0 - 1.0f
     /// 0 == collision straight away, 1.0 means no collision at all.
