@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 // /////////////////////
 // Stucts and Enums
 // /////////////////////
@@ -23,6 +25,10 @@ struct alignas(16) Vec3
 {
     float data[3];
 };
+
+static_assert(std::is_pod<Vec3>::value, "Vec3 is not a POD");
+static_assert(std::is_standard_layout<Vec3>::value, "Vec3 doesn't ahve standard layout");
+static_assert(std::is_trivial<Vec3>::value, "Vec3 isn't trivial");
 
 // /////////////////////
 // Helpers
