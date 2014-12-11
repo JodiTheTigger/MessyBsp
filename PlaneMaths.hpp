@@ -17,7 +17,9 @@
 #pragma once
 
 #include "Geometry.hpp"
+#include "VectorMaths3.hpp"
 
+#include <cmath>
 #include <vector>
 
 // /////////////////////
@@ -31,7 +33,7 @@ bool inline PointBehindPlanes(
     for (const auto& plane : planes)
     {
         auto distance =
-                DotF(plane.direction, point) +
+                DotF(plane.normal, point) +
                 plane.distance -
                 epislon;
 
@@ -42,4 +44,77 @@ bool inline PointBehindPlanes(
     }
 
     return true;
+}
+
+std::vector<Vec3> inline VerticiesFromIntersectingPlanes(
+        const std::vector<Plane> planes)
+{
+    const auto planeCount = planes.size();
+    std::vector<Vec3> result;
+
+    // Ugh, brute force.
+    for (unsigned i = 0; i < planeCount; ++i)
+    {
+        const auto& n1 = planes[i];
+
+        for (unsigned j = i; j < planeCount; ++j)
+        {
+            const auto& n2 = planes[j];
+
+            for (unsigned k = j; k < planeCount; ++k)
+            {
+                const auto& n3 = planes[k];
+
+                auto n2n3 = Cross(n2.normal, n3.normal);
+                auto n3n1 = Cross(n3.normal, n1.normal);
+                auto n1n2 = Cross(n1.normal, n2.normal);
+
+                // Don't bother if the lengths are too small.
+                if  (
+                        ( SquareF(n2n3) < 0.0001f) ||
+                        ( SquareF(n3n1) < 0.0001f) ||
+                        ( SquareF(n1n2) < 0.0001f)
+                    )
+                {
+                    continue;
+                }
+
+                // From bullet physics:
+
+                // point P out of 3 plane equations:
+                // (. == Dot(), * = Cross())
+
+                //	     d1(N2 * N3) + d2(N3 * N1) + d3(N1 * N2)
+                //  P =  ---------------------------------------
+                //       N1 . (N2 * N3)
+
+                auto quotient = DotF(n2n3, n1.normal);
+
+                if (std::abs(quotient) <= 0.000001f)
+                {
+                    continue;
+                }
+
+                // Bullet makes the quotent -ve, dunno why (yet).
+                quotient = 1.0f / quotient;
+
+                auto d1n2n3 = n2n3 * n1.normal;
+                auto d2n3n1 = n3n1 * n2.normal;
+                auto d3n1n2 = n1n2 * n3.normal;
+
+                auto point = d2n3n1 + d3n1n2;
+                point = point + d1n2n3;
+                point = point * quotient;
+
+                if (!PointBehindPlanes(planes, point, 0.01f))
+                {
+                    continue;
+                }
+
+                result.push_back(point);
+            }
+        }
+    }
+
+    return result;
 }
