@@ -269,6 +269,11 @@ inline constexpr Vec4 Min(const Vec4& lhs, const Vec4& rhs)
     };
 }
 
+inline constexpr Vec4 Clamp(const Vec4& lhs, float min = 0.0f, float max = 1.0f)
+{
+    return Max(Min({max}, lhs),{min});
+}
+
 // ///////////////////
 // Scalar Return Maths
 // ///////////////////
