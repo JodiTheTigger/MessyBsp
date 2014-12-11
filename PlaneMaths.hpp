@@ -17,3 +17,29 @@
 #pragma once
 
 #include "Geometry.hpp"
+
+#include <vector>
+
+// /////////////////////
+// Helpers
+// /////////////////////
+bool inline PointBehindPlanes(
+        const std::vector<Plane>& planes,
+        const Vec3& point,
+        float epislon = 0.0f)
+{
+    for (const auto& plane : planes)
+    {
+        auto distance =
+                DotF(plane.direction, point) +
+                plane.distance -
+                epislon;
+
+        if (distance > 0.0f)
+        {
+            return false;
+        }
+    }
+
+    return true;
+}

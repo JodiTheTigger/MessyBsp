@@ -131,7 +131,6 @@ set(
     Bsp.cpp
     BspBrushToMesh.cpp
     BspBrushToMesh.hpp
-    Plane.hpp
     Trace.cpp
     Trace.hpp
     TraceTest.cpp
