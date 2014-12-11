@@ -16,24 +16,14 @@
 
 #pragma once
 
-#include "Vec3.hpp"
+#include "Geometry.hpp"
 
 #include <vector>
 
 // /////////////////////
-// Stucts and Enums
-// /////////////////////
-struct alignas(16) Plane
-{
-    Vec3 direction;
-    float distance;
-};
-
-// /////////////////////
 // Helpers
 // /////////////////////
-// RAM: TODO: Rename this, it not describing what it does.
-bool inline PointInPlane(
+bool inline PointBehindPlanes(
         const std::vector<Plane>& planes,
         const Vec3& point,
         float epislon = 0.0f)
@@ -41,7 +31,7 @@ bool inline PointInPlane(
     for (const auto& plane : planes)
     {
         auto distance =
-                DotProduct(plane.direction, point) +
+                DotF(plane.direction, point) +
                 plane.distance -
                 epislon;
 
