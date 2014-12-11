@@ -1843,7 +1843,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 
 	for(int currentplane=0; currentplane<convex.facets.count; currentplane++) {
 		int estart =e0;
-		int enextface;
+        int enextface = 0;
 		int planeside = 0;
         int e1 = e0+1;
 
@@ -1988,7 +1988,11 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 					assert(tmpunderedges[nea].p==tmpunderedges[nea+1].p);
 					vin = tmpunderedges[nea+1].v;
 					assert(vin < vertcountunder);
-					assert(vin >= vertcountunderold);   // for debugging only
+
+                    if (vin < vertcountunderold)
+                    {
+                        assert(vin >= vertcountunderold);   // for debugging only
+                    }
 				}
 				if(vout!=-1) {
 					// we previously processed an edge  where we went over
@@ -2099,7 +2103,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 static int candidateplane(Plane *planes,int planes_count,ConvexH *convex,float epsilon)
 {
 	int p ;
-	REAL md;
+    REAL md = 0;
 	int i;
 	for(i=0;i<planes_count;i++)
 	{
@@ -2318,19 +2322,36 @@ void removeb2b(Tri* s,Tri*t)
 	delete t;
 }
 
-void checkit(Tri *t)
+bool checkit(Tri *t)
 {
 	int i;
-	assert(tris[t->id]==t);
+    if (tris[t->id]!=t)
+    {
+        assert(tris[t->id]==t);
+        return false;
+    }
+
 	for(i=0;i<3;i++)
 	{
 		int i1=(i+1)%3;
 		int i2=(i+2)%3;
 		int a = (*t)[i1];
 		int b = (*t)[i2];
-		assert(a!=b);
-		assert( tris[t->n[i]]->neib(b,a) == t->id);
+
+        if (a==b)
+        {
+            assert(a!=b);
+            return false;
+        }
+
+        if (tris[t->n[i]]->neib(b,a) != t->id)
+        {
+            assert( tris[t->n[i]]->neib(b,a) == t->id);
+            return false;
+        }
 	}
+
+    return true;
 }
 void extrude(Tri *t0,int v)
 {
@@ -2345,9 +2366,9 @@ void extrude(Tri *t0,int v)
 	Tri* tc = new Tri(v,t[0],t[1]);
 	tc->n = int3(t0->n[2],n+0,n+1);
 	tris[t0->n[2]]->neib(t[0],t[1]) = n+2;
-	checkit(ta);
-	checkit(tb);
-	checkit(tc);
+    assert(checkit(ta));
+    assert(checkit(tb));
+    assert(checkit(tc));
 	if(hasvert(*tris[ta->n[0]],v)) removeb2b(ta,tris[ta->n[0]]);
 	if(hasvert(*tris[tb->n[0]],v)) removeb2b(tb,tris[tb->n[0]]);
 	if(hasvert(*tris[tc->n[0]],v)) removeb2b(tc,tris[tc->n[0]]);
@@ -2580,11 +2601,11 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
 	// todo: add bounding cube planes to force bevel. or try instead not adding the diameter expansion ??? must think.
 	// ConvexH *convex = ConvexHMakeCube(bmin - float3(diameter,diameter,diameter),bmax+float3(diameter,diameter,diameter));
 	ConvexH *c = ConvexHMakeCube(REAL3(bmin),REAL3(bmax)); 
-	int k;
-	while(maxplanes-- && (k=candidateplane(planes,planes_count,c,epsilon))>=0)
-	{
+    int k = 0;
+    while(maxplanes-- && (k=candidateplane(planes,planes_count,c,epsilon))>=0)
+    {
 		ConvexH *tmp = c;
-		c = ConvexHCrop(*tmp,planes[k]);
+        c = ConvexHCrop(*tmp,planes[k]);
 		if(c==NULL) {c=tmp; break;} // might want to debug this case better!!!
 		if(!AssertIntact(*c)) {c=tmp; break;} // might want to debug this case better too!!!
 		delete tmp;
@@ -2593,10 +2614,10 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
 	assert(AssertIntact(*c));
 	//return c;
 	faces_out = (int*)malloc(sizeof(int)*(1+c->facets.count+c->edges.count));     // new int[1+c->facets.count+c->edges.count];
-	faces_count_out=0;
+    faces_count_out=0;
 	i=0;
 	faces_out[faces_count_out++]=-1;
-	k=0;
+    k=0;
 	while(i<c->edges.count)
 	{
 		j=1;
@@ -2607,10 +2628,10 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
 			faces_out[faces_count_out++] = c->edges[i].v;
 			i++;
 		}
-		k++;
+        k++;
 	}
-	faces_out[0]=k; // number of faces.
-	assert(k==c->facets.count);
+    faces_out[0]=k; // number of faces.
+    assert(k==c->facets.count);
 	assert(faces_count_out == 1+c->facets.count+c->edges.count);
 	verts_out = c->vertices.element; // new float3[c->vertices.count]; 
 	verts_count_out = c->vertices.count;
