@@ -17,15 +17,16 @@
 #pragma once
 
 #include <vector>
+#include <stdint.h>
 
 namespace Bsp {
 
 class CollisionBsp;
 
-// TODO:
 struct Mesh
 {
-
+    std::vector<float> verticies;
+    std::vector<uint16_t> indicies;
 };
 
 std::vector<Mesh> GetBrushMeshes(CollisionBsp& bsp);

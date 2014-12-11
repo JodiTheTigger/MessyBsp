@@ -73,20 +73,26 @@ std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
                 auto verts =
                         VerticiesFromIntersectingPlanes(planes);
 
-                HullResult  result;
+                HullResult  hResult;
                 HullDesc    hullInfo
                 (
                     QF_TRIANGLES,
                     verts.size(),
                     verts[0].data,
-                    sizeof(Vec3)
+                    sizeof(Vec3) // RAM: TODO: Alignment might make this wacky.
                 );
 
-                mrHull.CreateConvexHull(hullInfo, result);
+                mrHull.CreateConvexHull(hullInfo, hResult);
 
-                // RAM: TODO: Copy into mesh.
+                // RAM: TODO: Asserts.
+                // RAM: TODO: convert indicies to 16 or 32 bit.
+                Mesh mesh;
+                mesh.verticies = std::vector<float>(hResult.mOutputVertices, hResult.mOutputVertices + hResult.mNumOutputVertices);
+                mesh.indicies = std::vector<uint16_t>(hResult.mIndices, hResult.mIndices + hResult.mNumIndices);
 
-                mrHull.ReleaseResult(result);
+                result.push_back(mesh);
+
+                mrHull.ReleaseResult(hResult);
             }
         }
     }
