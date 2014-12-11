@@ -17,12 +17,14 @@
 #include "BspBrushToMesh.hpp"
 #include "Bsp.hpp"
 #include "PlaneMaths.hpp"
+#include "third-party/ConvexHull/hull.h"
 
 namespace Bsp {
 
 std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
 {
     std::vector<Mesh> result;
+    HullLibrary mrHull;
 
     // For each brush that's solid, get all the plane equations
     // and then get all the intersection points between all the planes.
@@ -68,9 +70,23 @@ std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
 
             if (!planes.empty())
             {
-                // Get verticies from plane equations.
-                // Get hull from verticies
-                // Get triangle mesh from hull.
+                auto verts =
+                        VerticiesFromIntersectingPlanes(planes);
+
+                HullResult  result;
+                HullDesc    hullInfo
+                (
+                    QF_TRIANGLES,
+                    verts.size(),
+                    verts[0].data,
+                    sizeof(Vec3)
+                );
+
+                mrHull.CreateConvexHull(hullInfo, result);
+
+                // RAM: TODO: Copy into mesh.
+
+                mrHull.ReleaseResult(result);
             }
         }
     }
