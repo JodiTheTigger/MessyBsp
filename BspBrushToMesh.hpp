@@ -29,6 +29,6 @@ struct Mesh
     std::vector<uint16_t> indicies;
 };
 
-std::vector<Mesh> GetBrushMeshes(CollisionBsp& bsp);
+std::vector<Mesh> GetBrushMeshes(const CollisionBsp &bsp);
 
 } //namespace

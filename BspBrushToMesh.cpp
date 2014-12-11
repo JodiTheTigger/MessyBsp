@@ -21,9 +21,10 @@
 
 namespace Bsp {
 
-std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
+std::vector<Mesh> GetBrushMeshes(const CollisionBsp &bsp)
 {
     std::vector<Mesh> result;
+    std::vector<bool> flags(bsp.brushes.size());
     HullLibrary mrHull;
 
     // For each brush that's solid, get all the plane equations
@@ -39,21 +40,19 @@ std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
         {
             auto index = leafBrushes[i].brushIndex;
 
-            const auto& brush = bsp.brushes[index].brush;
-
-            // RAM: TODO: setting textureindex to -1 to prevent doing
-            // brush multiple times, figure out how to do that here.
-            if (brush.textureIndex < 0)
+            // Avoid repeating brushes.
+            if (flags[index])
             {
                 continue;
             }
+            flags[index] = true;
+
+            const auto& brush = bsp.brushes[index].brush;
 
             if (!(bsp.textures[brush.textureIndex].contentFlags & 1))
             {
                 continue;
             }
-
-            // RAM: TODO: Set brush as done.
 
             std::vector<Plane> planes;
             const auto* brushSides = &bsp.brushSides[brush.firstBrushSideIndex];
@@ -70,8 +69,13 @@ std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
 
             if (!planes.empty())
             {
+                // According to the spec, alignment can be ignored.
                 auto verts =
                         VerticiesFromIntersectingPlanes(planes);
+
+                unsigned stride = verts.size() > 1 ?
+                        verts[1].data - verts[0].data :
+                        sizeof(Vec3);
 
                 HullResult  hResult;
                 HullDesc    hullInfo
@@ -79,7 +83,7 @@ std::vector<Mesh> GetBrushMeshes(CollisionBsp &bsp)
                     QF_TRIANGLES,
                     verts.size(),
                     verts[0].data,
-                    sizeof(Vec3) // RAM: TODO: Alignment might make this wacky.
+                    stride
                 );
 
                 mrHull.CreateConvexHull(hullInfo, hResult);
