@@ -89,7 +89,7 @@ std::vector<Mesh> GetBrushMeshes(const CollisionBsp &bsp)
                 mrHull.CreateConvexHull(hullInfo, hResult);
 
                 // RAM: TODO: Asserts.
-                // RAM: TODO: convert indicies to 16 or 32 bit.
+                // RAM: TODO: check index conversion works.
                 Mesh mesh;
                 mesh.verticies = std::vector<float>(hResult.mOutputVertices, hResult.mOutputVertices + hResult.mNumOutputVertices);
                 mesh.indicies = std::vector<uint16_t>(hResult.mIndices, hResult.mIndices + hResult.mNumIndices);
