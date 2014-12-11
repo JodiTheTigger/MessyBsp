@@ -48,7 +48,11 @@
 #define SQRT_OF_2 (1.4142135f)
 #define OFFSET(Class,Member)  (((char*) (&(((Class*)NULL)-> Member )))- ((char*)NULL))
 
-
+// WTF GCC?
+// 'p' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+// c = ConvexHCrop(*tmp,planes[k]);
+//                               ^
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 int    argmin(float a[],int n);
 float  sqr(float a);
@@ -2600,32 +2604,32 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
 	planetestepsilon = magnitude(emax-emin) * PAPERWIDTH;
 	// todo: add bounding cube planes to force bevel. or try instead not adding the diameter expansion ??? must think.
 	// ConvexH *convex = ConvexHMakeCube(bmin - float3(diameter,diameter,diameter),bmax+float3(diameter,diameter,diameter));
-	ConvexH *c = ConvexHMakeCube(REAL3(bmin),REAL3(bmax)); 
+    ConvexH *c = ConvexHMakeCube(REAL3(bmin),REAL3(bmax));
     int k = 0;
     while(maxplanes-- && (k=candidateplane(planes,planes_count,c,epsilon))>=0)
     {
-		ConvexH *tmp = c;
+        ConvexH *tmp = c;
         c = ConvexHCrop(*tmp,planes[k]);
-		if(c==NULL) {c=tmp; break;} // might want to debug this case better!!!
-		if(!AssertIntact(*c)) {c=tmp; break;} // might want to debug this case better too!!!
+        if(c==NULL) {c=tmp; break;} // might want to debug this case better!!!
+        if(!AssertIntact(*c)) {c=tmp; break;} // might want to debug this case better too!!!
 		delete tmp;
 	}
 
-	assert(AssertIntact(*c));
+    assert(AssertIntact(*c));
 	//return c;
-	faces_out = (int*)malloc(sizeof(int)*(1+c->facets.count+c->edges.count));     // new int[1+c->facets.count+c->edges.count];
+    faces_out = (int*)malloc(sizeof(int)*(1+c->facets.count+c->edges.count));     // new int[1+c->facets.count+c->edges.count];
     faces_count_out=0;
 	i=0;
 	faces_out[faces_count_out++]=-1;
     k=0;
-	while(i<c->edges.count)
+    while(i<c->edges.count)
 	{
 		j=1;
-		while(j+i<c->edges.count && c->edges[i].p==c->edges[i+j].p) { j++; }
+        while(j+i<c->edges.count && c->edges[i].p==c->edges[i+j].p) { j++; }
 		faces_out[faces_count_out++]=j;
 		while(j--)
 		{
-			faces_out[faces_count_out++] = c->edges[i].v;
+            faces_out[faces_count_out++] = c->edges[i].v;
 			i++;
 		}
         k++;
@@ -2633,14 +2637,14 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
     faces_out[0]=k; // number of faces.
     assert(k==c->facets.count);
 	assert(faces_count_out == 1+c->facets.count+c->edges.count);
-	verts_out = c->vertices.element; // new float3[c->vertices.count]; 
-	verts_count_out = c->vertices.count;
-	for(i=0;i<c->vertices.count;i++)
+    verts_out = c->vertices.element; // new float3[c->vertices.count];
+    verts_count_out = c->vertices.count;
+    for(i=0;i<c->vertices.count;i++)
 	{
-		verts_out[i] = float3(c->vertices[i]);
+        verts_out[i] = float3(c->vertices[i]);
 	}
-	c->vertices.count=c->vertices.array_size=0;	c->vertices.element=NULL;
-	delete c;
+    c->vertices.count=c->vertices.array_size=0;	c->vertices.element=NULL;
+    delete c;
 	return 1;
 }
 
