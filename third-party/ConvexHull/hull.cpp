@@ -890,12 +890,6 @@ float3 operator*( const Quaternion& q, const float3& v )
 		(2*(qxqz-qyqw))*v.x + (2*(qyqz+qxqw))*v.y + (1-2*(qx2+qy2))*v.z  );
 }
 
-float3 operator*( const float3&, const Quaternion&)
-{
-	assert(0);  // must multiply with the quat on the left
-	return float3(0.0f,0.0f,0.0f);
-}
-
 Quaternion operator+( const Quaternion& a, const Quaternion& b )
 {
 	return Quaternion(a.x+b.x, a.y+b.y, a.z+b.z, a.w+b.w);
@@ -1662,12 +1656,6 @@ public:
 	short undermap;
 	short overmap;
 };
-class PlaneFlag
-{
-public:
-	unsigned char undermap;
-	unsigned char overmap;
-};
 class Coplanar{
 public:
 	unsigned short ea;
@@ -1815,9 +1803,6 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 	int vertcountunder=0;
     int vertcountover =0;
 
-
-
-
 	static Array<int> vertscoplanar;  // existing vertex members of convex that are coplanar
 	vertscoplanar.count=0;
 	static Array<int> edgesplit;  // existing edges that members of convex that cross the splitplane
@@ -1827,7 +1812,6 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 
 	EdgeFlag  edgeflag[512];
     VertFlag  vertflag[256];
-
 	HalfEdge  tmpunderedges[512];
 	Plane	  tmpunderplanes[128];
 	Coplanar coplanaredges[512];
@@ -1862,7 +1846,6 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 		int enextface;
 		int planeside = 0;
         int e1 = e0+1;
-
 
 		int vout=-1;
 		int vin =-1;
@@ -2049,13 +2032,9 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 		} while(e0!=estart) ;
 		e0 = enextface;
         if(planeside&UNDER) {
-
 			tmpunderplanes[underplanescount] = convex.facets[currentplane];
 			underplanescount++;
-		}
-        else {
-
-		}
+        }
 		if(vout>=0 && (planeside&UNDER)) {
 			assert(vin>=0);
 			assert(coplanaredge>=0);
@@ -2476,13 +2455,11 @@ int calchullgen(float3 *verts,int verts_count, int vlimit)
 	vlimit-=4;
 	while(vlimit >0 && (te=extrudable(epsilon)))
     {
-
 		int v=te->vmax;
 		assert(!isextreme[v]);  // wtf we've already done this vertex
 		isextreme[v]=1;
 		//if(v==p0 || v==p1 || v==p2 || v==p3) continue; // done these already
         j=tris.count;
-
 		while(j--) {
 			if(!tris[j]) continue;
 			int3 t=*tris[j];
@@ -2590,7 +2567,6 @@ int overhull(Plane *planes,int planes_count,float3 *verts, int verts_count,int m
 		bmax = VectorMax(bmax,verts[i]);
     }
 
-//	inflate *=diameter;   // RELATIVE INFLATION
 	bmin -= float3(inflate,inflate,inflate);
 	bmax += float3(inflate,inflate,inflate);
 	for(i=0;i<planes_count;i++)
@@ -2920,9 +2896,6 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 
 
 	#define EPSILON 0.000001f // close enough to consider two floating point numbers to be 'the same'.
-
-
-
 	vcount = 0;
 
 	float recip[3];
