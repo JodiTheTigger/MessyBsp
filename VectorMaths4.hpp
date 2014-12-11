@@ -224,6 +224,7 @@ inline constexpr Vec4N Normalise(const Vec4& lhs)
             norm.data[0],
             norm.data[1],
             norm.data[2],
+            norm.data[3],
         };
     }
 
