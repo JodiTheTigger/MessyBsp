@@ -121,6 +121,32 @@ endif()
 
 message("CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+# RAM: SDL
+INCLUDE(FindPkgConfig)
+
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
+
+# RAM: Glew
+Find_Package(GLEW REQUIRED)
+if(NOT GLEW_FOUND)
+    message( FATAL ERROR "GLEW not found!")
+endif()
+
+# RAM: openGL
+Find_Package(OpenGL REQUIRED)
+if(NOT OPENGL_FOUND)
+    message( FATAL ERROR "OPENGL not found!")
+endif()
+
+
+# :-( only finds sdl, not sdl2.
+#Find_Package(SDL 2.0 REQUIRED)
+#if(NOT SDL_FOUND)
+#    message( FATAL ERROR "SDL not found!")
+#endif()
+
 ###############
 # Source
 ###############
@@ -157,5 +183,6 @@ set(
 # Link
 ###############
 add_executable(MessyBsp ${SOURCE_LIST})
-
-
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})

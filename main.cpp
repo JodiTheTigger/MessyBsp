@@ -18,15 +18,69 @@
 #include "TraceTest.hpp"
 #include <cstdlib>
 
+#include <cstdio>
+
+// SDL + OpenGL
+#include <SDL2/SDL.h>
+
+// Need ifdef for different platforms.
+#include <GL/glew.h>
+
 int main(int, char**)
 {
     Bsp::CollisionBsp bsp;
 
     Bsp::GetCollisionBsp("final.bsp", bsp);
 
-    auto result = TimeBspCollision(bsp, 1000000);
+    auto result = TimeBspCollision(bsp, 1000);//1000000);
 
     printf("Trace Took %ld microseconds\n", result.count());
+
+    // RAM: Lets try loaind sdl and get a glcontext.
+    {
+        SDL_Init(SDL_INIT_VIDEO);
+
+        // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
+        SDL_Window *window = SDL_CreateWindow(
+            "SDL2/OpenGL Demo", 0, 0, 640, 480,
+            SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+
+        // Create an OpenGL context associated with the window.
+        SDL_GLContext glcontext = SDL_GL_CreateContext(window);
+
+        SDL_GL_MakeCurrent(window, glcontext);
+
+        // Now I can init glew.
+        {
+            glewExperimental = GL_TRUE;
+
+            GLenum err = glewInit();
+            if (GLEW_OK != err)
+            {
+                /* Problem: glewInit failed, something is seriously wrong. */
+                fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+
+            }
+            fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+        }
+
+        // now you can make GL calls.
+        glClearColor(0,1,0,1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        SDL_GL_SwapWindow(window);
+
+        // Once finished with OpenGL functions, the SDL_GLContext can be deleted.
+        SDL_GL_DeleteContext(glcontext);
+
+        SDL_Delay(3000);  // Pause execution for 3000 milliseconds, for example
+
+        // Close and destroy the window
+        SDL_DestroyWindow(window);
+
+        // Clean up
+        SDL_Quit();
+    }
+
 	
 	return 0;
 };
