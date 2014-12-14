@@ -26,20 +26,57 @@
 // Need ifdef for different platforms.
 #include <GL/glew.h>
 
+#include <getopt.h>
+
 void DoGraphics();
 
-int main(int, char**)
+static struct option long_options[] =
+{
+    { "help", optional_argument, nullptr, 'h' },
+    { "benchmark", optional_argument, nullptr, 'b' },
+    { nullptr, 0, nullptr, 0 },
+};
+
+int main(int argc, char** argv)
 {
     // Parse options
-    // http://optionparser.sourceforge.net/index.html
+    while (auto ch = getopt_long(argc, argv, "h:b:", long_options, NULL))
+    {
+        if (ch < 0)
+        {
+            break;
+        }
 
-    Bsp::CollisionBsp bsp;
+        if (ch == 'h')
+        {
+            printf("MessyBsp - By Richard Maxwell\n\n");
 
-    Bsp::GetCollisionBsp("final.bsp", bsp);
+            printf("  Renders 'final.bsp' or does a collsion detection bnechmark.\n\n");
 
-    auto result = TimeBspCollision(bsp, 1000);//1000000);
+            printf("  MessyBsp [--benchmark] [--help]\n\n");
 
-    printf("Trace Took %ld microseconds\n", result.count());
+            printf("  --benchmark:  Benchmark 1,000,000 random collision tests\n");
+            printf("                against 'final.bsp'. Prints the cost in Microseconds.\n\n");
+
+            printf("  --help     :  This help text.\n");
+            printf("\n");
+
+            return 0;
+        }
+
+        if (ch == 'b')
+        {
+            Bsp::CollisionBsp bsp;
+
+            Bsp::GetCollisionBsp("final.bsp", bsp);
+
+            auto result = TimeBspCollision(bsp, 1000);//1000000);
+
+            printf("Trace Took %ld microseconds\n", result.count());
+
+            return 0;
+        }
+    }
 
     // RAM: sdl testing.
     DoGraphics();
