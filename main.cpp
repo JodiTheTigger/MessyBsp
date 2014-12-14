@@ -30,6 +30,9 @@ void DoGraphics();
 
 int main(int, char**)
 {
+    // Parse options
+    // http://optionparser.sourceforge.net/index.html
+
     Bsp::CollisionBsp bsp;
 
     Bsp::GetCollisionBsp("final.bsp", bsp);
@@ -75,6 +78,18 @@ void DoGraphics()
         fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
     }
 
+    // TODO: Load vertex data, gen normal data
+    // TODO: player controller
+    // TODO: use opengl debug function binding
+    // TODO: breakpoint at debug error
+
+    // Loading vertex data (1 == number of buffers)
+    // http://en.wikipedia.org/wiki/Vertex_Buffer_Object
+    GLuint triangleVboHandle;
+    glGenBuffers(1, &triangleVboHandle);
+    glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);
+    //glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+
     // MAIN SDL LOOP
     bool running = true;
     while (running)
@@ -100,6 +115,12 @@ void DoGraphics()
         // now you can make GL calls.
         glClearColor(0,1,0,1);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        // glEnableVertexAttribArray
+        // glVertexAttribPointer
+        // glEnableClientState ??
+        // glDrawArrays
+
         SDL_GL_SwapWindow(window);
     }
 
