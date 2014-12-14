@@ -26,21 +26,14 @@
 // Need ifdef for different platforms.
 #include <GL/glew.h>
 
-#include <getopt.h>
+#include "third-party/getopt/getopt.h"
 
 void DoGraphics();
-
-static struct option long_options[] =
-{
-    { "help", optional_argument, nullptr, 'h' },
-    { "benchmark", optional_argument, nullptr, 'b' },
-    { nullptr, 0, nullptr, 0 },
-};
 
 int main(int argc, char** argv)
 {
     // Parse options
-    while (auto ch = getopt_long(argc, argv, "h:b:", long_options, NULL))
+    while (auto ch = getopt(argc, argv, "hb"))
     {
         if (ch < 0)
         {
@@ -55,10 +48,10 @@ int main(int argc, char** argv)
 
             printf("  MessyBsp [--benchmark] [--help]\n\n");
 
-            printf("  --benchmark:  Benchmark 1,000,000 random collision tests\n");
-            printf("                against 'final.bsp'. Prints the cost in Microseconds.\n\n");
+            printf("  -b:  Benchmark 1,000,000 random collision tests\n");
+            printf("       against 'final.bsp'. Prints the cost in Microseconds.\n\n");
 
-            printf("  --help     :  This help text.\n");
+            printf("  -h:  This help text.\n");
             printf("\n");
 
             return 0;

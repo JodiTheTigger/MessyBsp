@@ -169,6 +169,8 @@ set(
     QuaternionMaths.hpp
     VectorMaths3.hpp
     VectorMaths4.hpp
+    third-party/getopt/getopt.h
+    third-party/getopt/getopt.c
     third-party/ConvexHull/hull.cpp
     third-party/ConvexHull/hull.h)
 
