@@ -16,9 +16,7 @@
 
 #include "Bsp.hpp"
 #include "TraceTest.hpp"
-#include <cstdlib>
-
-#include <cstdio>
+#include "third-party/getopt/getopt.h"
 
 // SDL + OpenGL
 #include <SDL2/SDL.h>
@@ -26,7 +24,10 @@
 // Need ifdef for different platforms.
 #include <GL/glew.h>
 
-#include "third-party/getopt/getopt.h"
+#include <memory>
+
+#include <cstdlib>
+#include <cstdio>
 
 void DoGraphics(const Bsp::CollisionBsp& bsp);
 
@@ -118,6 +119,52 @@ std::vector<float> MakeTrianglesAndNormals()
     };
 }
 
+void PrintShaderLog(GLuint shader)
+{
+    int length = 0;
+
+    glGetShaderiv(
+        shader,
+        GL_INFO_LOG_LENGTH,
+        &length);
+
+    if (length > 0)
+    {
+        int charsWritten  = 0;
+        auto buffer = std::make_unique<char[]>(length);
+
+        glGetShaderInfoLog(
+            shader,
+            length,
+            &charsWritten,
+            buffer.get());
+        printf("%s\n",buffer.get());
+    }
+}
+
+void PrintProgramLog(GLuint program)
+{
+    int length = 0;
+
+    glGetShaderiv(
+        program,
+        GL_INFO_LOG_LENGTH,
+        &length);
+
+    if (length > 0)
+    {
+        int charsWritten  = 0;
+        auto buffer = std::make_unique<char[]>(length);
+
+        glGetProgramInfoLog(
+            program,
+            length,
+            &charsWritten,
+            buffer.get());
+        printf("%s\n",buffer.get());
+    }
+}
+
 // RAM: Lets try loaind sdl and get a glcontext.
 void DoGraphics(const Bsp::CollisionBsp &)
 {
@@ -191,44 +238,45 @@ void DoGraphics(const Bsp::CollisionBsp &)
 //                Vec4 color = Vec4(pos, 1.0)
 //            }
     const GLchar* vs = "\
-    uniform mat4 u_modelViewProjMatrix;\
-    uniform mat4 u_normalMatrix;\
+    uniform mat4 modelViewProjMatrix;\
+    uniform mat4 normalMatrix;\
     uniform vec3 lightDir;\
  \
     attribute vec3 vNormal;\
     attribute vec4 vPosition;\
  \
-    varying float v_Dot;\
+    varying float dot;\
  \
     void main()\
     {\
-        gl_Position = u_modelViewProjMatrix * vPosition;\
-        vec4 transNormal = u_normalMatrix * vec4(vNormal, 1);\
-        v_Dot = max(dot(transNormal.xyz, lightDir), 0.0);\
+        gl_Position = modelViewProjMatrix * vPosition;\
+        vec4 transNormal = normalMatrix * vec4(vNormal, 1);\
+        dot = max(dot(transNormal.xyz, lightDir), 0.0);\
     }";
 
     const GLchar* ps = "\
-    varying float v_Dot; \
+    varying float dot; \
     void main()\
     {\
         vec4 c = (0.1, 0.1, 1.0, 1.0);\
         \
-        vec2 texCoord = vec2(v_texCoord.s, 1.0 - v_texCoord.t);\
-        vec4 color = texture2D(sampler2d, texCoord);\
-        color += vec4(0.1, 0.1, 0.1, 1);\
-        gl_FragColor = c * v_Dot;\
+        gl_FragColor = c * dot;\
     }";
 
     auto vsO = glCreateShader(GL_VERTEX_SHADER);
     auto psO = glCreateShader(GL_FRAGMENT_SHADER);
     auto pO = glCreateProgram();
-    glShaderSource(vsO, 1, vs, nullptr);
-    glShaderSource(psO, 1, ps, nullptr);
+    glShaderSource(vsO, 1, &vs, nullptr);
+    glShaderSource(psO, 1, &ps, nullptr);
     glCompileShader(vsO);
     glCompileShader(psO);
+    PrintShaderLog(vsO);
+    PrintShaderLog(psO);
+
     glAttachShader(pO, vsO);
     glAttachShader(pO, psO);
     glLinkProgram(pO);
+    PrintProgramLog(pO);
 
     // MAIN SDL LOOP
     bool running = true;
