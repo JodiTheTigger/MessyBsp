@@ -28,10 +28,12 @@
 
 #include "third-party/getopt/getopt.h"
 
-void DoGraphics();
+void DoGraphics(const Bsp::CollisionBsp& bsp);
 
 int main(int argc, char** argv)
 {
+    bool benchmark = false;
+
     // Parse options
     while (auto ch = getopt(argc, argv, "hb"))
     {
@@ -59,31 +61,70 @@ int main(int argc, char** argv)
 
         if (ch == 'b')
         {
-            Bsp::CollisionBsp bsp;
-
-            Bsp::GetCollisionBsp("final.bsp", bsp);
-
-            auto result = TimeBspCollision(bsp, 1000);//1000000);
-
-            printf("Trace Took %ld microseconds\n", result.count());
-
-            return 0;
+            benchmark = true;
+            break;
         }
     }
 
+    Bsp::CollisionBsp bsp;
+
+    Bsp::GetCollisionBsp("final.bsp", bsp);
+
+    if (benchmark)
+    {
+        auto result = TimeBspCollision(bsp, 1000);//1000000);
+
+        printf("Trace Took %ld microseconds\n", result.count());
+
+        return 0;
+    }
+
     // RAM: sdl testing.
-    DoGraphics();
+    DoGraphics(bsp);
 
     return 0;
-};
+}
 
+std::vector<float> MakeTrianglesAndNormals()
+{
+    return std::vector<float>
+    {
+        // x,y,z,nx,ny,nz (RH coords, z comes out of monitor)
+        0.0f,
+        0.0f,
+        0.0f,
+
+        0.0f,
+        0.0f,
+        1.0f,
+
+
+        5.0f,
+        10.0f,
+        0.0f,
+
+        0.0f,
+        0.0f,
+        1.0f,
+
+
+        10.0f,
+        0.0f,
+        0.0f,
+
+        0.0f,
+        0.0f,
+        1.0f,
+    };
+}
 
 // RAM: Lets try loaind sdl and get a glcontext.
-void DoGraphics()
+void DoGraphics(const Bsp::CollisionBsp &)
 {
     SDL_Init(SDL_INIT_VIDEO);
 
     // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
+    // FFS. I wan't scoped_exit!
     SDL_Window *window = SDL_CreateWindow(
         "SDL2/OpenGL Demo", 0, 0, 640, 480,
         SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
@@ -118,7 +159,76 @@ void DoGraphics()
     GLuint triangleVboHandle;
     glGenBuffers(1, &triangleVboHandle);
     glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);
-    //glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+
+    auto triangles = MakeTrianglesAndNormals();
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        triangles.size(),
+        triangles.data(),
+        GL_STATIC_DRAW);
+
+    // Since I'm not changing state much, just setup here.
+    glVertexPointer(3, GL_FLOAT, 0, nullptr);
+
+    // TODO: vertex, fragment, program, bind, load
+    // try https://www.opengl.org/sdk/docs/tutorials/ClockworkCoders/loading.php
+    // http://classes.soe.ucsc.edu/cmps162/Spring12/s12/labnotes/shaders.html
+    // FFS I cannot find a simple tutorial!
+    // try https://www.khronos.org/webgl/wiki/Tutorial
+    // normals are transformed differently, ugh.
+    // http://www.songho.ca/opengl/gl_normaltransform.html
+//    Glchar* vs = "
+//            uniform mat4 mvp;
+//            attribute vec3 position;
+//            attribute vec3 normal;
+
+//            varying vec4 colour;
+//            varying vec4 normal;
+
+//            void main() {
+//                gl_Position = mvp * vec4(position, 1.0);
+
+//                Vec4 color = Vec4(pos, 1.0)
+//            }
+    const GLchar* vs = "\
+    uniform mat4 u_modelViewProjMatrix;\
+    uniform mat4 u_normalMatrix;\
+    uniform vec3 lightDir;\
+ \
+    attribute vec3 vNormal;\
+    attribute vec4 vPosition;\
+ \
+    varying float v_Dot;\
+ \
+    void main()\
+    {\
+        gl_Position = u_modelViewProjMatrix * vPosition;\
+        vec4 transNormal = u_normalMatrix * vec4(vNormal, 1);\
+        v_Dot = max(dot(transNormal.xyz, lightDir), 0.0);\
+    }";
+
+    const GLchar* ps = "\
+    varying float v_Dot; \
+    void main()\
+    {\
+        vec4 c = (0.1, 0.1, 1.0, 1.0);\
+        \
+        vec2 texCoord = vec2(v_texCoord.s, 1.0 - v_texCoord.t);\
+        vec4 color = texture2D(sampler2d, texCoord);\
+        color += vec4(0.1, 0.1, 0.1, 1);\
+        gl_FragColor = c * v_Dot;\
+    }";
+
+    auto vsO = glCreateShader(GL_VERTEX_SHADER);
+    auto psO = glCreateShader(GL_FRAGMENT_SHADER);
+    auto pO = glCreateProgram();
+    glShaderSource(vsO, 1, vs, nullptr);
+    glShaderSource(psO, 1, ps, nullptr);
+    glCompileShader(vsO);
+    glCompileShader(psO);
+    glAttachShader(pO, vsO);
+    glAttachShader(pO, psO);
+    glLinkProgram(pO);
 
     // MAIN SDL LOOP
     bool running = true;
