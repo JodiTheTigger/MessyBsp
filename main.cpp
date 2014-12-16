@@ -119,7 +119,13 @@ std::vector<float> MakeTrianglesAndNormals()
     };
 }
 
-void PrintShaderLog(GLuint shader)
+enum class Log
+{
+    Shader,
+    Program,
+};
+
+void PrintShaderLog(GLuint shader, Log type )
 {
     int length = 0;
 
@@ -133,34 +139,23 @@ void PrintShaderLog(GLuint shader)
         int charsWritten  = 0;
         auto buffer = std::make_unique<char[]>(length);
 
-        glGetShaderInfoLog(
-            shader,
-            length,
-            &charsWritten,
-            buffer.get());
-        printf("%s\n",buffer.get());
-    }
-}
+        if (type == Log::Shader)
+        {
+            glGetShaderInfoLog(
+                shader,
+                length,
+                &charsWritten,
+                buffer.get());
+        }
+        else
+        {
+           glGetProgramInfoLog(
+                shader,
+                length,
+                &charsWritten,
+                buffer.get());
+        }
 
-void PrintProgramLog(GLuint program)
-{
-    int length = 0;
-
-    glGetShaderiv(
-        program,
-        GL_INFO_LOG_LENGTH,
-        &length);
-
-    if (length > 0)
-    {
-        int charsWritten  = 0;
-        auto buffer = std::make_unique<char[]>(length);
-
-        glGetProgramInfoLog(
-            program,
-            length,
-            &charsWritten,
-            buffer.get());
         printf("%s\n",buffer.get());
     }
 }
@@ -270,13 +265,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
     glShaderSource(psO, 1, &ps, nullptr);
     glCompileShader(vsO);
     glCompileShader(psO);
-    PrintShaderLog(vsO);
-    PrintShaderLog(psO);
+    PrintShaderLog(vsO, Log::Shader);
+    PrintShaderLog(psO, Log::Shader);
 
     glAttachShader(pO, vsO);
     glAttachShader(pO, psO);
     glLinkProgram(pO);
-    PrintProgramLog(pO);
+    PrintShaderLog(pO, Log::Program);
 
     // MAIN SDL LOOP
     bool running = true;
