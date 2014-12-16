@@ -258,7 +258,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     varying float dot; \
     void main()\
     {\
-        vec4 c = (0.1, 0.1, 1.0, 1.0);\
+        vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\
         \
         gl_FragColor = c * dot;\
     }";
