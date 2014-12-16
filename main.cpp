@@ -210,7 +210,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
         GL_STATIC_DRAW);
 
     // Since I'm not changing state much, just setup here.
-    glVertexPointer(3, GL_FLOAT, 0, nullptr);
+    // glVertexPointer(3, GL_FLOAT, 0, nullptr);
 
     // TODO: vertex, fragment, program, bind, load
     // try https://www.opengl.org/sdk/docs/tutorials/ClockworkCoders/loading.php
@@ -219,6 +219,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // try https://www.khronos.org/webgl/wiki/Tutorial
     // normals are transformed differently, ugh.
     // http://www.songho.ca/opengl/gl_normaltransform.html
+    // Using demo code from:
+    // http://www.lighthouse3d.com/cg-topics/code-samples/opengl-3-3-glsl-1-5-sample/
 //    Glchar* vs = "
 //            uniform mat4 mvp;
 //            attribute vec3 position;
@@ -238,7 +240,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     uniform vec3 lightDir;\
  \
     attribute vec3 vNormal;\
-    attribute vec4 vPosition;\
+    attribute vec3 vPosition;\
  \
     varying float dot;\
  \
@@ -272,6 +274,36 @@ void DoGraphics(const Bsp::CollisionBsp &)
     glAttachShader(pO, psO);
     glLinkProgram(pO);
     PrintShaderLog(pO, Log::Program);
+
+    // Get the attribute addresses so we can setup the state
+    // for the vertex buffer correctly.
+    auto lvNormal    = glGetAttribLocation(pO, "vNormal");
+    auto lvPosition  = glGetAttribLocation(pO, "vPosition");
+
+    // Get the ids for the uniforms as well
+    auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");
+    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");
+    auto llightDir = glGetUniformLocation(pO, "lightdir");
+
+    // Right, enable the normal and position attribes in the vertex buffer
+    // and set what offset they are using.
+    glEnableVertexArrayAttrib(triangleVboHandle, lvPosition);
+    glVertexAttribPointer(
+                lvPosition,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                3*2*sizeof(float),
+                0);
+
+    glEnableVertexArrayAttrib(triangleVboHandle, lvNormal);
+    glVertexAttribPointer(
+                lvNormal,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                3*2*sizeof(float),
+                3*sizeof(float));
 
     // MAIN SDL LOOP
     bool running = true;
