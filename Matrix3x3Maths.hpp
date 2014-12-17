@@ -76,6 +76,17 @@ inline Matrix3x3 operator+(Matrix3x3 lhs, const Matrix3x3& rhs){ lhs += rhs;  re
 inline Matrix3x3 operator-(Matrix3x3 lhs, const Matrix3x3& rhs){ lhs -= rhs;  return lhs; }
 inline Matrix3x3 operator*(Matrix3x3 lhs, const Matrix3x3& rhs){ lhs *= rhs;  return lhs; }
 
+
+inline constexpr Matrix3x3& operator*=(Matrix3x3& lhs, float rhs)
+{
+    lhs.data[0] *= rhs;
+    lhs.data[1] *= rhs;
+    lhs.data[2] *= rhs;
+    return lhs;
+}
+
+inline Matrix3x3 operator*(Matrix3x3 lhs, float rhs){ lhs *= rhs;  return lhs; }
+
 // ///////////////////
 // Conversions
 // ///////////////////
@@ -111,6 +122,27 @@ inline Matrix3x3 ToMatrix3x3(const Quaternion& rotation)
              1.0f - 2.0f * ( xx + yy )
         }
     }}};
+}
+
+// ///////////////////
+// Matrix Maths.
+// ///////////////////
+inline Matrix4x4 Transpose(const Matrix4x4& lhs)
+{
+    return
+    {
+        lhs.data[0].data[0],
+        lhs.data[1].data[0],
+        lhs.data[2].data[0],
+
+        lhs.data[0].data[1],
+        lhs.data[1].data[1],
+        lhs.data[2].data[1],
+
+        lhs.data[0].data[2],
+        lhs.data[1].data[2],
+        lhs.data[2].data[2],
+    };
 }
 
 // ///////////////////

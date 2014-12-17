@@ -87,6 +87,191 @@ inline Matrix4x4 operator+(Matrix4x4 lhs, const Matrix4x4& rhs){ lhs += rhs;  re
 inline Matrix4x4 operator-(Matrix4x4 lhs, const Matrix4x4& rhs){ lhs -= rhs;  return lhs; }
 inline Matrix4x4 operator*(Matrix4x4 lhs, const Matrix4x4& rhs){ lhs *= rhs;  return lhs; }
 
+inline Matrix4x4& operator*=(Matrix4x4& lhs, float rhs)
+{
+    lhs.data[0] *= rhs;
+    lhs.data[1] *= rhs;
+    lhs.data[2] *= rhs;
+    lhs.data[3] *= rhs;
+    return lhs;
+}
+
+inline Matrix4x4 operator*(Matrix4x4 lhs, float rhs){ lhs *= rhs;  return lhs; }
+
+// ///////////////////
+// Matrix Maths.
+// ///////////////////
+inline Matrix4x4 Transpose(const Matrix4x4& lhs)
+{
+    return
+    {
+        lhs.data[0].data[0],
+        lhs.data[1].data[0],
+        lhs.data[2].data[0],
+        lhs.data[3].data[0],
+
+        lhs.data[0].data[1],
+        lhs.data[1].data[1],
+        lhs.data[2].data[1],
+        lhs.data[3].data[1],
+
+        lhs.data[0].data[2],
+        lhs.data[1].data[2],
+        lhs.data[2].data[2],
+        lhs.data[3].data[2],
+
+        lhs.data[0].data[3],
+        lhs.data[1].data[3],
+        lhs.data[2].data[3],
+        lhs.data[3].data[3],
+    };
+}
+
+Matrix4x4 Invert(const Matrix4x4& lhs)
+{
+    // Modified from
+    // http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix
+    Matrix4x4 inverse = {0};
+
+    inverse.data[0].data[0] =
+        lhs.data[1].data[1]  * lhs.data[2].data[2] * lhs.data[3].data[3] -
+        lhs.data[1].data[1]  * lhs.data[2].data[3] * lhs.data[3].data[2] -
+        lhs.data[2].data[1]  * lhs.data[1].data[2]  * lhs.data[3].data[3] +
+        lhs.data[2].data[1]  * lhs.data[1].data[3]  * lhs.data[3].data[2] +
+        lhs.data[3].data[1] * lhs.data[1].data[2]  * lhs.data[2].data[3] -
+        lhs.data[3].data[1] * lhs.data[1].data[3]  * lhs.data[2].data[2];
+
+    inverse.data[1].data[0] =
+        -lhs.data[1].data[0]  * lhs.data[2].data[2] * lhs.data[3].data[3] +
+        lhs.data[1].data[0]  * lhs.data[2].data[3] * lhs.data[3].data[2] +
+        lhs.data[2].data[0]  * lhs.data[1].data[2]  * lhs.data[3].data[3] -
+        lhs.data[2].data[0]  * lhs.data[1].data[3]  * lhs.data[3].data[2] -
+        lhs.data[3].data[0] * lhs.data[1].data[2]  * lhs.data[2].data[3] +
+        lhs.data[3].data[0] * lhs.data[1].data[3]  * lhs.data[2].data[2];
+
+    inverse.data[2].data[0] =
+        lhs.data[1].data[0]  * lhs.data[2].data[1] * lhs.data[3].data[3] -
+        lhs.data[1].data[0]  * lhs.data[2].data[3] * lhs.data[3].data[1] -
+        lhs.data[2].data[0]  * lhs.data[1].data[1] * lhs.data[3].data[3] +
+        lhs.data[2].data[0]  * lhs.data[1].data[3] * lhs.data[3].data[1] +
+        lhs.data[3].data[0] * lhs.data[1].data[1] * lhs.data[2].data[3] -
+        lhs.data[3].data[0] * lhs.data[1].data[3] * lhs.data[2].data[1];
+
+    inverse.data[3].data[0] =
+        -lhs.data[1].data[0]  * lhs.data[2].data[1] * lhs.data[3].data[2] +
+        lhs.data[1].data[0]  * lhs.data[2].data[2] * lhs.data[3].data[1] +
+        lhs.data[2].data[0]  * lhs.data[1].data[1] * lhs.data[3].data[2] -
+        lhs.data[2].data[0]  * lhs.data[1].data[2] * lhs.data[3].data[1] -
+        lhs.data[3].data[0] * lhs.data[1].data[1] * lhs.data[2].data[2] +
+        lhs.data[3].data[0] * lhs.data[1].data[2] * lhs.data[2].data[1];
+
+    inverse.data[0].data[1] =
+        -lhs.data[0].data[1]  * lhs.data[2].data[2] * lhs.data[3].data[3] +
+        lhs.data[0].data[1]  * lhs.data[2].data[3] * lhs.data[3].data[2] +
+        lhs.data[2].data[1]  * lhs.data[0].data[2] * lhs.data[3].data[3] -
+        lhs.data[2].data[1]  * lhs.data[0].data[3] * lhs.data[3].data[2] -
+        lhs.data[3].data[1] * lhs.data[0].data[2] * lhs.data[2].data[3] +
+        lhs.data[3].data[1] * lhs.data[0].data[3] * lhs.data[2].data[2];
+
+    inverse.data[1].data[1] =
+        lhs.data[0].data[0]  * lhs.data[2].data[2] * lhs.data[3].data[3] -
+        lhs.data[0].data[0]  * lhs.data[2].data[3] * lhs.data[3].data[2] -
+        lhs.data[2].data[0]  * lhs.data[0].data[2] * lhs.data[3].data[3] +
+        lhs.data[2].data[0]  * lhs.data[0].data[3] * lhs.data[3].data[2] +
+        lhs.data[3].data[0] * lhs.data[0].data[2] * lhs.data[2].data[3] -
+        lhs.data[3].data[0] * lhs.data[0].data[3] * lhs.data[2].data[2];
+
+    inverse.data[2].data[1] =
+        -lhs.data[0].data[0]  * lhs.data[2].data[1] * lhs.data[3].data[3] +
+        lhs.data[0].data[0]  * lhs.data[2].data[3] * lhs.data[3].data[1] +
+        lhs.data[2].data[0]  * lhs.data[0].data[1] * lhs.data[3].data[3] -
+        lhs.data[2].data[0]  * lhs.data[0].data[3] * lhs.data[3].data[1] -
+        lhs.data[3].data[0] * lhs.data[0].data[1] * lhs.data[2].data[3] +
+        lhs.data[3].data[0] * lhs.data[0].data[3] * lhs.data[2].data[1];
+
+    inverse.data[3].data[1] =
+        lhs.data[0].data[0]  * lhs.data[2].data[1] * lhs.data[3].data[2] -
+        lhs.data[0].data[0]  * lhs.data[2].data[2] * lhs.data[3].data[1] -
+        lhs.data[2].data[0]  * lhs.data[0].data[1] * lhs.data[3].data[2] +
+        lhs.data[2].data[0]  * lhs.data[0].data[2] * lhs.data[3].data[1] +
+        lhs.data[3].data[0] * lhs.data[0].data[1] * lhs.data[2].data[2] -
+        lhs.data[3].data[0] * lhs.data[0].data[2] * lhs.data[2].data[1];
+
+    inverse.data[0].data[2] =
+        lhs.data[0].data[1]  * lhs.data[1].data[2] * lhs.data[3].data[3] -
+        lhs.data[0].data[1]  * lhs.data[1].data[3] * lhs.data[3].data[2] -
+        lhs.data[1].data[1]  * lhs.data[0].data[2] * lhs.data[3].data[3] +
+        lhs.data[1].data[1]  * lhs.data[0].data[3] * lhs.data[3].data[2] +
+        lhs.data[3].data[1] * lhs.data[0].data[2] * lhs.data[1].data[3] -
+        lhs.data[3].data[1] * lhs.data[0].data[3] * lhs.data[1].data[2];
+
+    inverse.data[1].data[2] =
+        -lhs.data[0].data[0]  * lhs.data[1].data[2] * lhs.data[3].data[3] +
+        lhs.data[0].data[0]  * lhs.data[1].data[3] * lhs.data[3].data[2] +
+        lhs.data[1].data[0]  * lhs.data[0].data[2] * lhs.data[3].data[3] -
+        lhs.data[1].data[0]  * lhs.data[0].data[3] * lhs.data[3].data[2] -
+        lhs.data[3].data[0] * lhs.data[0].data[2] * lhs.data[1].data[3] +
+        lhs.data[3].data[0] * lhs.data[0].data[3] * lhs.data[1].data[2];
+
+    inverse.data[2].data[2] =
+        lhs.data[0].data[0]  * lhs.data[1].data[1] * lhs.data[3].data[3] -
+        lhs.data[0].data[0]  * lhs.data[1].data[3] * lhs.data[3].data[1] -
+        lhs.data[1].data[0]  * lhs.data[0].data[1] * lhs.data[3].data[3] +
+        lhs.data[1].data[0]  * lhs.data[0].data[3] * lhs.data[3].data[1] +
+        lhs.data[3].data[0] * lhs.data[0].data[1] * lhs.data[1].data[3] -
+        lhs.data[3].data[0] * lhs.data[0].data[3] * lhs.data[1].data[1];
+
+    inverse.data[3].data[2] =
+        -lhs.data[0].data[0]  * lhs.data[1].data[1] * lhs.data[3].data[2] +
+        lhs.data[0].data[0]  * lhs.data[1].data[2] * lhs.data[3].data[1] +
+        lhs.data[1].data[0]  * lhs.data[0].data[1] * lhs.data[3].data[2] -
+        lhs.data[1].data[0]  * lhs.data[0].data[2] * lhs.data[3].data[1] -
+        lhs.data[3].data[0] * lhs.data[0].data[1] * lhs.data[1].data[2] +
+        lhs.data[3].data[0] * lhs.data[0].data[2] * lhs.data[1].data[1];
+
+    inverse.data[0].data[3] =
+        -lhs.data[0].data[1] * lhs.data[1].data[2] * lhs.data[2].data[3] +
+        lhs.data[0].data[1] * lhs.data[1].data[3] * lhs.data[2].data[2] +
+        lhs.data[1].data[1] * lhs.data[0].data[2] * lhs.data[2].data[3] -
+        lhs.data[1].data[1] * lhs.data[0].data[3] * lhs.data[2].data[2] -
+        lhs.data[2].data[1] * lhs.data[0].data[2] * lhs.data[1].data[3] +
+        lhs.data[2].data[1] * lhs.data[0].data[3] * lhs.data[1].data[2];
+
+    inverse.data[1].data[3] =
+        lhs.data[0].data[0] * lhs.data[1].data[2] * lhs.data[2].data[3] -
+        lhs.data[0].data[0] * lhs.data[1].data[3] * lhs.data[2].data[2] -
+        lhs.data[1].data[0] * lhs.data[0].data[2] * lhs.data[2].data[3] +
+        lhs.data[1].data[0] * lhs.data[0].data[3] * lhs.data[2].data[2] +
+        lhs.data[2].data[0] * lhs.data[0].data[2] * lhs.data[1].data[3] -
+        lhs.data[2].data[0] * lhs.data[0].data[3] * lhs.data[1].data[2];
+
+    inverse.data[2].data[3] =
+        -lhs.data[0].data[0] * lhs.data[1].data[1] * lhs.data[2].data[3] +
+        lhs.data[0].data[0] * lhs.data[1].data[3] * lhs.data[2].data[1] +
+        lhs.data[1].data[0] * lhs.data[0].data[1] * lhs.data[2].data[3] -
+        lhs.data[1].data[0] * lhs.data[0].data[3] * lhs.data[2].data[1] -
+        lhs.data[2].data[0] * lhs.data[0].data[1] * lhs.data[1].data[3] +
+        lhs.data[2].data[0] * lhs.data[0].data[3] * lhs.data[1].data[1];
+
+    inverse.data[3].data[3] =
+        lhs.data[0].data[0] * lhs.data[1].data[1] * lhs.data[2].data[2] -
+        lhs.data[0].data[0] * lhs.data[1].data[2] * lhs.data[2].data[1] -
+        lhs.data[1].data[0] * lhs.data[0].data[1] * lhs.data[2].data[2] +
+        lhs.data[1].data[0] * lhs.data[0].data[2] * lhs.data[2].data[1] +
+        lhs.data[2].data[0] * lhs.data[0].data[1] * lhs.data[1].data[2] -
+        lhs.data[2].data[0] * lhs.data[0].data[2] * lhs.data[1].data[1];
+
+    auto determinant =
+            lhs.data[0].data[0] * inverse.data[0].data[0] +
+            lhs.data[0].data[1] * inverse.data[1].data[0] +
+            lhs.data[0].data[2] * inverse.data[2].data[0] +
+            lhs.data[0].data[3] * inverse.data[3].data[0];
+
+    auto inverseDeterminant = 1.0f / determinant;
+
+    return inverse * inverseDeterminant;
+}
+
 // ///////////////////
 // Vector Maths.
 // ///////////////////
