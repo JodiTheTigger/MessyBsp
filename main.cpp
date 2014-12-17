@@ -28,6 +28,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <cmath>
 
 void DoGraphics(const Bsp::CollisionBsp& bsp);
 
@@ -158,6 +159,56 @@ void PrintShaderLog(GLuint shader, Log type )
 
         printf("%s\n",buffer.get());
     }
+}
+
+Matrix4x4 ProjectionMatrix(
+    Radians fieldOfView,
+    float aspect,
+    float nearDistance,
+    float farDistance)
+{
+    //
+    // General form of the Projection Matrix
+    //
+    // uh = Cot( fov/2 ) == 1/Tan(fov/2)
+    // uw / uh = 1/aspect
+    //
+    //   uw         0       0       0
+    //    0        uh       0       0
+    //    0         0      f/(f-n)  1
+    //    0         0    -fn/(f-n)  0
+
+    float frustumDepth = farDistance - nearDistance;
+    float oneOverDepth = 1.0f / frustumDepth;
+    float oneOverTan   = 1.0f / std::tan(0.5f * fieldOfView.data);
+
+    return Matrix4x4
+    {{
+        {
+            oneOverTan / aspect,
+            0.0f,
+            0.0f,
+            0.0f
+        },
+        {
+            0.0f,
+            oneOverTan,
+            0.0f,
+            0.0f
+        },
+        {
+            0.0f,
+            0.0f,
+            farDistance * oneOverDepth,
+            1.0f
+        },
+        {
+            0.0f,
+            0.0f,
+            (-farDistance * nearDistance) * oneOverDepth,
+            0.0f
+        },
+    }};
 }
 
 // RAM: Lets try loaind sdl and get a glcontext.
