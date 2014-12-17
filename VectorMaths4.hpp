@@ -74,7 +74,7 @@ inline Vec4 operator-(Vec4 lhs, const Vec4& rhs){ lhs -= rhs;  return lhs; }
 inline Vec4 operator*(Vec4 lhs, const Vec4& rhs){ lhs *= rhs;  return lhs; }
 inline Vec4 operator/(Vec4 lhs, const Vec4& rhs){ lhs /= rhs;  return lhs; }
 
-inline Vec4& operator+=(Vec3& lhs, float rhs)
+inline Vec4& operator+=(Vec4& lhs, float rhs)
 {
     lhs.data[0] += rhs;
     lhs.data[1] += rhs;
@@ -83,7 +83,7 @@ inline Vec4& operator+=(Vec3& lhs, float rhs)
     return lhs;
 }
 
-inline Vec4& operator-=(Vec3& lhs, float rhs)
+inline Vec4& operator-=(Vec4& lhs, float rhs)
 {
     lhs.data[0] -= rhs;
     lhs.data[1] -= rhs;
@@ -106,8 +106,8 @@ inline Vec4& operator/=(Vec4& lhs, float rhs)
     return lhs *= 1.0f / rhs;
 }
 
-inline Vec3 operator+(Vec4 lhs, float rhs){ lhs += rhs;  return lhs; }
-inline Vec3 operator-(Vec4 lhs, float rhs){ lhs -= rhs;  return lhs; }
+inline Vec4 operator+(Vec4 lhs, float rhs){ lhs += rhs;  return lhs; }
+inline Vec4 operator-(Vec4 lhs, float rhs){ lhs -= rhs;  return lhs; }
 inline Vec4 operator*(Vec4 lhs, float rhs){ lhs *= rhs;  return lhs; }
 inline Vec4 operator/(Vec4 lhs, float rhs){ lhs /= rhs;  return lhs; }
 
@@ -202,17 +202,17 @@ inline Vec4 Dot(const Vec4& lhs, const Vec4& rhs)
 
 // Cross product doesn't exist for Vec4, only Vector3 and Vector7.
 
-inline constexpr Vec4 Square(const Vec4& lhs)
+inline Vec4 Square(const Vec4& lhs)
 {
     return Dot(lhs, lhs);
 }
 
-inline constexpr Vec4 Magnitude(const Vec4& lhs)
+inline Vec4 Magnitude(const Vec4& lhs)
 {
     return Sqrt(Square(lhs));
 }
 
-inline constexpr Vec4N Normalise(const Vec4& lhs)
+inline Vec4N Normalise(const Vec4& lhs)
 {
     auto length = Magnitude(lhs);
 

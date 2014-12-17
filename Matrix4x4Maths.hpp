@@ -17,7 +17,7 @@
 #pragma once
 
 #include "Geometry.hpp"
-#include "VectorMaths3.hpp"
+#include "VectorMaths4.hpp"
 
 // ///////////////////
 // Operators
