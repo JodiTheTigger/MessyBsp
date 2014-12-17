@@ -16,6 +16,8 @@
 
 #include "Bsp.hpp"
 #include "TraceTest.hpp"
+#include "VectorMaths3.hpp"
+#include "Matrix4x4Maths.hpp"
 #include "third-party/getopt/getopt.h"
 
 // SDL + OpenGL
@@ -178,21 +180,21 @@ Matrix4x4 ProjectionMatrix(
     //    0         0      f/(f-n)  1
     //    0         0    -fn/(f-n)  0
 
-    float frustumDepth = farDistance - nearDistance;
-    float oneOverDepth = 1.0f / frustumDepth;
-    float oneOverTan   = 1.0f / std::tan(0.5f * fieldOfView.data);
+    float frustumDepth  = farDistance - nearDistance;
+    float oneOverDepth  = 1.0f / frustumDepth;
+    float f             = 1.0f / std::tan(0.5f * fieldOfView.data);
 
     return Matrix4x4
     {{
         {
-            oneOverTan / aspect,
+            f / aspect,
             0.0f,
             0.0f,
             0.0f
         },
         {
             0.0f,
-            oneOverTan,
+            f,
             0.0f,
             0.0f
         },
@@ -209,6 +211,37 @@ Matrix4x4 ProjectionMatrix(
             0.0f
         },
     }};
+}
+
+Matrix4x4 inline Translation(Vec3 offset)
+{
+    return Matrix4x4
+    {{
+        {1.0f,              0.0f,           0.0f,           0.0f},
+        {0.0f,              1.0f,           0.0f,           0.0f},
+        {0.0f,              0.0f,           1.0f,           0.0f},
+        {offset.data[0],    offset.data[1], offset.data[2], 1.0f},
+    }};
+}
+
+Matrix4x4 LookAt(
+        Vec3 position,
+        Vec3 positionBeenLookedAt,
+        Vec3 up = {0.0f, 1.0f, 0.0f})
+{
+    auto direction  = Normalise(positionBeenLookedAt - position);
+    auto right      = Normalise(Cross(direction, up));
+    auto newUp      = Normalise(Cross(right, direction));
+
+    auto result = Matrix4x4
+    {{
+        {right.data[0], newUp.data[0], -direction.data[0], 0.0f},
+        {right.data[1], newUp.data[1], -direction.data[1], 0.0f},
+        {right.data[2], newUp.data[2], -direction.data[2], 0.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f},
+    }};
+
+    return result * Translation(-position);
 }
 
 // RAM: Lets try loaind sdl and get a glcontext.
