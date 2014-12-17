@@ -79,4 +79,9 @@ struct alignas(16) Matrix3x3
     Vec3 data[3];
 };
 
+struct alignas(16) Matrix4x4
+{
+    Vec4 data[4];
+};
+
 

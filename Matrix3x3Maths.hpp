@@ -24,38 +24,38 @@
 // ///////////////////
 inline Matrix3x3& operator+=(Matrix3x3& lhs, const Matrix3x3& rhs)
 {
-    lhs.values[0] += rhs.values[0];
-    lhs.values[1] += rhs.values[1];
-    lhs.values[2] += rhs.values[2];
+    lhs.data[0] += rhs.data[0];
+    lhs.data[1] += rhs.data[1];
+    lhs.data[2] += rhs.data[2];
     return lhs;
 }
 
 inline Matrix3x3& operator-=(Matrix3x3& lhs, const Matrix3x3& rhs)
 {
-    lhs.values[0] -= rhs.values[0];
-    lhs.values[1] -= rhs.values[1];
-    lhs.values[2] -= rhs.values[2];
+    lhs.data[0] -= rhs.data[0];
+    lhs.data[1] -= rhs.data[1];
+    lhs.data[2] -= rhs.data[2];
     return lhs;
 }
 
 inline Matrix3x3& operator*=(Matrix3x3& lhs, const Matrix3x3& rhs)
 {
-    auto& l         = lhs.values;
-    const auto& r   = rhs.values;
+    auto& l         = lhs.data;
+    const auto& r   = rhs.data;
 
     auto result = Matrix3x3
     {
-            (l[0].values[0] * r[0].values[0]) + (l[0].values[1] * r[1].values[0]) + (l[0].values[2] * r[2].values[0]),
-            (l[0].values[0] * r[0].values[1]) + (l[0].values[1] * r[1].values[1]) + (l[0].values[2] * r[2].values[1]),
-            (l[0].values[0] * r[0].values[2]) + (l[0].values[1] * r[1].values[2]) + (l[0].values[2] * r[2].values[2]),
+            (l[0].data[0] * r[0].data[0]) + (l[0].data[1] * r[1].data[0]) + (l[0].data[2] * r[2].data[0]),
+            (l[0].data[0] * r[0].data[1]) + (l[0].data[1] * r[1].data[1]) + (l[0].data[2] * r[2].data[1]),
+            (l[0].data[0] * r[0].data[2]) + (l[0].data[1] * r[1].data[2]) + (l[0].data[2] * r[2].data[2]),
 
-            (l[1].values[0] * r[0].values[0]) + (l[1].values[1] * r[1].values[0]) + (l[1].values[2] * r[2].values[0]),
-            (l[1].values[0] * r[0].values[1]) + (l[1].values[1] * r[1].values[1]) + (l[1].values[2] * r[2].values[1]),
-            (l[1].values[0] * r[0].values[2]) + (l[1].values[1] * r[1].values[2]) + (l[1].values[2] * r[2].values[2]),
+            (l[1].data[0] * r[0].data[0]) + (l[1].data[1] * r[1].data[0]) + (l[1].data[2] * r[2].data[0]),
+            (l[1].data[0] * r[0].data[1]) + (l[1].data[1] * r[1].data[1]) + (l[1].data[2] * r[2].data[1]),
+            (l[1].data[0] * r[0].data[2]) + (l[1].data[1] * r[1].data[2]) + (l[1].data[2] * r[2].data[2]),
 
-            (l[2].values[0] * r[0].values[0]) + (l[2].values[1] * r[1].values[0]) + (l[2].values[2] * r[2].values[0]),
-            (l[2].values[0] * r[0].values[1]) + (l[2].values[1] * r[1].values[1]) + (l[2].values[2] * r[2].values[1]),
-            (l[2].values[0] * r[0].values[2]) + (l[2].values[1] * r[1].values[2]) + (l[2].values[2] * r[2].values[2]),
+            (l[2].data[0] * r[0].data[0]) + (l[2].data[1] * r[1].data[0]) + (l[2].data[2] * r[2].data[0]),
+            (l[2].data[0] * r[0].data[1]) + (l[2].data[1] * r[1].data[1]) + (l[2].data[2] * r[2].data[1]),
+            (l[2].data[0] * r[0].data[2]) + (l[2].data[1] * r[1].data[2]) + (l[2].data[2] * r[2].data[2]),
     };
 
     lhs = result;
@@ -66,9 +66,9 @@ inline constexpr Matrix3x3 operator-(const Matrix3x3& lhs)
 {
     return
     {
-        -lhs.values[0],
-        -lhs.values[1],
-        -lhs.values[2],
+        -lhs.data[0],
+        -lhs.data[1],
+        -lhs.data[2],
     };
 }
 
@@ -81,17 +81,17 @@ inline Matrix3x3 operator*(Matrix3x3 lhs, const Matrix3x3& rhs){ lhs *= rhs;  re
 // ///////////////////
 inline Matrix3x3 ToMatrix3x3(const Quaternion& rotation)
 {
-    auto xx      = rotation.values[0] * rotation.values[0];
-    auto xy      = rotation.values[0] * rotation.values[1];
-    auto xz      = rotation.values[0] * rotation.values[2];
-    auto xw      = rotation.values[0] * rotation.values[3];
+    auto xx      = rotation.data[0] * rotation.data[0];
+    auto xy      = rotation.data[0] * rotation.data[1];
+    auto xz      = rotation.data[0] * rotation.data[2];
+    auto xw      = rotation.data[0] * rotation.data[3];
 
-    auto yy      = rotation.values[1] * rotation.values[1];
-    auto yz      = rotation.values[1] * rotation.values[2];
-    auto yw      = rotation.values[1] * rotation.values[3];
+    auto yy      = rotation.data[1] * rotation.data[1];
+    auto yz      = rotation.data[1] * rotation.data[2];
+    auto yw      = rotation.data[1] * rotation.data[3];
 
-    auto zz      = rotation.values[2] * rotation.values[2];
-    auto zw      = rotation.values[2] * rotation.values[3];
+    auto zz      = rotation.data[2] * rotation.data[2];
+    auto zw      = rotation.data[2] * rotation.data[3];
 
     return Matrix3x3
     {{{
@@ -120,9 +120,9 @@ inline Vec3 operator*(const Matrix3x3& lhs, const Vec3& rhs)
 {
     return
     {
-            DotF(lhs.values[0], rhs),
-            DotF(lhs.values[1], rhs),
-            DotF(lhs.values[2], rhs)
+            DotF(lhs.data[0], rhs),
+            DotF(lhs.data[1], rhs),
+            DotF(lhs.data[2], rhs)
     };
 }
 
@@ -130,8 +130,8 @@ inline Vec3 operator*(const Vec3& lhs, const Matrix3x3& rhs)
 {
     return
     {
-            rhs.values[0].values[0] * lhs.values[0] + rhs.values[1].values[0] * lhs.values[1] + rhs.values[2].values[0] * lhs.values[2],
-            rhs.values[0].values[1] * lhs.values[0] + rhs.values[1].values[1] * lhs.values[1] + rhs.values[2].values[1] * lhs.values[2],
-            rhs.values[0].values[2] * lhs.values[0] + rhs.values[1].values[2] * lhs.values[1] + rhs.values[2].values[2] * lhs.values[2]
+            rhs.data[0].data[0] * lhs.data[0] + rhs.data[1].data[0] * lhs.data[1] + rhs.data[2].data[0] * lhs.data[2],
+            rhs.data[0].data[1] * lhs.data[0] + rhs.data[1].data[1] * lhs.data[1] + rhs.data[2].data[1] * lhs.data[2],
+            rhs.data[0].data[2] * lhs.data[0] + rhs.data[1].data[2] * lhs.data[1] + rhs.data[2].data[2] * lhs.data[2]
     };
 }
