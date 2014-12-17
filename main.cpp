@@ -287,6 +287,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
+    // The last item is meant to be a pointer to the data
+    // but it's actually an offset. yay.
     glEnableVertexArrayAttrib(triangleVboHandle, lvPosition);
     glVertexAttribPointer(
                 lvPosition,
@@ -294,7 +296,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 GL_FLOAT,
                 GL_FALSE,
                 3*2*sizeof(float),
-                0);
+                reinterpret_cast<const void*>(0));
 
     glEnableVertexArrayAttrib(triangleVboHandle, lvNormal);
     glVertexAttribPointer(
@@ -303,7 +305,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 GL_FLOAT,
                 GL_FALSE,
                 3*2*sizeof(float),
-                3*sizeof(float));
+                reinterpret_cast<const void*>(3*sizeof(float)));
 
     // MAIN SDL LOOP
     bool running = true;
