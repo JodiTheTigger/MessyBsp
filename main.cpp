@@ -32,6 +32,9 @@
 #include <cstdio>
 #include <cmath>
 
+// Globals
+Matrix4x4 g_projection;
+
 void DoGraphics(const Bsp::CollisionBsp& bsp);
 
 int main(int argc, char** argv)
@@ -293,9 +296,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
         triangles.data(),
         GL_STATIC_DRAW);
 
-    // Since I'm not changing state much, just setup here.
-    // glVertexPointer(3, GL_FLOAT, 0, nullptr);
-
     // TODO: vertex, fragment, program, bind, load
     // try https://www.opengl.org/sdk/docs/tutorials/ClockworkCoders/loading.php
     // http://classes.soe.ucsc.edu/cmps162/Spring12/s12/labnotes/shaders.html
@@ -305,19 +305,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // http://www.songho.ca/opengl/gl_normaltransform.html
     // Using demo code from:
     // http://www.lighthouse3d.com/cg-topics/code-samples/opengl-3-3-glsl-1-5-sample/
-//    Glchar* vs = "
-//            uniform mat4 mvp;
-//            attribute vec3 position;
-//            attribute vec3 normal;
 
-//            varying vec4 colour;
-//            varying vec4 normal;
-
-//            void main() {
-//                gl_Position = mvp * vec4(position, 1.0);
-
-//                Vec4 color = Vec4(pos, 1.0)
-//            }
     const GLchar* vs = "\
     uniform mat4 modelViewProjMatrix;\
     uniform mat4 normalMatrix;\
@@ -393,6 +381,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
     // MAIN SDL LOOP
     bool running = true;
+    bool visible = true;
+    bool resized = false;
     while (running)
     {
         SDL_Event e;
@@ -411,18 +401,69 @@ void DoGraphics(const Bsp::CollisionBsp &)
                     running = false;
                 }
             }
+
+            if (e.type == SDL_WINDOWEVENT)
+            {
+                switch (e.window.event)
+                {
+                    case SDL_WINDOWEVENT_SHOWN:
+                    case SDL_WINDOWEVENT_EXPOSED:
+                    case SDL_WINDOWEVENT_MAXIMIZED:
+                    case SDL_WINDOWEVENT_RESTORED:
+                    {
+                        visible = true;
+                        resized = true;
+                        break;
+                    }
+
+                    case SDL_WINDOWEVENT_HIDDEN:
+                    case SDL_WINDOWEVENT_MINIMIZED:
+                    {
+                        visible = false;
+                        break;
+                    }
+
+                    case SDL_WINDOWEVENT_RESIZED:
+                    {
+                        resized = true;
+                        break;
+                    }
+
+                    default:
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
         // now you can make GL calls.
-        glClearColor(0,1,0,1);
-        glClear(GL_COLOR_BUFFER_BIT);
+        if (visible)
+        {
+            if (resized)
+            {
+                int width;
+                int height;
 
-        // glEnableVertexAttribArray
-        // glVertexAttribPointer
-        // glEnableClientState ??
-        // glDrawArrays
+                SDL_GetWindowSize(window, &width, &height);
 
-        SDL_GL_SwapWindow(window);
+                glViewport(0, 0, width, height);
+
+                // RAM: TODO: Calculate projection and normal matricies.
+
+                resized = false;
+            }
+
+            glClearColor(0,1,0,1);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            // glEnableVertexAttribArray
+            // glVertexAttribPointer
+            // glEnableClientState ??
+            // glDrawArrays
+
+            SDL_GL_SwapWindow(window);
+        }
     }
 
 
