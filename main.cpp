@@ -308,20 +308,24 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // Using demo code from:
     // http://www.lighthouse3d.com/cg-topics/code-samples/opengl-3-3-glsl-1-5-sample/
 
+    // Even though I pass in a vec3 for the verticies, opengl will
+    // expand them to a vec4 filling in the missing values with the
+    // template <0,0,0,1>
+    // http://stackoverflow.com/questions/8551935/opengl-es-2-0-specifiying-position-attribute-vec3-or-vec4
     const GLchar* vs = "\
     uniform mat4 modelViewProjMatrix;\
     uniform mat4 normalMatrix;\
     uniform vec3 lightDir;\
  \
-    attribute vec3 vNormal;\
-    attribute vec3 vPosition;\
+    attribute vec4 vNormal;\
+    attribute vec4 vPosition;\
  \
     varying float dot;\
  \
     void main()\
     {\
         gl_Position = modelViewProjMatrix * vPosition;\
-        vec4 transNormal = normalMatrix * vec4(vNormal, 1);\
+        vec4 transNormal = normalMatrix * vNormal;\
         dot = max(dot(transNormal.xyz, lightDir), 0.0);\
     }";
 
