@@ -127,7 +127,7 @@ inline Matrix4x4 Transpose(const Matrix4x4& lhs)
     };
 }
 
-Matrix4x4 Invert(const Matrix4x4& lhs)
+Matrix4x4 Inverse(const Matrix4x4& lhs)
 {
     // Modified from
     // http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix
