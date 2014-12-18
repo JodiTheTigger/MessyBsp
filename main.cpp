@@ -276,7 +276,9 @@ void DoGraphics(const Bsp::CollisionBsp &)
         }
 
         fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-    }
+    }    
+
+    glEnable(GL_DEPTH_TEST);
 
     // TODO: Load vertex data, gen normal data
     // TODO: player controller
@@ -382,7 +384,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // MAIN SDL LOOP
     bool running = true;
     bool visible = true;
-    bool resized = false;
+    bool resized = true;
     while (running)
     {
         SDL_Event e;
@@ -449,7 +451,10 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
                 glViewport(0, 0, width, height);
 
-                // RAM: TODO: Calculate projection and normal matricies.
+                float ratio = 1.0f * width / height;
+
+                // 1.3 ~= less than 90 degrees in radians.
+                g_projection = ProjectionMatrix(Radians{1.3f}, ratio, -1.0f, 10.0f);
 
                 resized = false;
             }
@@ -457,10 +462,33 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glClearColor(0,1,0,1);
             glClear(GL_COLOR_BUFFER_BIT);
 
-            // glEnableVertexAttribArray
-            // glVertexAttribPointer
-            // glEnableClientState ??
-            // glDrawArrays
+            // Get View Matrix
+            auto view = LookAt(Vec3{0,0,-5}, Vec3{0,0,20});
+
+            // Assuming world matrix is identity
+            auto projViewWorld = g_projection * view;
+            auto normalXform = Transpose(Inverse(projViewWorld));
+
+            glUseProgram(pO);
+            glUniformMatrix4fv(
+                lmodelViewProjMatrix,
+                1,
+                false,
+                &projViewWorld.data[0].data[0]);
+
+            glUniformMatrix4fv(
+                lnormalMatrix,
+                1,
+                false,
+                &normalXform.data[0].data[0]);
+
+            glUniform3fv(
+                llightDir,
+                1,
+                &Normalise(Vec3{-0.05, -1, 0.1}).data[0]);
+
+            glBindVertexArray(triangleVboHandle);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
 
             SDL_GL_SwapWindow(window);
         }
