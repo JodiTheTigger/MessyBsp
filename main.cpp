@@ -463,7 +463,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glClear(GL_COLOR_BUFFER_BIT);
 
             // Get View Matrix
-            auto view = LookAt(Vec3{0,0,-5}, Vec3{0,0,20});
+            auto view = LookAt(Vec3{0,0,5}, Vec3{0,0,-20});
 
             // Assuming world matrix is identity
             auto projViewWorld = g_projection * view;
@@ -485,7 +485,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glUniform3fv(
                 llightDir,
                 1,
-                &Normalise(Vec3{-0.05, -1, 0.1}).data[0]);
+                &Normalise(Vec3{-0.05, -1, -0.3}).data[0]);
 
             glBindVertexArray(triangleVboHandle);
             glDrawArrays(GL_TRIANGLES, 0, 3);
