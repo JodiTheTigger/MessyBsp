@@ -96,7 +96,7 @@ std::vector<float> MakeTrianglesAndNormals()
 {
     return std::vector<float>
     {
-        // x,y,z,nx,ny,nz (RH coords, z comes out of monitor)
+        // x,y,z,nx,ny,nz (RH coords, +ve z comes out of monitor)
         0.0f,
         0.0f,
         0.0f,
@@ -220,10 +220,10 @@ Matrix4x4 inline Translation(Vec3 offset)
 {
     return Matrix4x4
     {{
-        {1.0f,              0.0f,           0.0f,           0.0f},
-        {0.0f,              1.0f,           0.0f,           0.0f},
-        {0.0f,              0.0f,           1.0f,           0.0f},
-        {offset.data[0],    offset.data[1], offset.data[2], 1.0f},
+        {1.0f, 0.0f, 0.0f, offset.data[0]},
+        {0.0f, 1.0f, 0.0f, offset.data[1]},
+        {0.0f, 0.0f, 1.0f, offset.data[2]},
+        {0.0f, 0.0f, 0.0f, 1.0f}
     }};
 }
 
@@ -494,7 +494,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 float ratio = 1.0f * width / height;
 
                 // 1.3 ~= less than 90 degrees in radians.
-                g_projection = ProjectionMatrix(Radians{1.3f}, ratio, -1.0f, 10.0f);
+                g_projection = ProjectionMatrix(Radians{1.3f}, ratio, 0.1f, 10.0f);
 
                 resized = false;
             }
@@ -503,9 +503,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glClear(GL_COLOR_BUFFER_BIT);GLCHECK();
 
             // Get View Matrix
+            // Camera is 5 units behind your back
+            // looking at 20 units behind the monitor
             auto view = LookAt(Vec3{0,0,5}, Vec3{0,0,-20});
 
             // Assuming world matrix is identity
+            // projection * view * model
+            // vertex = MVP * in_vertex;
             auto projViewWorld = g_projection * view;
 
             // RAM: TODO: Fix that the normal is full of nans
