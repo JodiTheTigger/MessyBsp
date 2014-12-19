@@ -270,6 +270,7 @@ void CheckGlError(const char *file, int line)
 }
 
 #define GLCHECK() CheckGlError(__FILE__,__LINE__)
+//#define GLCHECK()
 
 // RAM: Lets try loaind sdl and get a glcontext.
 void DoGraphics(const Bsp::CollisionBsp &)
@@ -408,14 +409,17 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 3*2*sizeof(float),
                 reinterpret_cast<const void*>(0));GLCHECK();
 
-    glEnableVertexAttribArray(lvNormal);GLCHECK();
-    glVertexAttribPointer(
-                lvNormal,
-                3,
-                GL_FLOAT,
-                GL_FALSE,
-                3*2*sizeof(float),
-                reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
+    if (lvNormal >= 0)
+    {
+        glEnableVertexAttribArray(lvNormal);GLCHECK();
+        glVertexAttribPointer(
+                    lvNormal,
+                    3,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    3*2*sizeof(float),
+                    reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
+    }
 
     // MAIN SDL LOOP
     bool running = true;
@@ -505,6 +509,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
             auto projViewWorld = g_projection * view;
             auto normalXform = Transpose(Inverse(projViewWorld));
 
+            // Stupid OpenGL docs make matrix stuff confusing
+            // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
                 lmodelViewProjMatrix,
