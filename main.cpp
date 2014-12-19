@@ -375,7 +375,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
     glAttachShader(pO, vsO);GLCHECK();
     glAttachShader(pO, psO);GLCHECK();
     glLinkProgram(pO);GLCHECK();
-    PrintShaderLog(pO, Log::Program);
+
+    GLint gotLinked;
+    glGetProgramiv(pO, GL_LINK_STATUS, &gotLinked);
+    if (gotLinked != GL_TRUE)
+    {
+        PrintShaderLog(pO, Log::Program);
+    }
 
     // Get the attribute addresses so we can setup the state
     // for the vertex buffer correctly.
@@ -391,7 +397,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // and set what offset they are using.
     // The last item is meant to be a pointer to the data
     // but it's actually an offset. yay.
-    glEnableVertexArrayAttrib(triangleVboHandle, lvPosition);GLCHECK();
+    glEnableVertexAttribArray(lvPosition);GLCHECK();
     glVertexAttribPointer(
                 lvPosition,
                 3,
@@ -400,7 +406,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 3*2*sizeof(float),
                 reinterpret_cast<const void*>(0));GLCHECK();
 
-    glEnableVertexArrayAttrib(triangleVboHandle, lvNormal);GLCHECK();
+    glEnableVertexAttribArray(lvNormal);GLCHECK();
     glVertexAttribPointer(
                 lvNormal,
                 3,
