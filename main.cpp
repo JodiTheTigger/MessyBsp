@@ -172,6 +172,7 @@ Matrix4x4 ProjectionMatrix(
     float nearDistance,
     float farDistance)
 {
+    // RAM: TODO: CHECK: this row major or column major? does it matter?
     //
     // General form of the Projection Matrix
     //
@@ -218,6 +219,10 @@ Matrix4x4 ProjectionMatrix(
 
 Matrix4x4 inline Translation(Vec3 offset)
 {
+    // RAM: Note that all matrix stuff done
+    // in C++ is row major, but GLSL uses column major to do its
+    // maths, so you have to transpose all c++ matricies before
+    // giving them to the shaders.
     return Matrix4x4
     {{
         {1.0f, 0.0f, 0.0f, offset.data[0]},
@@ -232,6 +237,7 @@ Matrix4x4 LookAt(
         Vec3 positionBeenLookedAt,
         Vec3 up = {0.0f, 1.0f, 0.0f})
 {
+    // RAM: TODO: Check is this row major or column major?
     auto direction  = Normalise(positionBeenLookedAt - position);
     auto right      = Normalise(Cross(direction, up));
     auto newUp      = Normalise(Cross(right, direction));
@@ -518,6 +524,11 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
+            //
+            // Sadly, the use of column-major format in the spec and blue book
+            // has resulted in endless confusion in the OpenGL programming
+            // community. Column-major notation suggests that matrices are not
+            // laid out in memory as a programmer would expect.
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
                 lmodelViewProjMatrix,
