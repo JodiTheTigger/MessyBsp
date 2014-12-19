@@ -47,25 +47,25 @@ inline Matrix4x4& operator*=(Matrix4x4& lhs, const Matrix4x4& rhs)
 
     auto result = Matrix4x4
     {
-            (l[0].data[0] * r[0].data[0]) + (l[0].data[1] * r[1].data[0]) + (l[0].data[2] * r[2].data[0]) + (l[0].data[2] * r[3].data[0]),
-            (l[0].data[0] * r[0].data[1]) + (l[0].data[1] * r[1].data[1]) + (l[0].data[2] * r[2].data[1]) + (l[0].data[2] * r[3].data[1]),
-            (l[0].data[0] * r[0].data[2]) + (l[0].data[1] * r[1].data[2]) + (l[0].data[2] * r[2].data[2]) + (l[0].data[2] * r[3].data[2]),
-            (l[0].data[0] * r[0].data[3]) + (l[0].data[1] * r[1].data[3]) + (l[0].data[2] * r[2].data[3]) + (l[0].data[2] * r[3].data[3]),
+            (l[0].data[0] * r[0].data[0]) + (l[0].data[1] * r[1].data[0]) + (l[0].data[2] * r[2].data[0]) + (l[0].data[3] * r[3].data[0]),
+            (l[0].data[0] * r[0].data[1]) + (l[0].data[1] * r[1].data[1]) + (l[0].data[2] * r[2].data[1]) + (l[0].data[3] * r[3].data[1]),
+            (l[0].data[0] * r[0].data[2]) + (l[0].data[1] * r[1].data[2]) + (l[0].data[2] * r[2].data[2]) + (l[0].data[3] * r[3].data[2]),
+            (l[0].data[0] * r[0].data[3]) + (l[0].data[1] * r[1].data[3]) + (l[0].data[2] * r[2].data[3]) + (l[0].data[3] * r[3].data[3]),
 
-            (l[1].data[0] * r[0].data[0]) + (l[1].data[1] * r[1].data[0]) + (l[1].data[2] * r[2].data[0]) + (l[1].data[2] * r[3].data[0]),
-            (l[1].data[0] * r[0].data[1]) + (l[1].data[1] * r[1].data[1]) + (l[1].data[2] * r[2].data[1]) + (l[1].data[2] * r[3].data[1]),
-            (l[1].data[0] * r[0].data[2]) + (l[1].data[1] * r[1].data[2]) + (l[1].data[2] * r[2].data[2]) + (l[1].data[2] * r[3].data[2]),
-            (l[1].data[0] * r[0].data[3]) + (l[1].data[1] * r[1].data[3]) + (l[1].data[2] * r[2].data[3]) + (l[1].data[2] * r[3].data[3]),
+            (l[1].data[0] * r[0].data[0]) + (l[1].data[1] * r[1].data[0]) + (l[1].data[2] * r[2].data[0]) + (l[1].data[3] * r[3].data[0]),
+            (l[1].data[0] * r[0].data[1]) + (l[1].data[1] * r[1].data[1]) + (l[1].data[2] * r[2].data[1]) + (l[1].data[3] * r[3].data[1]),
+            (l[1].data[0] * r[0].data[2]) + (l[1].data[1] * r[1].data[2]) + (l[1].data[2] * r[2].data[2]) + (l[1].data[3] * r[3].data[2]),
+            (l[1].data[0] * r[0].data[3]) + (l[1].data[1] * r[1].data[3]) + (l[1].data[2] * r[2].data[3]) + (l[1].data[3] * r[3].data[3]),
 
-            (l[2].data[0] * r[0].data[0]) + (l[2].data[1] * r[1].data[0]) + (l[2].data[2] * r[2].data[0]) + (l[2].data[2] * r[3].data[0]),
-            (l[2].data[0] * r[0].data[1]) + (l[2].data[1] * r[1].data[1]) + (l[2].data[2] * r[2].data[1]) + (l[2].data[2] * r[3].data[1]),
-            (l[2].data[0] * r[0].data[2]) + (l[2].data[1] * r[1].data[2]) + (l[2].data[2] * r[2].data[2]) + (l[2].data[2] * r[3].data[2]),
-            (l[2].data[0] * r[0].data[3]) + (l[2].data[1] * r[1].data[3]) + (l[2].data[2] * r[2].data[3]) + (l[2].data[2] * r[3].data[3]),
+            (l[2].data[0] * r[0].data[0]) + (l[2].data[1] * r[1].data[0]) + (l[2].data[2] * r[2].data[0]) + (l[2].data[3] * r[3].data[0]),
+            (l[2].data[0] * r[0].data[1]) + (l[2].data[1] * r[1].data[1]) + (l[2].data[2] * r[2].data[1]) + (l[2].data[3] * r[3].data[1]),
+            (l[2].data[0] * r[0].data[2]) + (l[2].data[1] * r[1].data[2]) + (l[2].data[2] * r[2].data[2]) + (l[2].data[3] * r[3].data[2]),
+            (l[2].data[0] * r[0].data[3]) + (l[2].data[1] * r[1].data[3]) + (l[2].data[2] * r[2].data[3]) + (l[2].data[3] * r[3].data[3]),
 
-            (l[3].data[0] * r[0].data[0]) + (l[3].data[1] * r[1].data[0]) + (l[3].data[2] * r[2].data[0]) + (l[3].data[2] * r[3].data[0]),
-            (l[3].data[0] * r[0].data[1]) + (l[3].data[1] * r[1].data[1]) + (l[3].data[2] * r[2].data[1]) + (l[3].data[2] * r[3].data[1]),
-            (l[3].data[0] * r[0].data[2]) + (l[3].data[1] * r[1].data[2]) + (l[3].data[2] * r[2].data[2]) + (l[3].data[2] * r[3].data[2]),
-            (l[3].data[0] * r[0].data[3]) + (l[3].data[1] * r[1].data[3]) + (l[3].data[2] * r[2].data[3]) + (l[3].data[2] * r[3].data[3]),
+            (l[3].data[0] * r[0].data[0]) + (l[3].data[1] * r[1].data[0]) + (l[3].data[2] * r[2].data[0]) + (l[3].data[3] * r[3].data[0]),
+            (l[3].data[0] * r[0].data[1]) + (l[3].data[1] * r[1].data[1]) + (l[3].data[2] * r[2].data[1]) + (l[3].data[3] * r[3].data[1]),
+            (l[3].data[0] * r[0].data[2]) + (l[3].data[1] * r[1].data[2]) + (l[3].data[2] * r[2].data[2]) + (l[3].data[3] * r[3].data[2]),
+            (l[3].data[0] * r[0].data[3]) + (l[3].data[1] * r[1].data[3]) + (l[3].data[2] * r[2].data[3]) + (l[3].data[3] * r[3].data[3]),
     };
 
     lhs = result;
