@@ -247,6 +247,30 @@ Matrix4x4 LookAt(
     return result * Translation(-position);
 }
 
+void CheckGlError(const char *file, int line)
+{
+    GLenum err (glGetError());
+
+    while (err!=GL_NO_ERROR)
+    {
+        const char* error;
+
+        switch (err)
+        {
+            case GL_INVALID_OPERATION:  error="INVALID_OPERATION";  break;
+            case GL_INVALID_ENUM:       error="INVALID_ENUM";       break;
+            case GL_INVALID_VALUE:      error="INVALID_VALUE";      break;
+            case GL_OUT_OF_MEMORY:      error="OUT_OF_MEMORY";      break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:  error="INVALID_FRAMEBUFFER_OPERATION";  break;
+        }
+
+        printf("GL %s - %s:%d\n", error, file, line);
+        err=glGetError();
+    }
+}
+
+#define GLCHECK() CheckGlError(__FILE__,__LINE__)
+
 // RAM: Lets try loaind sdl and get a glcontext.
 void DoGraphics(const Bsp::CollisionBsp &)
 {
@@ -288,15 +312,15 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // Loading vertex data (1 == number of buffers)
     // http://en.wikipedia.org/wiki/Vertex_Buffer_Object
     GLuint triangleVboHandle;
-    glGenBuffers(1, &triangleVboHandle);
-    glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);
+    glGenBuffers(1, &triangleVboHandle);GLCHECK();
+    glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);GLCHECK();
 
     auto triangles = MakeTrianglesAndNormals();
     glBufferData(
         GL_ARRAY_BUFFER,
         triangles.size(),
         triangles.data(),
-        GL_STATIC_DRAW);
+        GL_STATIC_DRAW);GLCHECK();
 
     // TODO: vertex, fragment, program, bind, load
     // try https://www.opengl.org/sdk/docs/tutorials/ClockworkCoders/loading.php
@@ -338,52 +362,52 @@ void DoGraphics(const Bsp::CollisionBsp &)
         gl_FragColor = c * dot;\
     }";
 
-    auto vsO = glCreateShader(GL_VERTEX_SHADER);
-    auto psO = glCreateShader(GL_FRAGMENT_SHADER);
-    auto pO = glCreateProgram();
-    glShaderSource(vsO, 1, &vs, nullptr);
-    glShaderSource(psO, 1, &ps, nullptr);
-    glCompileShader(vsO);
-    glCompileShader(psO);
+    auto vsO = glCreateShader(GL_VERTEX_SHADER);GLCHECK();
+    auto psO = glCreateShader(GL_FRAGMENT_SHADER);GLCHECK();
+    auto pO = glCreateProgram();GLCHECK();
+    glShaderSource(vsO, 1, &vs, nullptr);GLCHECK();
+    glShaderSource(psO, 1, &ps, nullptr);GLCHECK();
+    glCompileShader(vsO);GLCHECK();
+    glCompileShader(psO);GLCHECK();
     PrintShaderLog(vsO, Log::Shader);
     PrintShaderLog(psO, Log::Shader);
 
-    glAttachShader(pO, vsO);
-    glAttachShader(pO, psO);
-    glLinkProgram(pO);
+    glAttachShader(pO, vsO);GLCHECK();
+    glAttachShader(pO, psO);GLCHECK();
+    glLinkProgram(pO);GLCHECK();
     PrintShaderLog(pO, Log::Program);
 
     // Get the attribute addresses so we can setup the state
     // for the vertex buffer correctly.
-    auto lvNormal    = glGetAttribLocation(pO, "vNormal");
-    auto lvPosition  = glGetAttribLocation(pO, "vPosition");
+    auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
+    auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
 
     // Get the ids for the uniforms as well
-    auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");
-    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");
-    auto llightDir = glGetUniformLocation(pO, "lightdir");
+    auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");GLCHECK();
+    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");GLCHECK();
+    auto llightDir = glGetUniformLocation(pO, "lightdir");GLCHECK();
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
     // The last item is meant to be a pointer to the data
     // but it's actually an offset. yay.
-    glEnableVertexArrayAttrib(triangleVboHandle, lvPosition);
+    glEnableVertexArrayAttrib(triangleVboHandle, lvPosition);GLCHECK();
     glVertexAttribPointer(
                 lvPosition,
                 3,
                 GL_FLOAT,
                 GL_FALSE,
                 3*2*sizeof(float),
-                reinterpret_cast<const void*>(0));
+                reinterpret_cast<const void*>(0));GLCHECK();
 
-    glEnableVertexArrayAttrib(triangleVboHandle, lvNormal);
+    glEnableVertexArrayAttrib(triangleVboHandle, lvNormal);GLCHECK();
     glVertexAttribPointer(
                 lvNormal,
                 3,
                 GL_FLOAT,
                 GL_FALSE,
                 3*2*sizeof(float),
-                reinterpret_cast<const void*>(3*sizeof(float)));
+                reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
 
     // MAIN SDL LOOP
     bool running = true;
@@ -463,8 +487,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 resized = false;
             }
 
-            glClearColor(0,1,0,1);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClearColor(0,1,0,1);GLCHECK();
+            glClear(GL_COLOR_BUFFER_BIT);GLCHECK();
 
             // Get View Matrix
             auto view = LookAt(Vec3{0,0,5}, Vec3{0,0,-20});
@@ -473,26 +497,26 @@ void DoGraphics(const Bsp::CollisionBsp &)
             auto projViewWorld = g_projection * view;
             auto normalXform = Transpose(Inverse(projViewWorld));
 
-            glUseProgram(pO);
+            glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
                 lmodelViewProjMatrix,
                 1,
                 false,
-                &projViewWorld.data[0].data[0]);
+                &projViewWorld.data[0].data[0]);GLCHECK();
 
             glUniformMatrix4fv(
                 lnormalMatrix,
                 1,
                 false,
-                &normalXform.data[0].data[0]);
+                &normalXform.data[0].data[0]);GLCHECK();
 
             glUniform3fv(
                 llightDir,
                 1,
-                &Normalise(Vec3{-0.05, -1, -0.3}).data[0]);
+                &Normalise(Vec3{-0.05, -1, -0.3}).data[0]);GLCHECK();
 
-            glBindVertexArray(triangleVboHandle);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glBindVertexArray(triangleVboHandle);GLCHECK();
+            glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
 
             SDL_GL_SwapWindow(window);
         }
