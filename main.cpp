@@ -385,6 +385,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
     // Get the attribute addresses so we can setup the state
     // for the vertex buffer correctly.
+    // RAM: TODO: Swap to glBindAttribLocation()
+    // See http://stackoverflow.com/questions/4635913/explicit-vs-automatic-attribute-location-binding-for-opengl-shaders
     auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
     auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
 
@@ -521,7 +523,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 1,
                 &Normalise(Vec3{-0.05, -1, -0.3}).data[0]);GLCHECK();
 
-            glBindVertexArray(triangleVboHandle);GLCHECK();
             glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
 
             SDL_GL_SwapWindow(window);
