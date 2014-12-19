@@ -507,7 +507,10 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
             // Assuming world matrix is identity
             auto projViewWorld = g_projection * view;
+
+            // RAM: TODO: Fix that the normal is full of nans
             auto normalXform = Transpose(Inverse(projViewWorld));
+            auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
@@ -527,7 +530,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glUniform3fv(
                 llightDir,
                 1,
-                &Normalise(Vec3{-0.05, -1, -0.3}).data[0]);GLCHECK();
+                &lightDir.data[0]);GLCHECK();
 
             glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
 
