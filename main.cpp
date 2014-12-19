@@ -319,7 +319,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     auto triangles = MakeTrianglesAndNormals();
     glBufferData(
         GL_ARRAY_BUFFER,
-        triangles.size(),
+        triangles.size() * sizeof(float),
         triangles.data(),
         GL_STATIC_DRAW);GLCHECK();
 
