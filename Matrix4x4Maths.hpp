@@ -135,7 +135,7 @@ inline constexpr Matrix4x4 Translation(const Vec3& lhs)
     {
         1.0f, 0.0f, 0.0f, lhs.data[0],
         0.0f, 1.0f, 0.0f, lhs.data[1],
-        0.0f, 0.0f, 0.0f, lhs.data[2],
+        0.0f, 0.0f, 1.0f, lhs.data[2],
         0.0f, 0.0f, 0.0f, 1.0f,
     };
 }
