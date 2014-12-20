@@ -216,26 +216,6 @@ Matrix4x4 ProjectionMatrix(
     }};
 }
 
-Matrix4x4 LookAt(
-        Vec3 position,
-        Vec3 positionBeenLookedAt,
-        Vec3 up = {0.0f, 1.0f, 0.0f})
-{
-    auto direction  = Normalise(positionBeenLookedAt - position);
-    auto right      = Normalise(Cross(direction, up));
-    auto newUp      = Normalise(Cross(right, direction));
-
-    auto result = Matrix4x4
-    {{
-        {right.data[0], newUp.data[0], -direction.data[0], 0.0f},
-        {right.data[1], newUp.data[1], -direction.data[1], 0.0f},
-        {right.data[2], newUp.data[2], -direction.data[2], 0.0f},
-        {0.0f, 0.0f, 0.0f, 1.0f},
-    }};
-
-    return result * Translation(-position);
-}
-
 void CheckGlError(const char *file, int line)
 {
     GLenum err (glGetError());
@@ -494,7 +474,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAt(Vec3{0,0,5}, Vec3{0,0,-20});
+            auto view = LookAtRH(Vec3{0,0,5}, Vec3{0,0,-20});
 
             // Assuming world matrix is identity
             // projection * view * model

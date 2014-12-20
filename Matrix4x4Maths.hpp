@@ -103,7 +103,7 @@ inline Matrix4x4 operator*(Matrix4x4 lhs, float rhs){ lhs *= rhs;  return lhs; }
 // ///////////////////
 // Matrix Maths.
 // ///////////////////
-inline Matrix4x4 Transpose(const Matrix4x4& lhs)
+inline constexpr Matrix4x4 Transpose(const Matrix4x4& lhs)
 {
     return
     {
@@ -144,6 +144,8 @@ Matrix4x4 Inverse(const Matrix4x4& lhs)
 {
     // Modified from
     // http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix
+    // Note that this doesn't care is it's row or column major, maths still
+    // works out.
     Matrix4x4 inverse = {0};
 
     inverse.data[0].data[0] =
@@ -285,6 +287,39 @@ Matrix4x4 Inverse(const Matrix4x4& lhs)
     auto inverseDeterminant = 1.0f / determinant;
 
     return inverse * inverseDeterminant;
+}
+
+/// Calculate the view matrix when the camera at \a eyePosition is looking
+/// at the point \a target, orientatied so that straigt up is \a up.
+/// RH Means we are using the right hand coordinate system so that the positive
+/// z axis points out of the screen when up is y and right is x.
+Matrix4x4 LookAtRH(
+        Vec3 eyePosition,
+        Vec3 target,
+        Vec3N up = {0.0f, 1.0f, 0.0f})
+{
+    // RH means the positive z-axis points out of the screen.
+
+    auto direction  = Normalise(eyePosition - target);
+    auto right      = Normalise(Cross(direction, up));
+    auto newUp      = Normalise(Cross(right, direction));
+
+    // This is row major, so it'll be transposed from all the
+    // OpenGL documentation.
+    // direction isn't -ve, because we did (eye - target), not (target - eye).
+    // Documentation on the net is so fucking annoying.
+    // Also, I don't know why all the examples on the net
+    // used a normalised right, when the gl docs don't.
+    // https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
+    auto result = Matrix4x4
+    {
+        right.data[0],      right.data[1],      right.data[2],      0.0f,
+        newUp.data[0],      newUp.data[1],      newUp.data[2],      0.0f,
+        direction.data[0],  direction.data[1],  direction.data[2],  0.0f,
+        0.0f,               0.0f,               0.0f,               1.0f,
+    };
+
+    return result * Translation(-eyePosition);
 }
 
 // ///////////////////
