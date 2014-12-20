@@ -216,17 +216,6 @@ Matrix4x4 ProjectionMatrix(
     }};
 }
 
-Matrix4x4 inline Translation(Vec3 offset)
-{
-    return Matrix4x4
-    {{
-        {1.0f,              0.0f,           0.0f,           0.0f},
-        {0.0f,              1.0f,           0.0f,           0.0f},
-        {0.0f,              0.0f,           1.0f,           0.0f},
-        {offset.data[0],    offset.data[1], offset.data[2], 1.0f},
-    }};
-}
-
 Matrix4x4 LookAt(
         Vec3 position,
         Vec3 positionBeenLookedAt,
