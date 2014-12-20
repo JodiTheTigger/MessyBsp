@@ -166,56 +166,6 @@ void PrintShaderLog(GLuint shader, Log type )
     }
 }
 
-Matrix4x4 ProjectionMatrix(
-    Radians fieldOfView,
-    float aspect,
-    float nearDistance,
-    float farDistance)
-{
-    //
-    // General form of the Projection Matrix
-    //
-    // uh = Cot( fov/2 ) == 1/Tan(fov/2)
-    // uw / uh = 1/aspect
-    //
-    //   uw         0       0       0
-    //    0        uh       0       0
-    //    0         0      f/(f-n)  1
-    //    0         0    -fn/(f-n)  0
-
-    float frustumDepth  = farDistance - nearDistance;
-    float oneOverDepth  = 1.0f / frustumDepth;
-    float f             = 1.0f / std::tan(0.5f * fieldOfView.data);
-
-    return Matrix4x4
-    {{
-        {
-            f / aspect,
-            0.0f,
-            0.0f,
-            0.0f
-        },
-        {
-            0.0f,
-            f,
-            0.0f,
-            0.0f
-        },
-        {
-            0.0f,
-            0.0f,
-            farDistance * oneOverDepth,
-            1.0f
-        },
-        {
-            0.0f,
-            0.0f,
-            (-farDistance * nearDistance) * oneOverDepth,
-            0.0f
-        },
-    }};
-}
-
 void CheckGlError(const char *file, int line)
 {
     GLenum err (glGetError());

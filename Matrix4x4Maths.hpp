@@ -322,6 +322,38 @@ Matrix4x4 LookAtRH(
     return result * Translation(-eyePosition);
 }
 
+Matrix4x4 ProjectionMatrix(
+    Radians fieldOfView,
+    float aspect,
+    float nearDistance,
+    float farDistance)
+{
+    //
+    // General form of the Projection Matrix
+    // ***ROW MAJOR***
+    //
+    // uh = Cot( fov/2 ) == 1/Tan(fov/2)
+    // uw / uh = 1/aspect
+    //
+    //   uw         0       0       0
+    //    0        uh       0       0
+    //    0         0      f/(f-n)  -fn/(f-n)
+    //    0         0       1       0
+
+    float frustumDepth  = farDistance - nearDistance;
+    float oneOverDepth  = 1.0f / frustumDepth;
+    float f             = 1.0f / std::tan(0.5f * fieldOfView.data);
+    float farOverDepth  = farDistance * oneOverDepth;
+
+    return Matrix4x4
+    {
+        f / aspect, 0.0f,   0.0f,           0.0f,
+        0.0f,       f,      0.0f,           0.0f,
+        0.0f,       0.0f,   farOverDepth,   -farOverDepth * nearDistance,
+        0.0f,       0.0f,   1.0f,           0.0f
+    };
+}
+
 // ///////////////////
 // Vector Maths.
 // ///////////////////
