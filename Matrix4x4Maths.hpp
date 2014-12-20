@@ -129,6 +129,17 @@ inline Matrix4x4 Transpose(const Matrix4x4& lhs)
     };
 }
 
+inline constexpr Matrix4x4 Translation(const Vec3& lhs)
+{
+    return
+    {
+        1.0f, 0.0f, 0.0f, lhs.data[0],
+        0.0f, 1.0f, 0.0f, lhs.data[1],
+        0.0f, 0.0f, 0.0f, lhs.data[2],
+        0.0f, 0.0f, 0.0f, 1.0f,
+    };
+}
+
 Matrix4x4 Inverse(const Matrix4x4& lhs)
 {
     // Modified from
@@ -269,6 +280,8 @@ Matrix4x4 Inverse(const Matrix4x4& lhs)
             lhs.data[0].data[2] * inverse.data[2].data[0] +
             lhs.data[0].data[3] * inverse.data[3].data[0];
 
+    // TODO: Deal with 0 determinant.
+
     auto inverseDeterminant = 1.0f / determinant;
 
     return inverse * inverseDeterminant;
@@ -297,4 +310,17 @@ inline Vec4 operator*(const Vec4& lhs, const Matrix4x4& rhs)
         rhs.data[0].data[2] * lhs.data[0] + rhs.data[1].data[2] * lhs.data[1] + rhs.data[2].data[2] * lhs.data[2] + rhs.data[3].data[2] * lhs.data[3],
         rhs.data[0].data[3] * lhs.data[0] + rhs.data[1].data[3] * lhs.data[1] + rhs.data[2].data[3] * lhs.data[2] + rhs.data[3].data[3] * lhs.data[3],
     };
+}
+
+// ///////////////////
+// Conversions
+// ///////////////////
+inline constexpr Matrix4x4 ToOpenGL(const Matrix4x4& lhs)
+{
+    return Transpose(lhs);
+}
+
+inline constexpr Matrix4x4 ToDirectX(const Matrix4x4& lhs)
+{
+    return lhs;
 }
