@@ -19,6 +19,8 @@
 #include "Geometry.hpp"
 #include "VectorMaths4.hpp"
 
+// *** ROW MAJOR ***
+
 // ///////////////////
 // Operators
 // ///////////////////
