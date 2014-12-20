@@ -172,7 +172,6 @@ Matrix4x4 ProjectionMatrix(
     float nearDistance,
     float farDistance)
 {
-    // RAM: TODO: CHECK: this row major or column major? does it matter?
     //
     // General form of the Projection Matrix
     //
@@ -219,16 +218,12 @@ Matrix4x4 ProjectionMatrix(
 
 Matrix4x4 inline Translation(Vec3 offset)
 {
-    // RAM: Note that all matrix stuff done
-    // in C++ is row major, but GLSL uses column major to do its
-    // maths, so you have to transpose all c++ matricies before
-    // giving them to the shaders.
     return Matrix4x4
     {{
-        {1.0f, 0.0f, 0.0f, offset.data[0]},
-        {0.0f, 1.0f, 0.0f, offset.data[1]},
-        {0.0f, 0.0f, 1.0f, offset.data[2]},
-        {0.0f, 0.0f, 0.0f, 1.0f}
+        {1.0f,              0.0f,           0.0f,           0.0f},
+        {0.0f,              1.0f,           0.0f,           0.0f},
+        {0.0f,              0.0f,           1.0f,           0.0f},
+        {offset.data[0],    offset.data[1], offset.data[2], 1.0f},
     }};
 }
 
@@ -237,7 +232,6 @@ Matrix4x4 LookAt(
         Vec3 positionBeenLookedAt,
         Vec3 up = {0.0f, 1.0f, 0.0f})
 {
-    // RAM: TODO: Check is this row major or column major?
     auto direction  = Normalise(positionBeenLookedAt - position);
     auto right      = Normalise(Cross(direction, up));
     auto newUp      = Normalise(Cross(right, direction));
