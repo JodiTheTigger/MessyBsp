@@ -429,11 +429,39 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Assuming world matrix is identity
             // projection * view * model
             // vertex = MVP * in_vertex;
+            // Who would have thought that this little line would have
+            // causes me so much fucking pain.
+            // BTW: RH, row, post, -1,1.
             auto projViewWorld = g_projection * view;
 
             // RAM: TODO: Fix that the normal is full of nans
             auto normalXform = Transpose(Inverse(projViewWorld));
             auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
+
+            // screw it, test the matrix myself since it doesn't work.
+            // expect eveything to be withint a -1,1 box.
+            {
+                Vec4 a = {0.0f, 0.0f, 0.0f, 1.0f};
+                Vec4 b = {5.0f, 10.0f, 0.0f, 1.0f};
+                Vec4 c = {10.0f, 0.0f, 0.0f, 1.0f};
+
+                // world -> clip space
+                auto ta = a * projViewWorld;
+                auto tb = b * projViewWorld;
+                auto tc = c * projViewWorld;
+
+                // clip space -> NDC
+                auto cta = ta * (1.0f / ta.data[3]);
+                auto ctb = tb * (1.0f / tb.data[3]);
+                auto ctc = tc * (1.0f / tc.data[3]);
+
+                // NDC - > window coords (viewport)
+                // ??
+
+                // now in window coords
+
+                cta*ctb*ctc;
+            }
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
@@ -447,13 +475,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 lmodelViewProjMatrix,
                 1,
                 false,
-                &projViewWorld.data[0].data[0]);GLCHECK();
+                &ToOpenGL(projViewWorld).data[0].data[0]);GLCHECK();
 
             glUniformMatrix4fv(
                 lnormalMatrix,
                 1,
                 false,
-                &normalXform.data[0].data[0]);GLCHECK();
+                &ToOpenGL(normalXform).data[0].data[0]);GLCHECK();
 
             glUniform3fv(
                 llightDir,
