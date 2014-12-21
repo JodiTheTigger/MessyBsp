@@ -395,7 +395,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAtRH(Vec3{0,0,20}, Vec3{0,0,-20});
+            auto view = LookAtRH(Vec3{0,0,40}, Vec3{0,0,-20});
 
             // Assuming world matrix is identity
             // projection * view * model
