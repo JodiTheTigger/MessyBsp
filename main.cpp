@@ -32,6 +32,9 @@
 #include <cstdio>
 #include <cmath>
 
+static const float Pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
+static const float DegToRad = (2.0f * Pi / 360.0f);
+
 // Globals
 Matrix4x4 g_projection;
 
@@ -413,18 +416,18 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 float ratio = 1.0f * width / height;
 
                 // 1.3 ~= less than 90 degrees in radians.
-                g_projection = ProjectionMatrix(Radians{1.3f}, ratio, 0.1f, 10.0f);
+                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 10.0f);
 
                 resized = false;
             }
 
-            glClearColor(0,1,0,1);GLCHECK();
+            glClearColor(0.1,0.2,0.1,1);GLCHECK();
             glClear(GL_COLOR_BUFFER_BIT);GLCHECK();
 
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAtRH(Vec3{0,0,5}, Vec3{0,0,-20});
+            auto view = LookAtRH(Vec3{0,0,20}, Vec3{0,0,-20});
 
             // Assuming world matrix is identity
             // projection * view * model
@@ -450,7 +453,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 auto tb = b * projViewWorld;
                 auto tc = c * projViewWorld;
 
-                // clip space -> NDC
+                // clip space -> NDC (-1 to 1)
                 auto cta = ta * (1.0f / ta.data[3]);
                 auto ctb = tb * (1.0f / tb.data[3]);
                 auto ctc = tc * (1.0f / tc.data[3]);
