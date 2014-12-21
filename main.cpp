@@ -437,12 +437,16 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // has resulted in endless confusion in the OpenGL programming
             // community. Column-major notation suggests that matrices are not
             // laid out in memory as a programmer would expect.
+
+            // TODO: Understand why this works.
+            auto openglMatrix = projViewWorld;//ToOpenGL(projViewWorld);
+
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
                 lmodelViewProjMatrix,
                 1,
                 false,
-                &ToOpenGL(projViewWorld).data[0].data[0]);GLCHECK();
+                &openglMatrix.data[0].data[0]);GLCHECK();
 
             glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
 

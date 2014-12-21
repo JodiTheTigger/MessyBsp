@@ -345,13 +345,36 @@ Matrix4x4 ProjectionMatrix(
     float f             = 1.0f / std::tan(0.5f * fieldOfView.data);
     float farOverDepth  = farDistance * oneOverDepth;
 
-    return Matrix4x4
+    Matrix4x4 a =
     {
         f / aspect, 0.0f,   0.0f,           0.0f,
         0.0f,       f,      0.0f,           0.0f,
         0.0f,       0.0f,   farOverDepth,   -farOverDepth * nearDistance,
         0.0f,       0.0f,   1.0f,           0.0f
     };
+
+    float negativeFrustumDepth = nearDistance - farDistance;
+
+    // https://unspecified.wordpress.com/2012/06/21/calculating-the-gluperspective-matrix-and-other-opengl-matrix-maths/
+    Matrix4x4 b =
+    {
+        f / aspect, 0.0f,   0.0f,           0.0f,
+        0.0f,       f,      0.0f,           0.0f,
+        0.0f,       0.0f,   farDistance + nearDistance / negativeFrustumDepth, 2*farDistance*nearDistance / negativeFrustumDepth,
+        0.0f,       0.0f,   -1.0f,          0.0f,
+    };
+
+    a*b;
+
+    return b;
+
+    // RAM: Different way
+    // f = 1 / tan(fovy/2);
+    // f / aspect, 0, 0, 0
+    // 0, f, 0, 0
+    // 0, 0, zFar + zNear/ (zNear - zFar), 2*zNear*zFar/(zNear-zFar)
+    // 0, 0, -1, 0
+
 }
 
 // ///////////////////
