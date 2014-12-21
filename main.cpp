@@ -104,11 +104,11 @@ std::vector<float> MakeTriangles()
         0.0f,
         0.0f,
 
-        0.5f,
-        0.8f,
+        5.0f,
+        10.0f,
         0.0f,
 
-        0.8f,
+        10.f,
         0.0f,
         0.0f,
     };
@@ -429,16 +429,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
                 cta*ctb*ctc;
             }
-
-            // RAM: Just draw the triangle:
-            // Use identity.
-            projViewWorld =
-            {
-                1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f,
-            };
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
