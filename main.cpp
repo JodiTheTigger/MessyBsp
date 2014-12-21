@@ -95,36 +95,22 @@ int main(int argc, char** argv)
     return 0;
 }
 
-std::vector<float> MakeTrianglesAndNormals()
+std::vector<float> MakeTriangles()
 {
     return std::vector<float>
     {
-        // x,y,z,nx,ny,nz (RH coords, +ve z comes out of monitor)
+        // x,y,z (RH coords, +ve z comes out of monitor)
         0.0f,
         0.0f,
         0.0f,
-
-        0.0f,
-        0.0f,
-        1.0f,
-
 
         5.0f,
         10.0f,
         0.0f,
 
-        0.0f,
-        0.0f,
-        1.0f,
-
-
         10.0f,
         0.0f,
         0.0f,
-
-        0.0f,
-        0.0f,
-        1.0f,
     };
 }
 
@@ -238,7 +224,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     glGenBuffers(1, &triangleVboHandle);GLCHECK();
     glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);GLCHECK();
 
-    auto triangles = MakeTrianglesAndNormals();
+    auto triangles = MakeTriangles();
     glBufferData(
         GL_ARRAY_BUFFER,
         triangles.size() * sizeof(float),
@@ -261,28 +247,20 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // http://stackoverflow.com/questions/8551935/opengl-es-2-0-specifiying-position-attribute-vec3-or-vec4
     const GLchar* vs = "\
     uniform mat4 modelViewProjMatrix;\
-    uniform mat4 normalMatrix;\
-    uniform vec3 lightDir;\
  \
-    attribute vec4 vNormal;\
     attribute vec4 vPosition;\
- \
-    varying float dot;\
  \
     void main()\
     {\
         gl_Position = modelViewProjMatrix * vPosition;\
-        vec4 transNormal = normalMatrix * vNormal;\
-        dot = max(dot(transNormal.xyz, lightDir), 0.0);\
     }";
 
     const GLchar* ps = "\
-    varying float dot; \
     void main()\
     {\
         vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\
         \
-        gl_FragColor = c * dot;\
+        gl_FragColor = c;\
     }";
 
     auto vsO = glCreateShader(GL_VERTEX_SHADER);GLCHECK();
@@ -310,13 +288,10 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // for the vertex buffer correctly.
     // RAM: TODO: Swap to glBindAttribLocation()
     // See http://stackoverflow.com/questions/4635913/explicit-vs-automatic-attribute-location-binding-for-opengl-shaders
-    auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
     auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
 
     // Get the ids for the uniforms as well
     auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");GLCHECK();
-    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");GLCHECK();
-    auto llightDir = glGetUniformLocation(pO, "lightdir");GLCHECK();
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
@@ -330,18 +305,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 GL_FALSE,
                 3*2*sizeof(float),
                 reinterpret_cast<const void*>(0));GLCHECK();
-
-    if (lvNormal >= 0)
-    {
-        glEnableVertexAttribArray(lvNormal);GLCHECK();
-        glVertexAttribPointer(
-                    lvNormal,
-                    3,
-                    GL_FLOAT,
-                    GL_FALSE,
-                    3*2*sizeof(float),
-                    reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
-    }
 
     // MAIN SDL LOOP
     bool running = true;
@@ -437,10 +400,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // BTW: RH, row, post, -1,1.
             auto projViewWorld = g_projection * view;
 
-            // RAM: TODO: Fix that the normal is full of nans
-            auto normalXform = Transpose(Inverse(projViewWorld));
-            auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
-
             // screw it, test the matrix myself since it doesn't work.
             // expect eveything to be withint a -1,1 box.
             {
@@ -479,17 +438,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 1,
                 false,
                 &ToOpenGL(projViewWorld).data[0].data[0]);GLCHECK();
-
-            glUniformMatrix4fv(
-                lnormalMatrix,
-                1,
-                false,
-                &ToOpenGL(normalXform).data[0].data[0]);GLCHECK();
-
-            glUniform3fv(
-                llightDir,
-                1,
-                &lightDir.data[0]);GLCHECK();
 
             glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
 
