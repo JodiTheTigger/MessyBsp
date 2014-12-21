@@ -104,11 +104,11 @@ std::vector<float> MakeTriangles()
         0.0f,
         0.0f,
 
-        5.0f,
-        10.0f,
+        0.5f,
+        0.8f,
         0.0f,
 
-        10.0f,
+        0.8f,
         0.0f,
         0.0f,
     };
@@ -245,29 +245,34 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // expand them to a vec4 filling in the missing values with the
     // template <0,0,0,1>
     // http://stackoverflow.com/questions/8551935/opengl-es-2-0-specifiying-position-attribute-vec3-or-vec4
-    const GLchar* vs = "\
-    uniform mat4 modelViewProjMatrix;\
- \
-    attribute vec4 vPosition;\
- \
-    void main()\
-    {\
-        gl_Position = modelViewProjMatrix * vPosition;\
-    }";
+    static const GLchar* vs[] =
+    {
+        "//#version 330 core                  \n"
+        "uniform mat4 modelViewProjMatrix;  \n"
+        "                                   \n"
+        "attribute vec4 vPosition;          \n"
+        "                                   \n"
+        "void main()                        \n"
+        "{                                  \n"
+        "    gl_Position = modelViewProjMatrix * vPosition;\n"
+        "}"
+    };
 
-    const GLchar* ps = "\
-    void main()\
-    {\
-        vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\
-        \
-        gl_FragColor = c;\
-    }";
+    static const GLchar* ps[] =
+    {
+        "//#version 330 core                  \n"
+        "void main()                        \n"
+        "{                                  \n"
+        "    vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\n"
+        "    gl_FragColor = c;              \n"
+        "}"
+    };
 
     auto vsO = glCreateShader(GL_VERTEX_SHADER);GLCHECK();
     auto psO = glCreateShader(GL_FRAGMENT_SHADER);GLCHECK();
     auto pO = glCreateProgram();GLCHECK();
-    glShaderSource(vsO, 1, &vs, nullptr);GLCHECK();
-    glShaderSource(psO, 1, &ps, nullptr);GLCHECK();
+    glShaderSource(vsO, 1, vs, nullptr);GLCHECK();
+    glShaderSource(psO, 1, ps, nullptr);GLCHECK();
     glCompileShader(vsO);GLCHECK();
     glCompileShader(psO);GLCHECK();
     PrintShaderLog(vsO, Log::Shader);
@@ -303,7 +308,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 3,
                 GL_FLOAT,
                 GL_FALSE,
-                3*2*sizeof(float),
+                0,
                 reinterpret_cast<const void*>(0));GLCHECK();
 
     // MAIN SDL LOOP
@@ -424,6 +429,16 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
                 cta*ctb*ctc;
             }
+
+            // RAM: Just draw the triangle:
+            // Use identity.
+            projViewWorld =
+            {
+                1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f,
+            };
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
