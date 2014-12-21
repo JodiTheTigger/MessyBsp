@@ -366,7 +366,7 @@ Matrix4x4 ProjectionMatrix(
 
     a*b;
 
-    return b;
+    return Transpose(b);
 
     // RAM: Different way
     // f = 1 / tan(fovy/2);
