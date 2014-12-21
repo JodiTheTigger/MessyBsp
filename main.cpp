@@ -248,12 +248,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
     static const GLchar* vs[] =
     {
         "//#version 330 core                  \n"
+        "uniform mat4 modelViewProjMatrix;  \n"
         "                                   \n"
         "attribute vec4 vPosition;          \n"
         "                                   \n"
         "void main()                        \n"
         "{                                  \n"
-        "    gl_Position = vPosition;\n"
+        "    gl_Position = modelViewProjMatrix * vPosition;\n"
         "}"
     };
 
@@ -262,7 +263,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
         "//#version 330 core                  \n"
         "void main()                        \n"
         "{                                  \n"
-        "    gl_FragColor = vec4(0.1, 0.1, 1.0, 1.0);              \n"
+        "    vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\n"
+        "    gl_FragColor = c;              \n"
         "}"
     };
 
@@ -293,6 +295,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // See http://stackoverflow.com/questions/4635913/explicit-vs-automatic-attribute-location-binding-for-opengl-shaders
     auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
 
+    // Get the ids for the uniforms as well
+    auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");GLCHECK();
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
@@ -386,7 +390,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             }
 
             glClearColor(0.1,0.2,0.1,1);GLCHECK();
-            glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);GLCHECK();
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);GLCHECK();
 
             // Get View Matrix
             // Camera is 5 units behind your back
@@ -444,6 +448,11 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // community. Column-major notation suggests that matrices are not
             // laid out in memory as a programmer would expect.
             glUseProgram(pO);GLCHECK();
+            glUniformMatrix4fv(
+                lmodelViewProjMatrix,
+                1,
+                false,
+                &ToOpenGL(projViewWorld).data[0].data[0]);GLCHECK();
 
             glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
 
