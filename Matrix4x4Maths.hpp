@@ -19,7 +19,7 @@
 #include "Geometry.hpp"
 #include "VectorMaths4.hpp"
 
-// *** ROW MAJOR ***
+// *** ROW MAJOR STORAGE ***
 
 // ///////////////////
 // Operators
@@ -313,10 +313,10 @@ Matrix4x4 LookAtRH(
     // https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
     auto result = Matrix4x4
     {
-        right.data[0],      right.data[1],      right.data[2],      0.0f,
-        newUp.data[0],      newUp.data[1],      newUp.data[2],      0.0f,
-        direction.data[0],  direction.data[1],  direction.data[2],  0.0f,
-        0.0f,               0.0f,               0.0f,               1.0f,
+        right.data[0],  newUp.data[0],  direction.data[0],  0.0f,
+        right.data[1],  newUp.data[1],  direction.data[1],  0.0f,
+        right.data[2],  newUp.data[2],  direction.data[2],  0.0f,
+        0.0f,           0.0f,           0.0f,               1.0f,
     };
 
     return result * Translation(-eyePosition);
@@ -330,7 +330,6 @@ Matrix4x4 ProjectionMatrix(
 {
     //
     // General form of the Projection Matrix
-    // ***ROW MAJOR***
     //
     // https://unspecified.wordpress.com/2012/06/21/calculating-the-gluperspective-matrix-and-other-opengl-matrix-maths/
     float f            = 1.0f / std::tan(0.5f * fieldOfView.data);
@@ -341,8 +340,8 @@ Matrix4x4 ProjectionMatrix(
     {
         f / aspect, 0.0f,   0.0f,                                       0.0f,
         0.0f,       f,      0.0f,                                       0.0f,
-        0.0f,       0.0f,   farDistance + nearDistance / frustumDepth,  -1.0f,
-        0.0f,       0.0f,   twoNearFar / frustumDepth,                  0.0f,
+        0.0f,       0.0f,   farDistance + nearDistance / frustumDepth,  twoNearFar / frustumDepth,
+        0.0f,       0.0f,   -1.0f,                  0.0f,
     };
 }
 
