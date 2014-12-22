@@ -316,6 +316,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     bool visible = true;
     bool resized = true;
     Vec3 cameraPosition = {0,0,50};
+    Vec3 lookAtPosition = {0,0,-20};
     while (running)
     {
         SDL_Event e;
@@ -335,22 +336,26 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 }
 
                 // Bad keyboard input
-                static const float delta = 1.0f;
+                static const float delta = 0.5f;
                 if (e.key.keysym.sym == SDLK_a)
                 {
                     cameraPosition.data[0] -= delta;
+                    lookAtPosition.data[0] -= delta;
                 }
                 if (e.key.keysym.sym == SDLK_d)
                 {
                     cameraPosition.data[0] += delta;
+                    lookAtPosition.data[0] += delta;
                 }
                 if (e.key.keysym.sym == SDLK_w)
                 {
                     cameraPosition.data[1] += delta;
+                    lookAtPosition.data[1] += delta;
                 }
                 if (e.key.keysym.sym == SDLK_s)
                 {
                     cameraPosition.data[1] -= delta;
+                    lookAtPosition.data[1] -= delta;
                 }
             }
 
@@ -415,7 +420,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAtRH(cameraPosition, Vec3{0,0,-20});
+            auto view = LookAtRH(cameraPosition, lookAtPosition);
 
             // Assuming world matrix is identity
             // projection * view * model
@@ -423,6 +428,12 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Who would have thought that this little line would have
             // causes me so much fucking pain.
             // BTW: RH, row, post, -1,1.
+            // UGH! I still don't understand.
+            // but
+            // https://fgiesen.wordpress.com/2012/02/12/row-major-vs-column-major-row-vectors-vs-column-vectors/
+            // says just copy the notation thats on the net, and do the matrix multiplication
+            // in the order as the on net, and it all works in the end, column or vector store.
+            // It did. *sigh*
             auto projViewWorld = g_projection * view;
 
             // screw it, test the matrix myself since it doesn't work.
@@ -459,7 +470,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // laid out in memory as a programmer would expect.
 
             // TODO: Understand why this works.
-            auto openglMatrix = projViewWorld;//ToOpenGL(projViewWorld);
+            auto openglMatrix = projViewWorld;
 
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
