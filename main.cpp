@@ -315,6 +315,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     bool running = true;
     bool visible = true;
     bool resized = true;
+    Vec3 cameraPosition = {0,0,50};
     while (running)
     {
         SDL_Event e;
@@ -331,6 +332,25 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                 {
                     running = false;
+                }
+
+                // Bad keyboard input
+                static const float delta = 1.0f;
+                if (e.key.keysym.sym == SDLK_a)
+                {
+                    cameraPosition.data[0] -= delta;
+                }
+                if (e.key.keysym.sym == SDLK_d)
+                {
+                    cameraPosition.data[0] += delta;
+                }
+                if (e.key.keysym.sym == SDLK_w)
+                {
+                    cameraPosition.data[1] += delta;
+                }
+                if (e.key.keysym.sym == SDLK_s)
+                {
+                    cameraPosition.data[1] -= delta;
                 }
             }
 
@@ -395,7 +415,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAtRH(Vec3{0,0,40}, Vec3{0,0,-20});
+            auto view = LookAtRH(cameraPosition, Vec3{0,0,-20});
 
             // Assuming world matrix is identity
             // projection * view * model
