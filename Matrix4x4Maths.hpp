@@ -144,8 +144,8 @@ Matrix4x4 Inverse(const Matrix4x4& lhs)
 {
     // Modified from
     // http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix
-    // Note that this doesn't care is it's row or column major, maths still
-    // works out.
+    // Note that this doesn't care is it's row or column major storage, maths
+    // still works out.
     Matrix4x4 inverse = {0};
 
     inverse.data[0].data[0] =
@@ -298,16 +298,11 @@ Matrix4x4 LookAtRH(
         Vec3 target,
         Vec3N up = {0.0f, 1.0f, 0.0f})
 {
-    // RH means the positive z-axis points out of the screen.
-
     auto direction  = Normalise(eyePosition - target);
     auto right      = Normalise(Cross(direction, up));
     auto newUp      = Normalise(Cross(right, direction));
 
-    // This is row major, so it'll be transposed from all the
-    // OpenGL documentation.
-    // direction isn't -ve, because we did (eye - target), not (target - eye).
-    // Documentation on the net is so fucking annoying.
+    // Direction isn't -ve, because we did (eye - target), not (target - eye).
     // Also, I don't know why all the examples on the net
     // used a normalised right, when the gl docs don't.
     // https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
@@ -368,17 +363,4 @@ inline Vec4 operator*(const Vec4& lhs, const Matrix4x4& rhs)
         rhs.data[0].data[2] * lhs.data[0] + rhs.data[1].data[2] * lhs.data[1] + rhs.data[2].data[2] * lhs.data[2] + rhs.data[3].data[2] * lhs.data[3],
         rhs.data[0].data[3] * lhs.data[0] + rhs.data[1].data[3] * lhs.data[1] + rhs.data[2].data[3] * lhs.data[2] + rhs.data[3].data[3] * lhs.data[3],
     };
-}
-
-// ///////////////////
-// Conversions
-// ///////////////////
-inline constexpr Matrix4x4 ToOpenGL(const Matrix4x4& lhs)
-{
-    return Transpose(lhs);
-}
-
-inline constexpr Matrix4x4 ToDirectX(const Matrix4x4& lhs)
-{
-    return lhs;
 }
