@@ -35,6 +35,49 @@
 static const float Pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
 static const float DegToRad = (2.0f * Pi / 360.0f);
 
+struct Globals
+{
+    // 50Hz for now.
+    unsigned tickClientPeriodInMicroseconds = 20 * 1000;
+    unsigned ticksPerSecond = 1000000 / tickClientPeriodInMicroseconds;
+
+    // Need to convert all this stuff to SI units.
+    // For now, lets assume 1 game unit = 1m
+    float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
+    float moveDeltaPerTick = 2.0f / ticksPerSecond;
+};
+
+const Globals globals;
+
+enum ActionMap
+{
+    Forward = 0,
+    Backward,
+    StrafeLeft,
+    StrafeRight,
+    Up,
+    Down,
+
+    Count
+};
+
+struct PlayerActions
+{
+    bool actions[ActionMap::Count];
+
+    Vec3 look;
+};
+
+static const uint8_t keymap[ActionMap::Count] =
+{
+    SDL_SCANCODE_W,
+    SDL_SCANCODE_S,
+    SDL_SCANCODE_A,
+    SDL_SCANCODE_D,
+    SDL_SCANCODE_SPACE,
+    SDL_SCANCODE_Q
+};
+
 // Globals
 Matrix4x4 g_projection;
 
@@ -93,6 +136,30 @@ int main(int argc, char** argv)
     DoGraphics(bsp);
 
     return 0;
+}
+
+PlayerActions GetActions()
+{
+    PlayerActions result;
+
+    const auto* keys = SDL_GetKeyboardState(nullptr);
+
+    for (unsigned i = 0; i < sizeof(keymap); ++i)
+    {
+        if (keys[keymap[i]])
+        {
+            result.actions[keymap[i]] = true;
+        }
+    }
+
+    return result;
+}
+
+// This class should be full of platform voodoo if done properly.
+// good thing I'm not doing it properly.
+uint64_t Microseconds()
+{
+    return static_cast<uint64_t>(SDL_GetTicks()) * 1000l;
 }
 
 std::vector<float> MakeTriangles()
@@ -317,6 +384,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
     bool resized = true;
     Vec3 cameraPosition = {0,0,50};
     Vec3 lookAtPosition = {0,0,-20};
+    auto then = Microseconds();
+
     while (running)
     {
         SDL_Event e;
@@ -333,29 +402,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                 {
                     running = false;
-                }
-
-                // Bad keyboard input
-                static const float delta = 0.5f;
-                if (e.key.keysym.sym == SDLK_a)
-                {
-                    cameraPosition.data[0] -= delta;
-                    lookAtPosition.data[0] -= delta;
-                }
-                if (e.key.keysym.sym == SDLK_d)
-                {
-                    cameraPosition.data[0] += delta;
-                    lookAtPosition.data[0] += delta;
-                }
-                if (e.key.keysym.sym == SDLK_w)
-                {
-                    cameraPosition.data[1] += delta;
-                    lookAtPosition.data[1] += delta;
-                }
-                if (e.key.keysym.sym == SDLK_s)
-                {
-                    cameraPosition.data[1] -= delta;
-                    lookAtPosition.data[1] -= delta;
                 }
             }
 
@@ -392,6 +438,52 @@ void DoGraphics(const Bsp::CollisionBsp &)
                     }
                 }
             }
+        }
+
+        // Poll for user input.
+        auto now = Microseconds();
+        if (now < then)
+        {
+            then = now;
+        }
+
+        auto delta = now - then;
+        if (delta > globals.tickClientPeriodInMicroseconds)
+        {
+            PlayerActions actions = GetActions();
+
+            Vec3 movement = {0.0f};
+
+            if (actions.actions[Forward])
+            {
+                movement.data[2] -= globals.moveDeltaPerTick;
+            }
+            if (actions.actions[Backward])
+            {
+                movement.data[2] += globals.moveDeltaPerTick;
+            }
+
+            if (actions.actions[StrafeLeft])
+            {
+                movement.data[0] -= globals.moveDeltaPerTick;
+            }
+            if (actions.actions[StrafeRight])
+            {
+                movement.data[0] += globals.moveDeltaPerTick;
+            }
+
+            if (actions.actions[Up])
+            {
+                movement.data[1] += globals.moveDeltaPerTick;
+            }
+            if (actions.actions[Down])
+            {
+                movement.data[1] += globals.moveDeltaPerTick;
+            }
+
+            cameraPosition += Normalise(movement) * globals.moveDeltaPerTick;
+
+            then = now;
         }
 
         // now you can make GL calls.
