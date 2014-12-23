@@ -317,6 +317,23 @@ Matrix4x4 LookAtRH(
     return result * Translation(-eyePosition);
 }
 
+// http://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_4
+Matrix4x4 LookAtRH(
+        Vec3 eyePosition,
+        Radians yaw,
+        Radians pitch,
+        Vec3N up = {0.0f, 1.0f, 0.0f})
+{
+    Vec3 look =
+    {
+        std::sin(yaw.data) * std::cos(pitch.data),
+        std::sin(pitch.data),
+        (float) std::cos(yaw.data) * (float) cos(pitch.data)
+    };
+
+    return LookAtRH(eyePosition, eyePosition + look, up);
+}
+
 Matrix4x4 ProjectionMatrix(
     Radians fieldOfView,
     float aspect,
