@@ -513,6 +513,14 @@ void DoGraphics(const Bsp::CollisionBsp &)
             yaw.data     += actions.mouseX * mouseDelta;
             pitch.data   += actions.mouseY * mouseDelta;
 
+            // clamp to +- 90 degrees up and down
+            // +- Pi for hrizontal
+            if (yaw.data < -Pi) yaw.data += M_PI * 2;
+            if (yaw.data >  Pi) yaw.data -= M_PI * 2;
+
+            if (pitch.data < -Pi / 2.0f) pitch.data = -M_PI / 2.0f;
+            if (pitch.data >  Pi / 2.0f) pitch.data =  M_PI / 2.0f;
+
             then = now;
         }
 
