@@ -399,7 +399,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     bool running = true;
     bool visible = true;
     bool resized = true;
-    Vec3 cameraPosition = {0,0,50};
+    Vec3 cameraPosition = {0,0,30};
     Radians yaw = {0.0f};
     Radians pitch = {0.0f};
     auto then = Microseconds();
