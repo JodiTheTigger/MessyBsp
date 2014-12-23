@@ -45,6 +45,7 @@ struct Globals
     // For now, lets assume 1 game unit = 1m
     float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
     float moveDeltaPerTick = 2.0f / ticksPerSecond;
+    float viewAnglePerMouseMoveUnit = 1.0f;
 };
 
 const Globals globals;
@@ -65,7 +66,8 @@ struct PlayerActions
 {
     bool actions[ActionMap::Count];
 
-    Vec3 look;
+    int mouseX;
+    int mouseY;
 };
 
 static const uint8_t keymap[ActionMap::Count] =
@@ -142,6 +144,7 @@ PlayerActions GetActions()
 {
     PlayerActions result;
 
+    // Keyboard
     const auto* keys = SDL_GetKeyboardState(nullptr);
 
     for (unsigned i = 0; i < ActionMap::Count; ++i)
@@ -155,6 +158,16 @@ PlayerActions GetActions()
             result.actions[i] = false;
         }
     }
+
+    // Mouse
+
+    // http://www.libsdl.org/release/SDL-1.2.15/docs/html/sdlmousemotionevent.html
+    //
+    // If the cursor is hidden (SDL_ShowCursor(0)) and the input is grabbed
+    // (SDL_WM_GrabInput(SDL_GRAB_ON)), then the mouse will give relative
+    // motion events even when the cursor reaches the edge fo the screen.
+    // This is currently only implemented on Windows and Linux/Unix-a-likes.
+    SDL_GetRelativeMouseState(&result.mouseX, &result.mouseY);
 
     return result;
 }
@@ -387,7 +400,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
     bool visible = true;
     bool resized = true;
     Vec3 cameraPosition = {0,0,50};
-    Vec3 lookAtPosition = {0,0,-20};
+    Radians yaw = {0.0f};
+    Radians pitch = {0.0f};
     auto then = Microseconds();
 
     while (running)
@@ -491,6 +505,14 @@ void DoGraphics(const Bsp::CollisionBsp &)
                     Normalise(movement) * globals.moveDeltaPerTick;
             }
 
+            // deal with where we are looking.
+            float mouseDelta =
+                globals.viewAnglePerMouseMoveUnit *
+                globals.viewAngleSpeedPerTick;
+
+            yaw.data     += actions.mouseX * mouseDelta;
+            pitch.data   += actions.mouseY * mouseDelta;
+
             then = now;
         }
 
@@ -520,7 +542,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAtRH(cameraPosition, lookAtPosition);
+            auto view = LookAtRH(cameraPosition, yaw, pitch);
 
             // Assuming world matrix is identity
             // projection * view * model
