@@ -144,11 +144,15 @@ PlayerActions GetActions()
 
     const auto* keys = SDL_GetKeyboardState(nullptr);
 
-    for (unsigned i = 0; i < sizeof(keymap); ++i)
+    for (unsigned i = 0; i < ActionMap::Count; ++i)
     {
         if (keys[keymap[i]])
         {
-            result.actions[keymap[i]] = true;
+            result.actions[i] = true;
+        }
+        else
+        {
+            result.actions[i] = false;
         }
     }
 
@@ -456,32 +460,36 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
             if (actions.actions[Forward])
             {
-                movement.data[2] -= globals.moveDeltaPerTick;
+                movement.data[2] -= 1.0f;
             }
             if (actions.actions[Backward])
             {
-                movement.data[2] += globals.moveDeltaPerTick;
+                movement.data[2] += 1.0f;
             }
 
             if (actions.actions[StrafeLeft])
             {
-                movement.data[0] -= globals.moveDeltaPerTick;
+                movement.data[0] -= 1.0f;
             }
             if (actions.actions[StrafeRight])
             {
-                movement.data[0] += globals.moveDeltaPerTick;
+                movement.data[0] += 1.0f;
             }
 
             if (actions.actions[Up])
             {
-                movement.data[1] += globals.moveDeltaPerTick;
+                movement.data[1] += 1.0f;
             }
             if (actions.actions[Down])
             {
-                movement.data[1] += globals.moveDeltaPerTick;
+                movement.data[1] -= 1.0f;
             }
 
-            cameraPosition += Normalise(movement) * globals.moveDeltaPerTick;
+            if (SquareF(movement) > 0.0f)
+            {
+                cameraPosition +=
+                    Normalise(movement) * globals.moveDeltaPerTick;
+            }
 
             then = now;
         }
