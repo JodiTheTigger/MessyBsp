@@ -328,7 +328,7 @@ Matrix4x4 LookAtRH(
     {
         std::sin(yaw.data) * std::cos(pitch.data),
         std::sin(pitch.data),
-        (float) std::cos(yaw.data) * (float) cos(pitch.data)
+        std::cos(yaw.data) * std::cos(pitch.data)
     };
 
     return LookAtRH(eyePosition, eyePosition + look, up);
