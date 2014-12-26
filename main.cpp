@@ -45,7 +45,7 @@ struct Globals
     // For now, lets assume 1 game unit = 1m
     float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
     float moveDeltaPerTick = 2.0f / ticksPerSecond;
-    float viewAnglePerMouseMoveUnit = 1.0f;
+    float viewAnglePerMouseMoveUnit = 0.1f;
 };
 
 const Globals globals;
@@ -181,21 +181,81 @@ uint64_t Microseconds()
 
 std::vector<float> MakeTriangles()
 {
+//    return std::vector<float>
+//    {
+//        // x,y,z (RH coords, +ve z comes out of monitor)
+//        0.0f,
+//        0.0f,
+//        0.0f,
+
+//        5.0f,
+//        10.0f,
+//        0.0f,
+
+//        10.f,
+//        0.0f,
+//        0.0f,
+//    };
+
+    // Make a cube.
     return std::vector<float>
     {
-        // x,y,z (RH coords, +ve z comes out of monitor)
-        0.0f,
-        0.0f,
-        0.0f,
+        // front
+        0.0f,   0.0f,   0.0f,
+        10.0f,  0.0f,   0.0f,
+        0.0f,   10.0f,  0.0f,
 
-        5.0f,
-        10.0f,
-        0.0f,
-
-        10.f,
-        0.0f,
-        0.0f,
+        10.0f,  0.0f,   0.0f,
+        10.0f,  10.0f,  0.0f,
+        0.0f,   10.0f,  0.0f,
     };
+
+//        // left
+//        0.0f,   0.0f,   0.0f,
+//        0.0f,  0.0f,   -10.0f,
+//        0.0f,   10.0f,  0.0f,
+
+//        0.0f,  0.0f,   -10.0f,
+//        0.0f,  10.0f,  -10.0f,
+//        0.0f,  10.0f,  0.0f,
+
+//        // right
+//        10.0f,  0.0f,   0.0f,
+//        10.0f,  10.0f,  0.0f,
+//        10.0f,  0.0f,   -10.0f,
+
+//        10.0f,  0.0f,   -10.0f,
+//        10.0f,  10.0f,  0.0f,
+//        10.0f,  10.0f,  -10.0f,
+
+
+//        // back
+//        0.0f,   0.0f,   -10.0f,
+//        0.0f,   10.0f,  -10.0f,
+//        10.0f,  0.0f,   -10.0f,
+
+//        10.0f,  0.0f,   -10.0f,
+//        0.0f,   10.0f,  -10.0f,
+//        10.0f,  10.0f,  -10.0f,
+
+//        // top
+//        0.0f,   10.0f,   0.0f,
+//        10.0f,   10.0f,  -10.0f,
+//        0.0f,  10.0f,   -10.0f,
+
+//        0.0f,  10.0f,   0.0f,
+//        10.0f,   10.0f,  0.0f,
+//        10.0f,  10.0f,  -10.0f,
+
+//        // bottom
+//        0.0f,   0.0f,   0.0f,
+//        0.0f,  0.0f,   -10.0f,
+//        10.0f,   0.0f,  -10.0f,
+
+//        0.0f,  0.0f,   0.0f,
+//        10.0f,  0.0f,  -10.0f,
+//        10.0f,   0.0f,  0.0f,
+//    };
 }
 
 enum class Log
@@ -263,6 +323,19 @@ void CheckGlError(const char *file, int line)
 
 #define GLCHECK() CheckGlError(__FILE__,__LINE__)
 //#define GLCHECK()
+
+void PrintMatrix(const Matrix4x4& matrix)
+{
+    for (auto i = 0; i < 4; ++i)
+    {
+        printf(
+            "%3.3f %3.3f %3.3f %3.3f\n",
+            matrix.data[i].data[0],
+            matrix.data[i].data[1],
+            matrix.data[i].data[2],
+            matrix.data[i].data[3]);
+    }
+}
 
 // RAM: Lets try loaind sdl and get a glcontext.
 void DoGraphics(const Bsp::CollisionBsp &)
@@ -515,11 +588,11 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
             // clamp to +- 90 degrees up and down
             // +- Pi for hrizontal
-            if (yaw.data < -Pi) yaw.data += M_PI * 2;
-            if (yaw.data >  Pi) yaw.data -= M_PI * 2;
+            if (yaw.data < -Pi) yaw.data += Pi * 2;
+            if (yaw.data >  Pi) yaw.data -= Pi * 2;
 
-            if (pitch.data < -Pi / 2.0f) pitch.data = -M_PI / 2.0f;
-            if (pitch.data >  Pi / 2.0f) pitch.data =  M_PI / 2.0f;
+            if (pitch.data < -Pi / 2.0f) pitch.data = -Pi / 2.0f;
+            if (pitch.data >  Pi / 2.0f) pitch.data =  Pi / 2.0f;
 
             then = now;
         }
@@ -589,6 +662,29 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 // now in window coords
 
                 cta*ctb*ctc;
+
+                // RAM: Debug test view matrix again.
+                auto va = LookAtRH(Vec3{0,0,0}, Radians{0.0}, Radians{0.0});
+                auto vb = LookAtRH(Vec3{0,0,0}, Radians{Pi / 4.0f}, Radians{0.0});
+                auto vc = LookAtRH(Vec3{0,0,0}, Radians{Pi / 2.0f}, Radians{0.0});
+                auto vd = LookAtRH(Vec3{0,0,0}, Radians{Pi}, Radians{0.0});
+
+                auto ve = LookAtRH(Vec3{0,0,0}, Radians{-Pi}, Radians{0.0});
+
+                va*vb*vc*vd*ve;
+
+                // fuck it, time for printf debugging, viewing matricies and
+                // vectors in the debugger is too painful.
+                {
+                    static float lastYaw = 0.0f;
+
+                    if (lastYaw != yaw.data)
+                    {
+                        printf("Yaw: %3.1f Degrees (%1.3f Radians)\n", (yaw.data * 360.0f) / (2.0f * Pi), yaw.data);
+                        lastYaw = yaw.data;
+                        PrintMatrix(view);
+                    }
+                }
             }
 
             // Stupid OpenGL docs make matrix stuff confusing
@@ -602,6 +698,10 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // TODO: Understand why this works.
             auto openglMatrix = projViewWorld;
 
+            TODO;
+            // Download glm, implement all the maths see if it works, and if
+            // it does see where my maths fails.
+
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
                 lmodelViewProjMatrix,
@@ -609,7 +709,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 false,
                 &openglMatrix.data[0].data[0]);GLCHECK();
 
-            glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
+            glDrawArrays(GL_TRIANGLES, 0, triangles.size() / 3);GLCHECK();
 
             SDL_GL_SwapWindow(window);
         }
