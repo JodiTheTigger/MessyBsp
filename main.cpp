@@ -612,7 +612,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 float ratio = 1.0f * width / height;
 
                 // 1.3 ~= less than 90 degrees in radians.
-                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 10.0f);
+                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 100.0f);
 
                 resized = false;
             }
@@ -696,11 +696,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // laid out in memory as a programmer would expect.
 
             // TODO: Understand why this works.
-            auto openglMatrix = projViewWorld;
-
-            TODO;
-            // Download glm, implement all the maths see if it works, and if
-            // it does see where my maths fails.
+            auto openglMatrix = Transpose(projViewWorld);
 
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
