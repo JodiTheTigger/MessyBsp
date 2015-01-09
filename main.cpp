@@ -45,7 +45,7 @@ struct Globals
     // For now, lets assume 1 game unit = 1m
     float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
     float moveDeltaPerTick = 2.0f / ticksPerSecond;
-    float viewAnglePerMouseMoveUnit = 0.1f;
+    float viewAnglePerMouseMoveUnit = 0.01f;
 };
 
 const Globals globals;
@@ -627,65 +627,10 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
             // Assuming world matrix is identity
             // projection * view * model
-            // vertex = MVP * in_vertex;
+            // vertex = PVM * in_vertex;
             // Who would have thought that this little line would have
-            // causes me so much fucking pain.
-            // BTW: RH, row, post, -1,1.
-            // UGH! I still don't understand.
-            // but
-            // https://fgiesen.wordpress.com/2012/02/12/row-major-vs-column-major-row-vectors-vs-column-vectors/
-            // says just copy the notation thats on the net, and do the matrix multiplication
-            // in the order as the on net, and it all works in the end, column or vector store.
-            // It did. *sigh*
+            // causes me so much fucking pain.            
             auto projViewWorld = g_projection * view;
-
-            // screw it, test the matrix myself since it doesn't work.
-            // expect eveything to be withint a -1,1 box.
-            {
-                Vec4 a = {0.0f, 0.0f, 0.0f, 1.0f};
-                Vec4 b = {5.0f, 10.0f, 0.0f, 1.0f};
-                Vec4 c = {10.0f, 0.0f, 0.0f, 1.0f};
-
-                // world -> clip space
-                auto ta = a * projViewWorld;
-                auto tb = b * projViewWorld;
-                auto tc = c * projViewWorld;
-
-                // clip space -> NDC (-1 to 1)
-                auto cta = ta * (1.0f / ta.data[3]);
-                auto ctb = tb * (1.0f / tb.data[3]);
-                auto ctc = tc * (1.0f / tc.data[3]);
-
-                // NDC - > window coords (viewport)
-                // ??
-
-                // now in window coords
-
-                cta*ctb*ctc;
-
-                // RAM: Debug test view matrix again.
-                auto va = LookAtRH(Vec3{0,0,0}, Radians{0.0}, Radians{0.0});
-                auto vb = LookAtRH(Vec3{0,0,0}, Radians{Pi / 4.0f}, Radians{0.0});
-                auto vc = LookAtRH(Vec3{0,0,0}, Radians{Pi / 2.0f}, Radians{0.0});
-                auto vd = LookAtRH(Vec3{0,0,0}, Radians{Pi}, Radians{0.0});
-
-                auto ve = LookAtRH(Vec3{0,0,0}, Radians{-Pi}, Radians{0.0});
-
-                va*vb*vc*vd*ve;
-
-                // fuck it, time for printf debugging, viewing matricies and
-                // vectors in the debugger is too painful.
-                {
-                    static float lastYaw = 0.0f;
-
-                    if (lastYaw != yaw.data)
-                    {
-                        printf("Yaw: %3.1f Degrees (%1.3f Radians)\n", (yaw.data * 360.0f) / (2.0f * Pi), yaw.data);
-                        lastYaw = yaw.data;
-                        PrintMatrix(view);
-                    }
-                }
-            }
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
@@ -695,7 +640,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // community. Column-major notation suggests that matrices are not
             // laid out in memory as a programmer would expect.
 
-            // TODO: Understand why this works.
+            // My matricies are stored in crow major format, so I need to
+            // Transpose them to be in OpenGL and DirectX's Column major format.
             auto openglMatrix = Transpose(projViewWorld);
 
             glUseProgram(pO);GLCHECK();
