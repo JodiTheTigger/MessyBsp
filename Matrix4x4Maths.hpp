@@ -298,119 +298,91 @@ Matrix4x4 LookAtRH(
         Vec3 target,
         Vec3N up = {0.0f, 1.0f, 0.0f})
 {
-    auto direction  = Normalise(eyePosition - target);
+    auto direction  = Normalise(target - eyePosition);
     auto right      = Normalise(Cross(direction, up));
     auto newUp      = Normalise(Cross(right, direction));
 
-    // Direction isn't -ve, because we did (eye - target), not (target - eye).
-    // Also, I don't know why all the examples on the net
-    // used a normalised right, when the gl docs don't.
-    // https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
-    auto result = Matrix4x4
+    return
     {
-        right.data[0],  newUp.data[0],  direction.data[0],  0.0f,
-        right.data[1],  newUp.data[1],  direction.data[1],  0.0f,
-        right.data[2],  newUp.data[2],  direction.data[2],  0.0f,
-        0.0f,           0.0f,           0.0f,               1.0f,
+        right.data[0],     right.data[1],     right.data[2],     -DotF(right, eyePosition),
+        newUp.data[0],     newUp.data[1],     newUp.data[2],     -DotF(newUp, eyePosition),
+        direction.data[0], direction.data[1], direction.data[2], -DotF(direction, eyePosition),
+        0.0f,              0.0f,              0.0f,              1.0f,
     };
-
-    auto oldView = result * Translation(-eyePosition);
-
-
-    auto zaxis = Normalise(eyePosition - target);
-    auto xaxis = Normalise(Cross(up, zaxis));
-    auto yaxis = Cross(zaxis, xaxis);
-
-    Matrix4x4 newView =
-    {
-        xaxis.data[0],           yaxis.data[0],           zaxis.data[0],          0,
-        xaxis.data[1],           yaxis.data[1],           zaxis.data[1],          0,
-        xaxis.data[2],           yaxis.data[2],           zaxis.data[2],          0,
-        -DotF(xaxis, eyePosition),  -DotF(yaxis, eyePosition),  -DotF(zaxis, eyePosition),  1,
-    };
-
-    oldView * newView;
-
-    return oldView;
 }
 
 // http://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_4
 Matrix4x4 LookAtRH(
         Vec3 eyePosition,
         Radians yaw,
-        Radians,// pitch,
+        Radians pitch,
         Vec3N up = {0.0f, 1.0f, 0.0f})
 {
-//    Vec3 look =
-//    {
-//        std::sin(yaw.data) * std::cos(pitch.data),
-//        std::sin(pitch.data),
-//        std::cos(yaw.data) * std::cos(pitch.data)
-//    };
-
     Vec3 look =
     {
-        std::sin(yaw.data),
-        0.0f,
-        std::cos(yaw.data)
+        std::sin(yaw.data) * std::cos(pitch.data),
+        std::sin(pitch.data),
+        std::cos(yaw.data) * std::cos(pitch.data)
     };
 
-//    return LookAtRH(eyePosition, eyePosition + look, up);
+    return LookAtRH(eyePosition, eyePosition + look, up);
+}
 
-
-    auto direction  = Normalise(look);
-    auto right      = Normalise(Cross(direction, up));
-    auto newUp      = Normalise(Cross(right, direction));
-
-    // Direction isn't -ve, because we did (eye - target), not (target - eye).
-    // Also, I don't know why all the examples on the net
-    // used a normalised right, when the gl docs don't.
-    // https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
-    auto result = Matrix4x4
+Matrix4x4 LookAtRH2(
+        Vec3 eyePosition,
+        Radians yaw,
+        Radians pitch)
+{
+    Vec3 NewX =
     {
-        right.data[0],  newUp.data[0],  -direction.data[0],  0.0f,
-        right.data[1],  newUp.data[1],  -direction.data[1],  0.0f,
-        right.data[2],  newUp.data[2],  -direction.data[2],  0.0f,
-        0.0f,           0.0f,           0.0f,               1.0f,
+        std::cos(yaw.data),
+        -std::sin(pitch.data)*-std::sin(yaw.data),
+        std::cos(pitch.data)*-std::sin(yaw.data)
     };
 
-    // RAM: TODO: This line doesn't seem to work because the translation bit is
-    // is set to 0. ugh.
-    auto oldView = result * Translation(-eyePosition);
+    Vec3 NewY =
+    {
+        0,
+        std::cos(pitch.data),
+        std::sin(pitch.data)
+    };
 
-    return oldView;
+    Vec3 NewZ =
+    {
+        std::sin(yaw.data),
+        -std::sin(pitch.data)*std::cos(yaw.data),
+        std::cos(pitch.data)*std::cos(yaw.data)
+    };
+
+    return
+    {
+        NewX.data[0], NewX.data[1], NewX.data[2], -DotF(NewX, eyePosition),
+        NewY.data[0], NewY.data[1], NewY.data[2], -DotF(NewY, eyePosition),
+        NewZ.data[0], NewZ.data[1], NewZ.data[2], -DotF(NewZ, eyePosition),
+        0.0f,         0.0f,         0.0f,         1.0f,
+    };
 }
 
 Matrix4x4 ProjectionMatrix(
-    Radians,// fieldOfView,
-    float,// aspect,
-    float,// nearDistance,
-    float)// farDistance)
+    Radians fieldOfView,
+    float aspect,
+    float nearDistance,
+    float farDistance)
 {
-//    //
-//    // General form of the Projection Matrix
-//    //
-//    // https://unspecified.wordpress.com/2012/06/21/calculating-the-gluperspective-matrix-and-other-opengl-matrix-maths/
-//    float f            = 1.0f / std::tan(0.5f * fieldOfView.data);
-//    float frustumDepth = nearDistance - farDistance;
-//    float twoNearFar   = 2 * farDistance * nearDistance;
+    //
+    // General form of the Projection Matrix
+    //
+    float f           = 1.0f / std::tan(0.5f * fieldOfView.data);
+    float Zd          = farDistance - nearDistance;
+    float Znid        = 1.0f / -Zd;
+    float twoNearFar  = 2 * farDistance * nearDistance;
 
-//    return Matrix4x4
-//    {
-//        f / aspect, 0.0f,   0.0f,                                       0.0f,
-//        0.0f,       f,      0.0f,                                       0.0f,
-//        0.0f,       0.0f,   farDistance + nearDistance / frustumDepth,  twoNearFar / frustumDepth,
-//        0.0f,       0.0f,   -1.0f,                  0.0f,
-//    };
-
-
-    // I have NFI what matrix is right or wrong, so I'll just scale myself
     return Matrix4x4
     {
-        0.05f, 0.0f, 0.0f, 0.0f ,
-        0.0f, 0.05f, 0.0f, 0.0f,
-        0.0f, 0.0f, 0.05f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f,
+        f / aspect, 0.0f,   0.0f,                                0.0f,
+        0.0f,       f,      0.0f,                                0.0f,
+        0.0f,       0.0f,   (farDistance + nearDistance) * Znid, twoNearFar * Znid,
+        0.0f,       0.0f,   -1.0f,                               0.0f,
     };
 }
 
