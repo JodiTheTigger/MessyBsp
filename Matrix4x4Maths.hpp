@@ -311,47 +311,35 @@ Matrix4x4 LookAtRH(
     };
 }
 
-// http://en.wikibooks.org/wiki/OpenGL_Programming/Glescraft_4
 Matrix4x4 LookAtRH(
-        Vec3 eyePosition,
-        Radians yaw,
-        Radians pitch,
-        Vec3N up = {0.0f, 1.0f, 0.0f})
-{
-    Vec3 look =
-    {
-        -std::sin(yaw.data) * std::cos(pitch.data),
-        std::sin(pitch.data),
-        std::cos(yaw.data) * std::cos(pitch.data)
-    };
-
-    return LookAtRH(eyePosition, eyePosition + look, up);
-}
-
-Matrix4x4 LookAtRH2(
         Vec3 eyePosition,
         Radians yaw,
         Radians pitch)
 {
+    float cosYaw = std::cos(yaw.data);
+    float sinYaw = std::sin(yaw.data);
+    float cosPitch = std::cos(pitch.data);
+    float sinPitch = std::sin(pitch.data);
+
     Vec3 NewX =
     {
-        std::cos(yaw.data),
-        -std::sin(pitch.data)*-std::sin(yaw.data),
-        std::cos(pitch.data)*-std::sin(yaw.data)
+        cosYaw,
+        -sinPitch*-sinYaw,
+        cosPitch*-sinYaw
     };
 
     Vec3 NewY =
     {
         0,
-        std::cos(pitch.data),
-        std::sin(pitch.data)
+        cosPitch,
+        sinPitch
     };
 
     Vec3 NewZ =
     {
-        std::sin(yaw.data),
-        -std::sin(pitch.data)*std::cos(yaw.data),
-        std::cos(pitch.data)*std::cos(yaw.data)
+        sinYaw,
+        -sinPitch*cosYaw,
+        cosPitch*cosYaw
     };
 
     return
