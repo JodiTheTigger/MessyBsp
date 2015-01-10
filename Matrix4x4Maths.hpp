@@ -320,7 +320,7 @@ Matrix4x4 LookAtRH(
 {
     Vec3 look =
     {
-        std::sin(yaw.data) * std::cos(pitch.data),
+        -std::sin(yaw.data) * std::cos(pitch.data),
         std::sin(pitch.data),
         std::cos(yaw.data) * std::cos(pitch.data)
     };

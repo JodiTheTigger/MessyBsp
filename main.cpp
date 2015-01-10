@@ -353,6 +353,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
     SDL_GL_MakeCurrent(window, glcontext);
 
+    // capture the mouse so no-one else can use it. Means
+    // when the app starts the mouse doesn't leave the window
+    // http://gamedev.stackexchange.com/questions/33519/trap-mouse-in-sdl
+    // NOTE: for a real game, have an option to turn this on or off, so the
+    // user can escape the window if running in a window.
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+
     // Now I can init glew.
     {
         glewExperimental = GL_TRUE;
