@@ -164,7 +164,6 @@ set(
     rAssert.hpp
     rAssert.cpp
     Geometry.hpp
-    Matrix3x3Maths.hpp
     Matrix4x4Maths.hpp
     PlaneMaths.hpp
     QuaternionMaths.hpp

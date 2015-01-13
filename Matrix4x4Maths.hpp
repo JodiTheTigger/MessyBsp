@@ -19,7 +19,7 @@
 #include "Geometry.hpp"
 #include "VectorMaths4.hpp"
 
-// *** ROW MAJOR ***
+// *** ROW MAJOR STORAGE ***
 
 // ///////////////////
 // Operators
@@ -144,8 +144,8 @@ Matrix4x4 Inverse(const Matrix4x4& lhs)
 {
     // Modified from
     // http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix
-    // Note that this doesn't care is it's row or column major, maths still
-    // works out.
+    // Note that this doesn't care is it's row or column major storage, maths
+    // still works out.
     Matrix4x4 inverse = {0};
 
     inverse.data[0].data[0] =
@@ -298,28 +298,57 @@ Matrix4x4 LookAtRH(
         Vec3 target,
         Vec3N up = {0.0f, 1.0f, 0.0f})
 {
-    // RH means the positive z-axis points out of the screen.
-
-    auto direction  = Normalise(eyePosition - target);
+    auto direction  = Normalise(target - eyePosition);
     auto right      = Normalise(Cross(direction, up));
     auto newUp      = Normalise(Cross(right, direction));
 
-    // This is row major, so it'll be transposed from all the
-    // OpenGL documentation.
-    // direction isn't -ve, because we did (eye - target), not (target - eye).
-    // Documentation on the net is so fucking annoying.
-    // Also, I don't know why all the examples on the net
-    // used a normalised right, when the gl docs don't.
-    // https://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
-    auto result = Matrix4x4
+    return
     {
-        right.data[0],      right.data[1],      right.data[2],      0.0f,
-        newUp.data[0],      newUp.data[1],      newUp.data[2],      0.0f,
-        direction.data[0],  direction.data[1],  direction.data[2],  0.0f,
-        0.0f,               0.0f,               0.0f,               1.0f,
+        right.data[0],     right.data[1],     right.data[2],     -DotF(right, eyePosition),
+        newUp.data[0],     newUp.data[1],     newUp.data[2],     -DotF(newUp, eyePosition),
+        direction.data[0], direction.data[1], direction.data[2], -DotF(direction, eyePosition),
+        0.0f,              0.0f,              0.0f,              1.0f,
+    };
+}
+
+Matrix4x4 LookAtRH(
+        Vec3 eyePosition,
+        Radians yaw,
+        Radians pitch)
+{
+    float cosYaw = std::cos(yaw.data);
+    float sinYaw = std::sin(yaw.data);
+    float cosPitch = std::cos(pitch.data);
+    float sinPitch = std::sin(pitch.data);
+
+    Vec3 NewX =
+    {
+        cosYaw,
+        -sinPitch*-sinYaw,
+        cosPitch*-sinYaw
     };
 
-    return result * Translation(-eyePosition);
+    Vec3 NewY =
+    {
+        0,
+        cosPitch,
+        sinPitch
+    };
+
+    Vec3 NewZ =
+    {
+        sinYaw,
+        -sinPitch*cosYaw,
+        cosPitch*cosYaw
+    };
+
+    return
+    {
+        NewX.data[0], NewX.data[1], NewX.data[2], -DotF(NewX, eyePosition),
+        NewY.data[0], NewY.data[1], NewY.data[2], -DotF(NewY, eyePosition),
+        NewZ.data[0], NewZ.data[1], NewZ.data[2], -DotF(NewZ, eyePosition),
+        0.0f,         0.0f,         0.0f,         1.0f,
+    };
 }
 
 Matrix4x4 ProjectionMatrix(
@@ -330,27 +359,18 @@ Matrix4x4 ProjectionMatrix(
 {
     //
     // General form of the Projection Matrix
-    // ***ROW MAJOR***
     //
-    // uh = Cot( fov/2 ) == 1/Tan(fov/2)
-    // uw / uh = 1/aspect
-    //
-    //   uw         0       0       0
-    //    0        uh       0       0
-    //    0         0      f/(f-n)  -fn/(f-n)
-    //    0         0       1       0
-
-    float frustumDepth  = farDistance - nearDistance;
-    float oneOverDepth  = 1.0f / frustumDepth;
-    float f             = 1.0f / std::tan(0.5f * fieldOfView.data);
-    float farOverDepth  = farDistance * oneOverDepth;
+    float f           = 1.0f / std::tan(0.5f * fieldOfView.data);
+    float Zd          = farDistance - nearDistance;
+    float Znid        = 1.0f / -Zd;
+    float twoNearFar  = 2 * farDistance * nearDistance;
 
     return Matrix4x4
     {
-        f / aspect, 0.0f,   0.0f,           0.0f,
-        0.0f,       f,      0.0f,           0.0f,
-        0.0f,       0.0f,   farOverDepth,   -farOverDepth * nearDistance,
-        0.0f,       0.0f,   1.0f,           0.0f
+        f / aspect, 0.0f,   0.0f,                                0.0f,
+        0.0f,       f,      0.0f,                                0.0f,
+        0.0f,       0.0f,   (farDistance + nearDistance) * Znid, twoNearFar * Znid,
+        0.0f,       0.0f,   -1.0f,                               0.0f,
     };
 }
 
@@ -377,17 +397,4 @@ inline Vec4 operator*(const Vec4& lhs, const Matrix4x4& rhs)
         rhs.data[0].data[2] * lhs.data[0] + rhs.data[1].data[2] * lhs.data[1] + rhs.data[2].data[2] * lhs.data[2] + rhs.data[3].data[2] * lhs.data[3],
         rhs.data[0].data[3] * lhs.data[0] + rhs.data[1].data[3] * lhs.data[1] + rhs.data[2].data[3] * lhs.data[2] + rhs.data[3].data[3] * lhs.data[3],
     };
-}
-
-// ///////////////////
-// Conversions
-// ///////////////////
-inline constexpr Matrix4x4 ToOpenGL(const Matrix4x4& lhs)
-{
-    return Transpose(lhs);
-}
-
-inline constexpr Matrix4x4 ToDirectX(const Matrix4x4& lhs)
-{
-    return lhs;
 }

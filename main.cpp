@@ -35,6 +35,51 @@
 static const float Pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
 static const float DegToRad = (2.0f * Pi / 360.0f);
 
+struct Globals
+{
+    // 50Hz for now.
+    unsigned tickClientPeriodInMicroseconds = 20 * 1000;
+    unsigned ticksPerSecond = 1000000 / tickClientPeriodInMicroseconds;
+
+    // Need to convert all this stuff to SI units.
+    // For now, lets assume 1 game unit = 1m
+    float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
+    float moveDeltaPerTick = 2.0f / ticksPerSecond;
+    float viewAnglePerMouseMoveUnit = 0.01f;
+};
+
+const Globals globals;
+
+enum ActionMap
+{
+    Forward = 0,
+    Backward,
+    StrafeLeft,
+    StrafeRight,
+    Up,
+    Down,
+
+    Count
+};
+
+struct PlayerActions
+{
+    bool actions[ActionMap::Count];
+
+    int mouseX;
+    int mouseY;
+};
+
+static const uint8_t keymap[ActionMap::Count] =
+{
+    SDL_SCANCODE_W,
+    SDL_SCANCODE_S,
+    SDL_SCANCODE_A,
+    SDL_SCANCODE_D,
+    SDL_SCANCODE_SPACE,
+    SDL_SCANCODE_Q
+};
+
 // Globals
 Matrix4x4 g_projection;
 
@@ -95,36 +140,97 @@ int main(int argc, char** argv)
     return 0;
 }
 
-std::vector<float> MakeTrianglesAndNormals()
+PlayerActions GetActions()
 {
+    PlayerActions result;
+
+    // Keyboard
+    const auto* keys = SDL_GetKeyboardState(nullptr);
+
+    for (unsigned i = 0; i < ActionMap::Count; ++i)
+    {
+        if (keys[keymap[i]])
+        {
+            result.actions[i] = true;
+        }
+        else
+        {
+            result.actions[i] = false;
+        }
+    }
+
+    // Mouse
+    SDL_GetRelativeMouseState(&result.mouseX, &result.mouseY);
+
+    return result;
+}
+
+// This class should be full of platform voodoo if done properly.
+// good thing I'm not doing it properly.
+uint64_t Microseconds()
+{
+    return static_cast<uint64_t>(SDL_GetTicks()) * 1000l;
+}
+
+std::vector<float> MakeTriangles()
+{
+    // Make a cube.
     return std::vector<float>
     {
-        // x,y,z,nx,ny,nz (RH coords, +ve z comes out of monitor)
-        0.0f,
-        0.0f,
-        0.0f,
+        // front (x,y,z,nx,ny,nz)
+        0.0f,   0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
 
-        0.0f,
-        0.0f,
-        1.0f,
+        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+        10.0f,  10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+
+        // left
+        0.0f,   0.0f,   0.0f,       -1.0f,  0.0f,   0.0f,
+        0.0f,   0.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
+        0.0f,   10.0f,  0.0f,       -1.0f,  0.0f,   0.0f,
+
+        0.0f,  0.0f,   -10.0f,      -1.0f,  0.0f,   0.0f,
+        0.0f,  10.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
+        0.0f,  10.0f,  0.0f,        -1.0f,  0.0f,   0.0f,
+
+        // right
+        10.0f,  0.0f,   0.0f,        1.0f,  0.0f,   0.0f,
+        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
+        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
+
+        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
+        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
+        10.0f,  10.0f,  -10.0f,      1.0f,  0.0f,   0.0f,
 
 
-        5.0f,
-        10.0f,
-        0.0f,
+        // back
+        0.0f,   0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
 
-        0.0f,
-        0.0f,
-        1.0f,
+        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+        10.0f,  10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
 
+        // top
+        0.0f,   10.0f,   0.0f,       0.0f,  1.0f,   0.0f,
+        10.0f,   10.0f,  -10.0f,     0.0f,  1.0f,   0.0f,
+        0.0f,  10.0f,   -10.0f,      0.0f,  1.0f,   0.0f,
 
-        10.0f,
-        0.0f,
-        0.0f,
+        0.0f,  10.0f,   0.0f,        0.0f,  1.0f,   0.0f,
+        10.0f,   10.0f,  0.0f,       0.0f,  1.0f,   0.0f,
+        10.0f,  10.0f,  -10.0f,      0.0f,  1.0f,   0.0f,
 
-        0.0f,
-        0.0f,
-        1.0f,
+        // bottom
+        0.0f,   0.0f,   0.0f,        0.0f, -1.0f,   0.0f,
+        0.0f,  0.0f,   -10.0f,       0.0f, -1.0f,   0.0f,
+        10.0f,   0.0f,  -10.0f,      0.0f, -1.0f,   0.0f,
+
+        0.0f,  0.0f,   0.0f,         0.0f, -1.0f,   0.0f,
+        10.0f,  0.0f,  -10.0f,       0.0f, -1.0f,   0.0f,
+        10.0f,   0.0f,  0.0f,        0.0f, -1.0f,   0.0f,
     };
 }
 
@@ -194,6 +300,19 @@ void CheckGlError(const char *file, int line)
 #define GLCHECK() CheckGlError(__FILE__,__LINE__)
 //#define GLCHECK()
 
+void PrintMatrix(const Matrix4x4& matrix)
+{
+    for (auto i = 0; i < 4; ++i)
+    {
+        printf(
+            "%3.3f %3.3f %3.3f %3.3f\n",
+            matrix.data[i].data[0],
+            matrix.data[i].data[1],
+            matrix.data[i].data[2],
+            matrix.data[i].data[3]);
+    }
+}
+
 // RAM: Lets try loaind sdl and get a glcontext.
 void DoGraphics(const Bsp::CollisionBsp &)
 {
@@ -209,6 +328,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
     SDL_GLContext glcontext = SDL_GL_CreateContext(window);
 
     SDL_GL_MakeCurrent(window, glcontext);
+
+    // capture the mouse so no-one else can use it. Means
+    // when the app starts the mouse doesn't leave the window
+    // http://gamedev.stackexchange.com/questions/33519/trap-mouse-in-sdl
+    // NOTE: for a real game, have an option to turn this on or off, so the
+    // user can escape the window if running in a window.
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Now I can init glew.
     {
@@ -238,7 +364,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     glGenBuffers(1, &triangleVboHandle);GLCHECK();
     glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);GLCHECK();
 
-    auto triangles = MakeTrianglesAndNormals();
+    auto triangles = MakeTriangles();
     glBufferData(
         GL_ARRAY_BUFFER,
         triangles.size() * sizeof(float),
@@ -259,37 +385,41 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // expand them to a vec4 filling in the missing values with the
     // template <0,0,0,1>
     // http://stackoverflow.com/questions/8551935/opengl-es-2-0-specifiying-position-attribute-vec3-or-vec4
-    const GLchar* vs = "\
-    uniform mat4 modelViewProjMatrix;\
-    uniform mat4 normalMatrix;\
-    uniform vec3 lightDir;\
- \
-    attribute vec4 vNormal;\
-    attribute vec4 vPosition;\
- \
-    varying float dot;\
- \
-    void main()\
-    {\
-        gl_Position = modelViewProjMatrix * vPosition;\
-        vec4 transNormal = normalMatrix * vNormal;\
-        dot = max(dot(transNormal.xyz, lightDir), 0.0);\
-    }";
+    static const GLchar* vs[] =
+    {
+        "//#version 330 core                  \n"
+        "uniform mat4 modelViewProjMatrix;  \n"
+        "uniform mat4 normalMatrix;         \n"
+        "uniform vec3 lightDir;             \n"
+        "                                   \n"
+        "attribute vec4 vPosition;          \n"
+        "attribute vec4 vNormal;            \n"
+        "varying float lightDot;            \n"
+        "                                   \n"
+        "void main()                        \n"
+        "{                                  \n"
+        "    gl_Position = modelViewProjMatrix * vPosition;\n"
+        "    vec4 transNormal = normalMatrix * vNormal;    \n"
+        "    lightDot = max(dot(transNormal.xyz, lightDir), 0.0);\n"
+        "}"
+    };
 
-    const GLchar* ps = "\
-    varying float dot; \
-    void main()\
-    {\
-        vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\
-        \
-        gl_FragColor = c * dot;\
-    }";
+    static const GLchar* ps[] =
+    {
+        "//#version 330 core                  \n"
+        "varying float lightDot;                \n"
+        "void main()                            \n"
+        "{                                      \n"
+        "    vec4 c = vec4(0.1, 0.1, 1.0, 1.0); \n"
+        "    gl_FragColor = c * lightDot;       \n"
+        "}"
+    };
 
     auto vsO = glCreateShader(GL_VERTEX_SHADER);GLCHECK();
     auto psO = glCreateShader(GL_FRAGMENT_SHADER);GLCHECK();
     auto pO = glCreateProgram();GLCHECK();
-    glShaderSource(vsO, 1, &vs, nullptr);GLCHECK();
-    glShaderSource(psO, 1, &ps, nullptr);GLCHECK();
+    glShaderSource(vsO, 1, vs, nullptr);GLCHECK();
+    glShaderSource(psO, 1, ps, nullptr);GLCHECK();
     glCompileShader(vsO);GLCHECK();
     glCompileShader(psO);GLCHECK();
     PrintShaderLog(vsO, Log::Shader);
@@ -310,8 +440,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // for the vertex buffer correctly.
     // RAM: TODO: Swap to glBindAttribLocation()
     // See http://stackoverflow.com/questions/4635913/explicit-vs-automatic-attribute-location-binding-for-opengl-shaders
-    auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
     auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
+    auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
 
     // Get the ids for the uniforms as well
     auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");GLCHECK();
@@ -343,10 +473,16 @@ void DoGraphics(const Bsp::CollisionBsp &)
                     reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
     }
 
+
     // MAIN SDL LOOP
     bool running = true;
     bool visible = true;
     bool resized = true;
+    Vec3 cameraPosition = {0,0,30};
+    Radians yaw = {0.0f};
+    Radians pitch = {0.0f};
+    auto then = Microseconds();
+
     while (running)
     {
         SDL_Event e;
@@ -401,6 +537,72 @@ void DoGraphics(const Bsp::CollisionBsp &)
             }
         }
 
+        // Poll for user input.
+        auto now = Microseconds();
+        if (now < then)
+        {
+            then = now;
+        }
+
+        auto delta = now - then;
+        if (delta > globals.tickClientPeriodInMicroseconds)
+        {
+            PlayerActions actions = GetActions();
+
+            Vec3 movement = {0.0f};
+
+            if (actions.actions[Forward])
+            {
+                movement.data[2] -= 1.0f;
+            }
+            if (actions.actions[Backward])
+            {
+                movement.data[2] += 1.0f;
+            }
+
+            if (actions.actions[StrafeLeft])
+            {
+                movement.data[0] -= 1.0f;
+            }
+            if (actions.actions[StrafeRight])
+            {
+                movement.data[0] += 1.0f;
+            }
+
+            if (actions.actions[Up])
+            {
+                movement.data[1] += 1.0f;
+            }
+            if (actions.actions[Down])
+            {
+                movement.data[1] -= 1.0f;
+            }
+
+            if (SquareF(movement) > 0.0f)
+            {
+                cameraPosition +=
+                    Normalise(movement) * globals.moveDeltaPerTick;
+            }
+
+            // deal with where we are looking.
+            float mouseDelta =
+                globals.viewAnglePerMouseMoveUnit *
+                globals.viewAngleSpeedPerTick;
+
+            yaw.data     += actions.mouseX * mouseDelta;
+            pitch.data   += actions.mouseY * mouseDelta;
+
+            // clamp to +- 90 degrees up and down
+            // +- Pi for hrizontal
+            if (yaw.data < -Pi) yaw.data += Pi * 2;
+            if (yaw.data >  Pi) yaw.data -= Pi * 2;
+
+            if (pitch.data < -((Pi / 2.0f) - 0.01)) pitch.data = -Pi / 2.0f;
+            if (pitch.data >  ((Pi / 2.0f) - 0.01)) pitch.data =  Pi / 2.0f;
+
+            then = now;
+        }
+
         // now you can make GL calls.
         if (visible)
         {
@@ -415,56 +617,32 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
                 float ratio = 1.0f * width / height;
 
-                // 1.3 ~= less than 90 degrees in radians.
-                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 10.0f);
+                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 100.0f);
 
                 resized = false;
             }
 
             glClearColor(0.1,0.2,0.1,1);GLCHECK();
-            glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);GLCHECK();
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);GLCHECK();
 
             // Get View Matrix
             // Camera is 5 units behind your back
             // looking at 20 units behind the monitor
-            auto view = LookAtRH(Vec3{0,0,20}, Vec3{0,0,-20});
+            auto view = LookAtRH(cameraPosition, yaw, pitch);
 
             // Assuming world matrix is identity
             // projection * view * model
-            // vertex = MVP * in_vertex;
+            // vertex = PVM * in_vertex;
             // Who would have thought that this little line would have
-            // causes me so much fucking pain.
-            // BTW: RH, row, post, -1,1.
+            // causes me so much fucking pain.            
             auto projViewWorld = g_projection * view;
 
-            // RAM: TODO: Fix that the normal is full of nans
-            auto normalXform = Transpose(Inverse(projViewWorld));
+            // Note: I should be able to avoid an inverse
+            // calcuation of the view matrix due to the fact
+            // that the rotation part is orthonormal and therefore
+            // M^T = M^(-1). But for now, I'll just use inverse.
+            auto normalXform = Transpose(Inverse(view));
             auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
-
-            // screw it, test the matrix myself since it doesn't work.
-            // expect eveything to be withint a -1,1 box.
-            {
-                Vec4 a = {0.0f, 0.0f, 0.0f, 1.0f};
-                Vec4 b = {5.0f, 10.0f, 0.0f, 1.0f};
-                Vec4 c = {10.0f, 0.0f, 0.0f, 1.0f};
-
-                // world -> clip space
-                auto ta = a * projViewWorld;
-                auto tb = b * projViewWorld;
-                auto tc = c * projViewWorld;
-
-                // clip space -> NDC (-1 to 1)
-                auto cta = ta * (1.0f / ta.data[3]);
-                auto ctb = tb * (1.0f / tb.data[3]);
-                auto ctc = tc * (1.0f / tc.data[3]);
-
-                // NDC - > window coords (viewport)
-                // ??
-
-                // now in window coords
-
-                cta*ctb*ctc;
-            }
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
@@ -473,25 +651,31 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // has resulted in endless confusion in the OpenGL programming
             // community. Column-major notation suggests that matrices are not
             // laid out in memory as a programmer would expect.
+
+            // My matricies are stored in crow major format, so I need to
+            // Transpose them to be in OpenGL and DirectX's Column major format.
+            auto openglMatrix = Transpose(projViewWorld);
+            auto normalMatrix = Transpose(normalXform);
+
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
                 lmodelViewProjMatrix,
                 1,
                 false,
-                &ToOpenGL(projViewWorld).data[0].data[0]);GLCHECK();
+                &openglMatrix.data[0].data[0]);GLCHECK();
 
             glUniformMatrix4fv(
                 lnormalMatrix,
                 1,
                 false,
-                &ToOpenGL(normalXform).data[0].data[0]);GLCHECK();
+                &normalMatrix.data[0].data[0]);GLCHECK();
 
             glUniform3fv(
                 llightDir,
                 1,
                 &lightDir.data[0]);GLCHECK();
 
-            glDrawArrays(GL_TRIANGLES, 0, 3);GLCHECK();
+            glDrawArrays(GL_TRIANGLES, 0, triangles.size() / 3);GLCHECK();
 
             SDL_GL_SwapWindow(window);
         }
