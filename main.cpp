@@ -160,13 +160,6 @@ PlayerActions GetActions()
     }
 
     // Mouse
-
-    // http://www.libsdl.org/release/SDL-1.2.15/docs/html/sdlmousemotionevent.html
-    //
-    // If the cursor is hidden (SDL_ShowCursor(0)) and the input is grabbed
-    // (SDL_WM_GrabInput(SDL_GRAB_ON)), then the mouse will give relative
-    // motion events even when the cursor reaches the edge fo the screen.
-    // This is currently only implemented on Windows and Linux/Unix-a-likes.
     SDL_GetRelativeMouseState(&result.mouseX, &result.mouseY);
 
     return result;
@@ -598,8 +591,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
             if (yaw.data < -Pi) yaw.data += Pi * 2;
             if (yaw.data >  Pi) yaw.data -= Pi * 2;
 
-            if (pitch.data < -Pi / 2.0f) pitch.data = -Pi / 2.0f;
-            if (pitch.data >  Pi / 2.0f) pitch.data =  Pi / 2.0f;
+            if (pitch.data < -((Pi / 2.0f) - 0.01)) pitch.data = -Pi / 2.0f;
+            if (pitch.data >  ((Pi / 2.0f) - 0.01)) pitch.data =  Pi / 2.0f;
 
             then = now;
         }
@@ -618,7 +611,6 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
                 float ratio = 1.0f * width / height;
 
-                // 1.3 ~= less than 90 degrees in radians.
                 g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 100.0f);
 
                 resized = false;
