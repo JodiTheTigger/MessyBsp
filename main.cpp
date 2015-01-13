@@ -193,14 +193,20 @@ std::vector<float> MakeTriangles()
     // Make a cube.
     return std::vector<float>
     {
-        // front
+        // front (x,y,z,nx,ny,nz)
         0.0f,   0.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
         10.0f,  0.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
         0.0f,   10.0f,  0.0f,
+        0.0f,   0.0f,   1.0f,
 
         10.0f,  0.0f,   0.0f,
+        0.0f,   0.0f,   1.0f,
         10.0f,  10.0f,  0.0f,
+        0.0f,   0.0f,   1.0f,
         0.0f,   10.0f,  0.0f,
+        0.0f,   0.0f,   1.0f,
     };
 
 //        // left
@@ -406,22 +412,29 @@ void DoGraphics(const Bsp::CollisionBsp &)
     {
         "//#version 330 core                  \n"
         "uniform mat4 modelViewProjMatrix;  \n"
+        "uniform mat4 normalMatrix;         \n"
+        "uniform vec3 lightDir;             \n"
         "                                   \n"
         "attribute vec4 vPosition;          \n"
+        "attribute vec4 vNormal;            \n"
+        "varying float lightDot;            \n"
         "                                   \n"
         "void main()                        \n"
         "{                                  \n"
         "    gl_Position = modelViewProjMatrix * vPosition;\n"
+        "    vec4 transNormal = normalMatrix * vNormal;    \n"
+        "    lightDot = max(dot(transNormal.xyz, lightDir), 0.0);\n"
         "}"
     };
 
     static const GLchar* ps[] =
     {
         "//#version 330 core                  \n"
-        "void main()                        \n"
-        "{                                  \n"
-        "    vec4 c = vec4(0.1, 0.1, 1.0, 1.0);\n"
-        "    gl_FragColor = c;              \n"
+        "varying float lightDot;                \n"
+        "void main()                            \n"
+        "{                                      \n"
+        "    vec4 c = vec4(0.1, 0.1, 1.0, 1.0); \n"
+        "    gl_FragColor = c * lightDot;       \n"
         "}"
     };
 
@@ -451,9 +464,12 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // RAM: TODO: Swap to glBindAttribLocation()
     // See http://stackoverflow.com/questions/4635913/explicit-vs-automatic-attribute-location-binding-for-opengl-shaders
     auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
+    auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
 
     // Get the ids for the uniforms as well
     auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");GLCHECK();
+    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");GLCHECK();
+    auto llightDir = glGetUniformLocation(pO, "lightdir");GLCHECK();
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
@@ -465,8 +481,21 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 3,
                 GL_FLOAT,
                 GL_FALSE,
-                0,
+                3*2*sizeof(float),
                 reinterpret_cast<const void*>(0));GLCHECK();
+
+    if (lvNormal >= 0)
+    {
+        glEnableVertexAttribArray(lvNormal);GLCHECK();
+        glVertexAttribPointer(
+                    lvNormal,
+                    3,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    3*2*sizeof(float),
+                    reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
+    }
+
 
     // MAIN SDL LOOP
     bool running = true;
@@ -631,6 +660,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // causes me so much fucking pain.            
             auto projViewWorld = g_projection * view;
 
+            // Note: I should be able to avoid an inverse
+            // calcuation of the view matrix due to the fact
+            // that the rotation part is orthonormal and therefore
+            // M^T = M^(-1). But for now, I'll just use inverse.
+            auto normalXform = Transpose(Inverse(view));
+            auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
+
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
             //
@@ -642,6 +678,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // My matricies are stored in crow major format, so I need to
             // Transpose them to be in OpenGL and DirectX's Column major format.
             auto openglMatrix = Transpose(projViewWorld);
+            auto normalMatrix = Transpose(normalXform);
 
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
@@ -649,6 +686,17 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 1,
                 false,
                 &openglMatrix.data[0].data[0]);GLCHECK();
+
+            glUniformMatrix4fv(
+                lnormalMatrix,
+                1,
+                false,
+                &normalMatrix.data[0].data[0]);GLCHECK();
+
+            glUniform3fv(
+                llightDir,
+                1,
+                &lightDir.data[0]);GLCHECK();
 
             glDrawArrays(GL_TRIANGLES, 0, triangles.size() / 3);GLCHECK();
 
