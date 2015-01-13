@@ -46,6 +46,9 @@ struct Globals
     float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
     float moveDeltaPerTick = 2.0f / ticksPerSecond;
     float viewAnglePerMouseMoveUnit = 0.01f;
+
+    // For testing lighting, rotates once every 5 seconds
+    float lightRotationsPerTick = ((2 * Pi) / 5.0f) / ticksPerSecond;
 };
 
 const Globals globals;
@@ -352,6 +355,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     }    
 
     glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_BACK);
 
     // TODO: Load vertex data, gen normal data
     // TODO: player controller
@@ -481,6 +485,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     Vec3 cameraPosition = {0,0,30};
     Radians yaw = {0.0f};
     Radians pitch = {0.0f};
+    Radians lightRotation = {0.0f};
     auto then = Microseconds();
 
     while (running)
@@ -601,6 +606,9 @@ void DoGraphics(const Bsp::CollisionBsp &)
             if (pitch.data >  ((Pi / 2.0f) - 0.01)) pitch.data =  Pi / 2.0f;
 
             then = now;
+
+            // light rotation
+            lightRotation.data += globals.lightRotationsPerTick;
         }
 
         // now you can make GL calls.
@@ -625,16 +633,14 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glClearColor(0.1,0.2,0.1,1);GLCHECK();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);GLCHECK();
 
-            // Get View Matrix
-            // Camera is 5 units behind your back
-            // looking at 20 units behind the monitor
+            // Get Matricies
             auto view = LookAtRH(cameraPosition, yaw, pitch);
 
             // Assuming world matrix is identity
             // projection * view * model
             // vertex = PVM * in_vertex;
             // Who would have thought that this little line would have
-            // causes me so much fucking pain.            
+            // caused me so much fucking pain.
             auto projViewWorld = g_projection * view;
 
             // Note: I should be able to avoid an inverse
@@ -642,7 +648,23 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // that the rotation part is orthonormal and therefore
             // M^T = M^(-1). But for now, I'll just use inverse.
             auto normalXform = Transpose(Inverse(view));
-            auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
+
+            // lets put the light at a height of 100, circling with a radius
+            // of 20, say.
+            auto lightPosition = Vec4
+            {
+                    20.0f * std::cos(lightRotation.data),
+                    100.0f,
+                    20.0f * std::sin(lightRotation.data),
+                    0.0f,
+            };
+
+            auto lightDir = Normalise(-lightPosition);
+            //auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
+
+            // RAM: lighting debug.
+            auto light = normalXform * lightDir;
+            light*light;
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
