@@ -392,30 +392,38 @@ void DoGraphics(const Bsp::CollisionBsp &)
     static const GLchar* vs[] =
     {
         "//#version 330 core                  \n"
-        "uniform mat4 modelViewProjMatrix;  \n"
+        "uniform mat4 projMatrix;           \n"
+        "uniform mat4 modelViewMatrix;      \n"
         "uniform mat4 normalMatrix;         \n"
         "uniform vec3 lightDir;             \n"
         "                                   \n"
         "attribute vec4 vPosition;          \n"
-        "attribute vec4 vNormal;            \n"
-        "varying float lightDot;            \n"
+        "attribute vec3 vNormal;            \n"
+        "varying vec4 eyeNormal;            \n"
+        "varying vec4 eyePosition;          \n"
         "                                   \n"
         "void main()                        \n"
         "{                                  \n"
-        "    gl_Position = modelViewProjMatrix * vPosition;\n"
-        "    vec4 transNormal = normalMatrix * vNormal;    \n"
-        "    lightDot = max(dot(transNormal.xyz, lightDir), 0.0);\n"
+        "    eyePosition = modelViewMatrix * vPosition;\n"
+        "    eyeNormal = normalize(normalMatrix * vec4(vNormal, 0.0));\n"
+        "    gl_Position = projMatrix * eyePosition;\n"
         "}"
     };
 
     static const GLchar* ps[] =
     {
         "//#version 330 core                  \n"
-        "varying float lightDot;                \n"
+        "varying vec4 eyePosition;               \n"
+        "varying vec4 eyeNormal;                 \n"
+        "uniform vec4 lightPos;                  \n"
         "void main()                            \n"
         "{                                      \n"
         "    vec4 c = vec4(0.1, 0.1, 1.0, 1.0); \n"
-        "    gl_FragColor = c * lightDot;       \n"
+        "    vec3 s = vec3(normalize(lightPos - eyePosition));\n"
+        "    vec3 eyeN = vec3(eyeNormal);\n"
+        "    float mydot = dot(eyeN, s);\n"
+        "    float diff = max(mydot, 0.0);\n"
+        "    gl_FragColor = c * diff;       \n"
         "}"
     };
 
@@ -448,9 +456,11 @@ void DoGraphics(const Bsp::CollisionBsp &)
     auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
 
     // Get the ids for the uniforms as well
-    auto lmodelViewProjMatrix = glGetUniformLocation(pO, "modelViewProjMatrix");GLCHECK();
+    auto lmodelViewMatrix = glGetUniformLocation(pO, "modelViewMatrix");GLCHECK();
+    auto lprojMatrix = glGetUniformLocation(pO, "projMatrix");GLCHECK();
     auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");GLCHECK();
     auto llightDir = glGetUniformLocation(pO, "lightdir");GLCHECK();
+    auto llightPos = glGetUniformLocation(pO, "lightPos");GLCHECK();
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
@@ -641,7 +651,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // vertex = PVM * in_vertex;
             // Who would have thought that this little line would have
             // caused me so much fucking pain.
-            auto projViewWorld = g_projection * view;
+            //auto projViewWorld = g_projection * view;
 
             // Note: I should be able to avoid an inverse
             // calcuation of the view matrix due to the fact
@@ -662,9 +672,14 @@ void DoGraphics(const Bsp::CollisionBsp &)
             auto lightDir = Normalise(-lightPosition);
             //auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
 
+            // zero out the w row?
+            normalXform.data[3] = {0.0f, 0.0f, 0.0f, 0.0f};
+
             // RAM: lighting debug.
             auto light = normalXform * lightDir;
-            light*light;
+            auto dot = light.data[2];
+            light*light*dot;
+
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
@@ -676,15 +691,22 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
             // My matricies are stored in crow major format, so I need to
             // Transpose them to be in OpenGL and DirectX's Column major format.
-            auto openglMatrix = Transpose(projViewWorld);
+            auto viewMatrix = Transpose(view);
+            auto projMatrix = Transpose(g_projection);
             auto normalMatrix = Transpose(normalXform);
 
             glUseProgram(pO);GLCHECK();
             glUniformMatrix4fv(
-                lmodelViewProjMatrix,
+                lmodelViewMatrix,
                 1,
                 false,
-                &openglMatrix.data[0].data[0]);GLCHECK();
+                &viewMatrix.data[0].data[0]);GLCHECK();
+
+            glUniformMatrix4fv(
+                lprojMatrix,
+                1,
+                false,
+                &projMatrix.data[0].data[0]);GLCHECK();
 
             glUniformMatrix4fv(
                 lnormalMatrix,
@@ -696,6 +718,11 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 llightDir,
                 1,
                 &lightDir.data[0]);GLCHECK();
+
+            glUniform3fv(
+                llightPos,
+                1,
+                &lightPosition.data[0]);GLCHECK();
 
             glDrawArrays(GL_TRIANGLES, 0, triangles.size() / 3);GLCHECK();
 
