@@ -719,7 +719,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 1,
                 &lightDir.data[0]);GLCHECK();
 
-            glUniform3fv(
+            glUniform4fv(
                 llightPos,
                 1,
                 &lightPosition.data[0]);GLCHECK();
