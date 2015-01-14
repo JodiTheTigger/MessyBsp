@@ -48,7 +48,7 @@ struct Globals
     float viewAnglePerMouseMoveUnit = 0.01f;
 
     // For testing lighting, rotates once every 5 seconds
-    float lightRotationsPerTick = ((2 * Pi) / 5.0f) / ticksPerSecond;
+    float modelRotationsPerTick = ((2 * Pi) / 5.0f) / ticksPerSecond;
 };
 
 const Globals globals;
@@ -495,7 +495,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     Vec3 cameraPosition = {0,0,30};
     Radians yaw = {0.0f};
     Radians pitch = {0.0f};
-    Radians lightRotation = {0.0f};
+    Radians modelRotation = {0.0f};
     auto then = Microseconds();
 
     while (running)
@@ -618,7 +618,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             then = now;
 
             // light rotation
-            lightRotation.data += globals.lightRotationsPerTick;
+            modelRotation.data += globals.modelRotationsPerTick;
         }
 
         // now you can make GL calls.
@@ -643,8 +643,10 @@ void DoGraphics(const Bsp::CollisionBsp &)
             glClearColor(0.1,0.2,0.1,1);GLCHECK();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);GLCHECK();
 
+            auto model = Ry(modelRotation) * Rx({modelRotation.data*2.0f});
+
             // Get Matricies
-            auto view = LookAtRH(cameraPosition, yaw, pitch);
+            auto view = LookAtRH(cameraPosition, yaw, pitch) * model;
 
             // Assuming world matrix is identity
             // projection * view * model
@@ -663,23 +665,16 @@ void DoGraphics(const Bsp::CollisionBsp &)
             // of 20, say.
             auto lightPosition = Vec4
             {
-                    20.0f * std::cos(lightRotation.data),
+                    20.0f,
                     100.0f,
-                    20.0f * std::sin(lightRotation.data),
+                    20.0f,
                     0.0f,
             };
 
             auto lightDir = Normalise(-lightPosition);
-            //auto lightDir = Normalise(Vec3{-0.05, -1, -0.3});
 
-            // zero out the w row?
+            // zero out the w row? Yes!
             normalXform.data[3] = {0.0f, 0.0f, 0.0f, 0.0f};
-
-            // RAM: lighting debug.
-            auto light = normalXform * lightDir;
-            auto dot = light.data[2];
-            light*light*dot;
-
 
             // Stupid OpenGL docs make matrix stuff confusing
             // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
