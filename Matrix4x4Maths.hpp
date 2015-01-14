@@ -351,6 +351,48 @@ Matrix4x4 LookAtRH(
     };
 }
 
+Matrix4x4 Rx(Radians theta)
+{
+    auto c = std::cos(theta.data);
+    auto s = std::sin(theta.data);
+
+    return
+    {
+        1.0f, 0.0f, 0.0f,   0.0f,
+        0.0f, c,    -s,     0.0f,
+        0.0f, s,    c,      0.0f,
+        0.0f, 0.0f, 0.0f,   1.0f,
+    };
+}
+
+Matrix4x4 Ry(Radians theta)
+{
+    auto c = std::cos(theta.data);
+    auto s = std::sin(theta.data);
+
+    return
+    {
+        c,      0.0f, s,    0.0f,
+        0.0f,   1.0f, 0.0f, 0.0f,
+        -s,     0.0f, c,    0.0f,
+        0.0f,   0.0f, 0.0f, 1.0f,
+    };
+}
+
+Matrix4x4 Rz(Radians theta)
+{
+    auto c = std::cos(theta.data);
+    auto s = std::sin(theta.data);
+
+    return
+    {
+        c,      -s,     0.0f, 0.0f,
+        s,      c,      0.0f, 0.0f,
+        0.0f,   0.0f,   1.0f, 0.0f,
+        0.0f,   0.0f,   0.0f, 1.0f,
+    };
+}
+
 Matrix4x4 ProjectionMatrix(
     Radians fieldOfView,
     float aspect,
