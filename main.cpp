@@ -303,20 +303,6 @@ void CheckGlError(const char *file, int line)
 #define GLCHECK() CheckGlError(__FILE__,__LINE__)
 //#define GLCHECK()
 
-void PrintMatrix(const Matrix4x4& matrix)
-{
-    for (auto i = 0; i < 4; ++i)
-    {
-        printf(
-            "%3.3f %3.3f %3.3f %3.3f\n",
-            matrix.data[i].data[0],
-            matrix.data[i].data[1],
-            matrix.data[i].data[2],
-            matrix.data[i].data[3]);
-    }
-}
-
-// RAM: Lets try loaind sdl and get a glcontext.
 void DoGraphics(const Bsp::CollisionBsp &)
 {
     SDL_Init(SDL_INIT_VIDEO);
