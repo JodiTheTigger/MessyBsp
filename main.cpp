@@ -303,6 +303,147 @@ void CheckGlError(const char *file, int line)
 #define GLCHECK() CheckGlError(__FILE__,__LINE__)
 //#define GLCHECK()
 
+void GLAPIENTRY DebugCallback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei,
+    const GLchar *message,
+    void *)
+{
+    char const* sourceString = "";
+
+    switch (source)
+    {
+        case GL_DEBUG_SOURCE_API:
+        {
+                sourceString = "Api";
+                break;
+        }
+
+        case GL_DEBUG_SOURCE_APPLICATION:
+        {
+                sourceString = "Application";
+                break;
+        }
+
+        case GL_DEBUG_SOURCE_OTHER:
+        {
+                sourceString = "Other";
+                break;
+        }
+
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        {
+                sourceString = "Shader Compiler";
+                break;
+        }
+
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+        {
+                sourceString = "Third Party";
+                break;
+        }
+
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        {
+                sourceString = "Window";
+                break;
+        }
+
+        default:
+        {
+            sourceString = "Unknown";
+            break;
+        }
+    }
+
+    char const* typeString = "";
+
+    switch (type)
+    {
+        case GL_DEBUG_TYPE_ERROR:
+        {
+                typeString = "Error";
+                break;
+        }
+
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        {
+                typeString = "Depreciated";
+                break;
+        }
+
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        {
+                typeString = "Undefined";
+                break;
+        }
+
+        case GL_DEBUG_TYPE_PORTABILITY:
+        {
+                typeString = "Portability";
+                break;
+        }
+
+        case GL_DEBUG_TYPE_PERFORMANCE:
+        {
+                typeString = "Performance";
+                break;
+        }
+
+        case GL_DEBUG_TYPE_OTHER:
+        {
+                typeString = "Other";
+                break;
+        }
+
+        default:
+        {
+            typeString = "Unknown";
+            break;
+        }
+    }
+
+    char const* severityString = "";
+
+    switch (severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:
+        {
+            severityString = "HIGH";
+            break;
+        }
+
+        case GL_DEBUG_SEVERITY_MEDIUM:
+        {
+            severityString = "Medium";
+            break;
+        }
+
+        case GL_DEBUG_SEVERITY_LOW:
+        {
+            severityString = "Low";
+            break;
+        }
+
+        default:
+        {
+            typeString = "Unknown";
+            break;
+        }
+    }
+
+    printf(
+        "GL_DEBUG: %s: %s (%s): %d: %s\n",
+        sourceString,
+        severityString,
+        typeString,
+        id,
+        message);
+}
+
 void DoGraphics(const Bsp::CollisionBsp &)
 {
     SDL_Init(SDL_INIT_VIDEO);
@@ -339,6 +480,29 @@ void DoGraphics(const Bsp::CollisionBsp &)
 
         fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
     }    
+
+    // RAM: debug for the debug extension
+    bool noDebug = true;
+    if (noDebug && glewIsExtensionSupported("GL_KHR_debug"))
+    {
+        noDebug = false;
+        glDebugMessageCallback((GLDEBUGPROC) DebugCallback, 0);GLCHECK();
+        printf("GL_KHR_debug\n");
+    }
+
+    if (noDebug && glewIsExtensionSupported("GL_ARB_debug_output"))
+    {
+        noDebug = false;
+        // RAM: TODO
+        printf("GL_ARB_debug_output\n");
+    }
+
+    if (noDebug && glewIsExtensionSupported("GL_AMD_debug_output"))
+    {
+        noDebug = false;
+        // RAM: TODO
+        printf("GL_AMD_debug_output\n");
+    }
 
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
