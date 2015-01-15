@@ -486,7 +486,16 @@ void DoGraphics(const Bsp::CollisionBsp &)
     if (noDebug && glewIsExtensionSupported("GL_KHR_debug"))
     {
         noDebug = false;
-        glDebugMessageCallback((GLDEBUGPROC) DebugCallback, 0);GLCHECK();
+        glDebugMessageCallback((GLDEBUGPROC) DebugCallback, nullptr);GLCHECK();
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        GLuint unusedIds = 0;
+        glDebugMessageControl(GL_DONT_CARE,
+            GL_DONT_CARE,
+            GL_DONT_CARE,
+            0,
+            &unusedIds,
+            true);GLCHECK();
+
         printf("GL_KHR_debug\n");
     }
 
