@@ -153,6 +153,7 @@ endif()
 set(
     SOURCE_LIST
     main.cpp
+    GLDebug.hpp
     Bsp.hpp
     Bsp.cpp
     BspBrushToMesh.cpp
