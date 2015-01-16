@@ -455,7 +455,15 @@ void DoGraphics(const Bsp::CollisionBsp &)
         SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
 
     // Create an OpenGL context associated with the window.
+
     SDL_GLContext glcontext = SDL_GL_CreateContext(window);
+
+    if (!glcontext)
+    {
+        printf("Create context failed: %s\n", SDL_GetError());
+
+        return;
+    }
 
     SDL_GL_MakeCurrent(window, glcontext);
 
@@ -513,19 +521,13 @@ void DoGraphics(const Bsp::CollisionBsp &)
         printf("GL_AMD_debug_output\n");
     }
 
+    if (!noDebug)
+    {
+        glEnable(GL_DEBUG_OUTPUT);
+    }
+
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
-
-    // Test gl debug is actually working.
-    // RAM: TODO: wrap this up as this is KHR only.
-    glDebugMessageInsert(
-        GL_DEBUG_SOURCE_APPLICATION,
-        GL_DEBUG_TYPE_OTHER,
-        42,
-        GL_DEBUG_SEVERITY_LOW,
-        -1,
-        "Testing 123");
-
 
     // TODO: Load vertex data, gen normal data
     // TODO: player controller
