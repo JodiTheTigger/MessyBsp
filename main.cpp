@@ -288,7 +288,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     if (noDebug && glewIsExtensionSupported("GL_KHR_debug"))
     {
         noDebug = false;
-        glDebugMessageCallback((GLDEBUGPROC) DebugCallback, nullptr);GLCHECK();
+        glDebugMessageCallback((GLDEBUGPROC) DebugCallback, nullptr);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         GLuint unusedIds = 0;
         glDebugMessageControl(GL_DONT_CARE,
@@ -296,7 +296,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
             GL_DONT_CARE,
             0,
             &unusedIds,
-            true);GLCHECK();
+            true);
 
         printf("GL_KHR_debug\n");
     }
@@ -331,15 +331,15 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // Loading vertex data (1 == number of buffers)
     // http://en.wikipedia.org/wiki/Vertex_Buffer_Object
     GLuint triangleVboHandle;
-    glGenBuffers(1, &triangleVboHandle);GLCHECK();
-    glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);GLCHECK();
+    glGenBuffers(1, &triangleVboHandle);
+    glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);
 
     auto triangles = MakeTriangles();
     glBufferData(
         GL_ARRAY_BUFFER,
         triangles.size() * sizeof(float),
         triangles.data(),
-        GL_STATIC_DRAW);GLCHECK();
+        GL_STATIC_DRAW);
 
     // TODO: vertex, fragment, program, bind, load
     // try https://www.opengl.org/sdk/docs/tutorials/ClockworkCoders/loading.php
@@ -393,19 +393,19 @@ void DoGraphics(const Bsp::CollisionBsp &)
         "}"
     };
 
-    auto vsO = glCreateShader(GL_VERTEX_SHADER);GLCHECK();
-    auto psO = glCreateShader(GL_FRAGMENT_SHADER);GLCHECK();
-    auto pO = glCreateProgram();GLCHECK();
-    glShaderSource(vsO, 1, vs, nullptr);GLCHECK();
-    glShaderSource(psO, 1, ps, nullptr);GLCHECK();
-    glCompileShader(vsO);GLCHECK();
-    glCompileShader(psO);GLCHECK();
+    auto vsO = glCreateShader(GL_VERTEX_SHADER);
+    auto psO = glCreateShader(GL_FRAGMENT_SHADER);
+    auto pO = glCreateProgram();
+    glShaderSource(vsO, 1, vs, nullptr);
+    glShaderSource(psO, 1, ps, nullptr);
+    glCompileShader(vsO);
+    glCompileShader(psO);
     PrintShaderLog(vsO, Log::Shader);
     PrintShaderLog(psO, Log::Shader);
 
-    glAttachShader(pO, vsO);GLCHECK();
-    glAttachShader(pO, psO);GLCHECK();
-    glLinkProgram(pO);GLCHECK();
+    glAttachShader(pO, vsO);
+    glAttachShader(pO, psO);
+    glLinkProgram(pO);
 
     GLint gotLinked;
     glGetProgramiv(pO, GL_LINK_STATUS, &gotLinked);
@@ -418,39 +418,39 @@ void DoGraphics(const Bsp::CollisionBsp &)
     // for the vertex buffer correctly.
     // RAM: TODO: Swap to glBindAttribLocation()
     // See http://stackoverflow.com/questions/4635913/explicit-vs-automatic-attribute-location-binding-for-opengl-shaders
-    auto lvPosition  = glGetAttribLocation(pO, "vPosition");GLCHECK();
-    auto lvNormal    = glGetAttribLocation(pO, "vNormal");GLCHECK();
+    auto lvPosition  = glGetAttribLocation(pO, "vPosition");
+    auto lvNormal    = glGetAttribLocation(pO, "vNormal");
 
     // Get the ids for the uniforms as well
-    auto lmodelViewMatrix = glGetUniformLocation(pO, "modelViewMatrix");GLCHECK();
-    auto lprojMatrix = glGetUniformLocation(pO, "projMatrix");GLCHECK();
-    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");GLCHECK();
-    auto llightDir = glGetUniformLocation(pO, "lightdir");GLCHECK();
-    auto llightPos = glGetUniformLocation(pO, "lightPos");GLCHECK();
+    auto lmodelViewMatrix = glGetUniformLocation(pO, "modelViewMatrix");
+    auto lprojMatrix = glGetUniformLocation(pO, "projMatrix");
+    auto lnormalMatrix = glGetUniformLocation(pO, "normalMatrix");
+    auto llightDir = glGetUniformLocation(pO, "lightdir");
+    auto llightPos = glGetUniformLocation(pO, "lightPos");
 
     // Right, enable the normal and position attribes in the vertex buffer
     // and set what offset they are using.
     // The last item is meant to be a pointer to the data
     // but it's actually an offset. yay.
-    glEnableVertexAttribArray(lvPosition);GLCHECK();
+    glEnableVertexAttribArray(lvPosition);
     glVertexAttribPointer(
                 lvPosition,
                 3,
                 GL_FLOAT,
                 GL_FALSE,
                 3*2*sizeof(float),
-                reinterpret_cast<const void*>(0));GLCHECK();
+                reinterpret_cast<const void*>(0));
 
     if (lvNormal >= 0)
     {
-        glEnableVertexAttribArray(lvNormal);GLCHECK();
+        glEnableVertexAttribArray(lvNormal);
         glVertexAttribPointer(
                     lvNormal,
                     3,
                     GL_FLOAT,
                     GL_FALSE,
                     3*2*sizeof(float),
-                    reinterpret_cast<const void*>(3*sizeof(float)));GLCHECK();
+                    reinterpret_cast<const void*>(3*sizeof(float)));
     }
 
 
@@ -606,8 +606,8 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 resized = false;
             }
 
-            glClearColor(0.1,0.2,0.1,1);GLCHECK();
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);GLCHECK();
+            glClearColor(0.1,0.2,0.1,1);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             auto model = Ry(modelRotation) * Rx({modelRotation.data*2.0f});
 
@@ -656,36 +656,36 @@ void DoGraphics(const Bsp::CollisionBsp &)
             auto projMatrix = Transpose(g_projection);
             auto normalMatrix = Transpose(normalXform);
 
-            glUseProgram(pO);GLCHECK();
+            glUseProgram(pO);
             glUniformMatrix4fv(
                 lmodelViewMatrix,
                 1,
                 false,
-                &viewMatrix.data[0].data[0]);GLCHECK();
+                &viewMatrix.data[0].data[0]);
 
             glUniformMatrix4fv(
                 lprojMatrix,
                 1,
                 false,
-                &projMatrix.data[0].data[0]);GLCHECK();
+                &projMatrix.data[0].data[0]);
 
             glUniformMatrix4fv(
                 lnormalMatrix,
                 1,
                 false,
-                &normalMatrix.data[0].data[0]);GLCHECK();
+                &normalMatrix.data[0].data[0]);
 
             glUniform3fv(
                 llightDir,
                 1,
-                &lightDir.data[0]);GLCHECK();
+                &lightDir.data[0]);
 
             glUniform4fv(
                 llightPos,
                 1,
-                &lightPosition.data[0]);GLCHECK();
+                &lightPosition.data[0]);
 
-            glDrawArrays(GL_TRIANGLES, 0, triangles.size() / 3);GLCHECK();
+            glDrawArrays(GL_TRIANGLES, 0, triangles.size() / 3);
 
             SDL_GL_SwapWindow(window);
         }
