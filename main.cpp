@@ -27,6 +27,7 @@
 // Need ifdef for different platforms.
 #include <GL/glew.h>
 
+#include <vector>
 #include <memory>
 
 #include <cstdlib>
@@ -74,6 +75,17 @@ struct PlayerActions
     int mouseY;
 };
 
+struct ControllerIdToPointer
+{
+    int id;
+    SDL_GameController* pad;
+    SDL_Joystick* padAsJoystick;
+    int instance;
+};
+
+// WTF? Global? What are you? 12 or something? Remove this!
+std::vector<ControllerIdToPointer> g_controllers;
+
 static const uint8_t keymap[ActionMap::Count] =
 {
     SDL_SCANCODE_W,
@@ -82,6 +94,16 @@ static const uint8_t keymap[ActionMap::Count] =
     SDL_SCANCODE_D,
     SDL_SCANCODE_SPACE,
     SDL_SCANCODE_Q
+};
+
+static const SDL_GameControllerButton padmap[ActionMap::Count] =
+{
+    SDL_CONTROLLER_BUTTON_DPAD_UP,
+    SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+    SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+    SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+    SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
 };
 
 // Globals
@@ -144,6 +166,66 @@ int main(int argc, char** argv)
     return 0;
 }
 
+void AddController(int id)
+{
+    if (!SDL_IsGameController(id))
+    {
+        return;
+    }
+
+    for (const auto& pad : g_controllers)
+    {
+        if (pad.id == id)
+        {
+            return;
+        }
+    }
+
+    ControllerIdToPointer result;
+
+    result.id  = id;
+    result.pad = SDL_GameControllerOpen(id);
+
+    if (result.pad)
+    {
+        result.padAsJoystick = SDL_GameControllerGetJoystick(result.pad);
+
+        if (result.padAsJoystick)
+        {
+            result.instance = SDL_JoystickInstanceID(result.padAsJoystick);
+            g_controllers.push_back(result);
+            return;
+        }
+    }
+
+    if (result.pad != nullptr)
+    {
+        SDL_GameControllerClose(result.pad);
+    }
+}
+
+void RemoveController(int instance)
+{
+    for (const auto& pad : g_controllers)
+    {
+        if (pad.instance == instance)
+        {
+            SDL_GameControllerClose(pad.pad);
+            return;
+        }
+    }
+}
+
+void OpenAllControllers()
+{
+    auto count = SDL_NumJoysticks();
+
+    for (int i = 0; i < count; ++i)
+    {
+        AddController(i);
+    }
+}
+
 PlayerActions GetActions()
 {
     PlayerActions result;
@@ -157,14 +239,35 @@ PlayerActions GetActions()
         {
             result.actions[i] = true;
         }
-        else
-        {
-            result.actions[i] = false;
-        }
     }
 
     // Mouse
     SDL_GetRelativeMouseState(&result.mouseX, &result.mouseY);
+
+    // Gamepad
+    for (const auto& controller : g_controllers)
+    {
+        // buttons
+        for (unsigned i = 0; i < ActionMap::Count; ++i)
+        {
+            if (SDL_GameControllerGetButton(controller.pad, padmap[i]))
+            {
+                result.actions[i] = true;
+            }
+        }
+
+        // Gamepad axis
+        if (!result.mouseX && !result.mouseY)
+        {
+            result.mouseX = SDL_GameControllerGetAxis(
+                        controller.pad,
+                        SDL_CONTROLLER_AXIS_LEFTX);
+
+            result.mouseY = SDL_GameControllerGetAxis(
+                        controller.pad,
+                        SDL_CONTROLLER_AXIS_LEFTY);
+        }
+    }
 
     return result;
 }
@@ -481,6 +584,16 @@ void DoGraphics(const Bsp::CollisionBsp &)
                 {
                     running = false;
                 }
+            }
+
+            if (e.type == SDL_CONTROLLERDEVICEADDED)
+            {
+                AddController(e.cdevice.which);
+            }
+
+            if (e.type == SDL_CONTROLLERDEVICEREMOVED)
+            {
+                RemoveController(e.cdevice.which);
             }
 
             if (e.type == SDL_WINDOWEVENT)
