@@ -19,7 +19,9 @@
 #include "VectorMaths3.hpp"
 #include "Matrix4x4Maths.hpp"
 #include "GLDebug.hpp"
+#include "PlaneMaths.hpp"
 #include "third-party/getopt/getopt.h"
+#include "third-party/ConvexHull/hull.h"
 
 // SDL + OpenGL
 #include <SDL2/SDL.h>
@@ -339,6 +341,51 @@ std::vector<float> MakeTriangles()
         10.0f,  0.0f,  -10.0f,       0.0f, -1.0f,   0.0f,
         10.0f,   0.0f,  0.0f,        0.0f, -1.0f,   0.0f,
     };
+}
+
+std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
+{
+    std::vector<Vec3> mesh;
+    std::vector<Plane> planes;
+    for (int i = 0; i < brush.sideCount; ++i)
+    {
+        const auto brushSide = bsp.brushSides[brush.firstBrushSideIndex + i];
+        int planeIndex = brushSide.planeIndex;
+        planes.push_back(bsp.planes[planeIndex]);
+    }
+
+    const auto verts = VerticiesFromIntersectingPlanes(planes);
+
+    if (!verts.empty())
+    {
+        const auto& firstVert = verts.data()[0];
+
+        HullDesc hullInfo;
+
+        hullInfo.mVcount = verts.size();
+        hullInfo.mVertexStride = sizeof(float) * 3;
+        hullInfo.mVertices = reinterpret_cast<const float*>(&firstVert.data);
+
+        HullResult result;
+
+        auto result = CreateConvexHull(hullInfo, result);
+
+        if (result == QE_OK)
+        {
+            for (int i = 0 ; i < result.mNumFaces; ++i)
+            {
+                for (int j = 0; j < 3; ++j)
+                {
+                    Vec3 vec =
+                    {
+                        result.mOutputVertices[result.]
+                    }
+                }
+            }
+        }
+    }
+
+    return mesh;
 }
 
 void DoGraphics(const Bsp::CollisionBsp &)
