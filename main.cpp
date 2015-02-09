@@ -281,68 +281,6 @@ uint64_t Microseconds()
     return static_cast<uint64_t>(SDL_GetTicks()) * 1000l;
 }
 
-std::vector<float> MakeTriangles()
-{
-    // Make a cube.
-    return std::vector<float>
-    {
-        // front (x,y,z,nx,ny,nz)
-        0.0f,   0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
-        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
-        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
-
-        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
-        10.0f,  10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
-        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
-
-        // left
-        0.0f,   0.0f,   0.0f,       -1.0f,  0.0f,   0.0f,
-        0.0f,   0.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
-        0.0f,   10.0f,  0.0f,       -1.0f,  0.0f,   0.0f,
-
-        0.0f,  0.0f,   -10.0f,      -1.0f,  0.0f,   0.0f,
-        0.0f,  10.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
-        0.0f,  10.0f,  0.0f,        -1.0f,  0.0f,   0.0f,
-
-        // right
-        10.0f,  0.0f,   0.0f,        1.0f,  0.0f,   0.0f,
-        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
-        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
-
-        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
-        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
-        10.0f,  10.0f,  -10.0f,      1.0f,  0.0f,   0.0f,
-
-
-        // back
-        0.0f,   0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
-        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
-        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
-
-        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
-        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
-        10.0f,  10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
-
-        // top
-        0.0f,   10.0f,   0.0f,       0.0f,  1.0f,   0.0f,
-        10.0f,   10.0f,  -10.0f,     0.0f,  1.0f,   0.0f,
-        0.0f,  10.0f,   -10.0f,      0.0f,  1.0f,   0.0f,
-
-        0.0f,  10.0f,   0.0f,        0.0f,  1.0f,   0.0f,
-        10.0f,   10.0f,  0.0f,       0.0f,  1.0f,   0.0f,
-        10.0f,  10.0f,  -10.0f,      0.0f,  1.0f,   0.0f,
-
-        // bottom
-        0.0f,   0.0f,   0.0f,        0.0f, -1.0f,   0.0f,
-        0.0f,  0.0f,   -10.0f,       0.0f, -1.0f,   0.0f,
-        10.0f,   0.0f,  -10.0f,      0.0f, -1.0f,   0.0f,
-
-        0.0f,  0.0f,   0.0f,         0.0f, -1.0f,   0.0f,
-        10.0f,  0.0f,  -10.0f,       0.0f, -1.0f,   0.0f,
-        10.0f,   0.0f,  0.0f,        0.0f, -1.0f,   0.0f,
-    };
-}
-
 std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
 {
     std::vector<Vec3> mesh;
@@ -367,20 +305,51 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
         hullInfo.mVertices = reinterpret_cast<const float*>(&firstVert.data);
 
         HullResult result;
+        HullLibrary library;
 
-        auto result = CreateConvexHull(hullInfo, result);
+        auto createResult = library.CreateConvexHull(hullInfo, result);
 
-        if (result == QE_OK)
+        if (createResult == QE_OK)
         {
-            for (int i = 0 ; i < result.mNumFaces; ++i)
+            for (unsigned face = 0 ; face < result.mNumFaces; ++face)
             {
-                for (int j = 0; j < 3; ++j)
+                auto index = result.mIndices[face * 3 + 0];
+
+                Vec3 a =
                 {
-                    Vec3 vec =
-                    {
-                        result.mOutputVertices[result.]
-                    }
-                }
+                    result.mOutputVertices[index + 0],
+                    result.mOutputVertices[index + 1],
+                    result.mOutputVertices[index + 2],
+                };
+
+                index = result.mIndices[face * 3 + 1];
+
+                Vec3 b =
+                {
+                    result.mOutputVertices[index + 0],
+                    result.mOutputVertices[index + 1],
+                    result.mOutputVertices[index + 2],
+                };
+
+                index = result.mIndices[face * 3 + 2];
+
+                Vec3 c =
+                {
+                    result.mOutputVertices[index + 0],
+                    result.mOutputVertices[index + 1],
+                    result.mOutputVertices[index + 2],
+                };
+
+                auto normal = Normalise(Cross(b-a, c-a));
+
+                mesh.push_back(a);
+                mesh.push_back(normal);
+
+                mesh.push_back(b);
+                mesh.push_back(normal);
+
+                mesh.push_back(c);
+                mesh.push_back(normal);
             }
         }
     }
@@ -388,7 +357,84 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
     return mesh;
 }
 
-void DoGraphics(const Bsp::CollisionBsp &)
+std::vector<float> MakeTriangles(const Bsp::CollisionBsp& bsp)
+{
+    std::vector<float> result;
+
+    // RAM: oooh, use the bsp!
+    auto oneBrush = MeshFromBrush(bsp, bsp.brushes[0].brush);
+
+    for (auto v : oneBrush)
+    {
+        result.push_back(v.data[0]);
+        result.push_back(v.data[1]);
+        result.push_back(v.data[2]);
+    }
+
+    return result;
+
+
+//    // Make a cube.
+//    return std::vector<float>
+//    {
+//        // front (x,y,z,nx,ny,nz)
+//        0.0f,   0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+//        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+//        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+
+//        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+//        10.0f,  10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+//        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+
+//        // left
+//        0.0f,   0.0f,   0.0f,       -1.0f,  0.0f,   0.0f,
+//        0.0f,   0.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
+//        0.0f,   10.0f,  0.0f,       -1.0f,  0.0f,   0.0f,
+
+//        0.0f,  0.0f,   -10.0f,      -1.0f,  0.0f,   0.0f,
+//        0.0f,  10.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
+//        0.0f,  10.0f,  0.0f,        -1.0f,  0.0f,   0.0f,
+
+//        // right
+//        10.0f,  0.0f,   0.0f,        1.0f,  0.0f,   0.0f,
+//        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
+//        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
+
+//        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
+//        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
+//        10.0f,  10.0f,  -10.0f,      1.0f,  0.0f,   0.0f,
+
+
+//        // back
+//        0.0f,   0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+//        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+//        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+
+//        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+//        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+//        10.0f,  10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+
+//        // top
+//        0.0f,   10.0f,   0.0f,       0.0f,  1.0f,   0.0f,
+//        10.0f,   10.0f,  -10.0f,     0.0f,  1.0f,   0.0f,
+//        0.0f,  10.0f,   -10.0f,      0.0f,  1.0f,   0.0f,
+
+//        0.0f,  10.0f,   0.0f,        0.0f,  1.0f,   0.0f,
+//        10.0f,   10.0f,  0.0f,       0.0f,  1.0f,   0.0f,
+//        10.0f,  10.0f,  -10.0f,      0.0f,  1.0f,   0.0f,
+
+//        // bottom
+//        0.0f,   0.0f,   0.0f,        0.0f, -1.0f,   0.0f,
+//        0.0f,  0.0f,   -10.0f,       0.0f, -1.0f,   0.0f,
+//        10.0f,   0.0f,  -10.0f,      0.0f, -1.0f,   0.0f,
+
+//        0.0f,  0.0f,   0.0f,         0.0f, -1.0f,   0.0f,
+//        10.0f,  0.0f,  -10.0f,       0.0f, -1.0f,   0.0f,
+//        10.0f,   0.0f,  0.0f,        0.0f, -1.0f,   0.0f,
+//    };
+}
+
+void DoGraphics(const Bsp::CollisionBsp& bsp)
 {
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -484,7 +530,7 @@ void DoGraphics(const Bsp::CollisionBsp &)
     glGenBuffers(1, &triangleVboHandle);
     glBindBuffer(GL_ARRAY_BUFFER, triangleVboHandle);
 
-    auto triangles = MakeTriangles();
+    auto triangles = MakeTriangles(bsp);
     glBufferData(
         GL_ARRAY_BUFFER,
         triangles.size() * sizeof(float),
