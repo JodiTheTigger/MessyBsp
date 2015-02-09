@@ -57,11 +57,11 @@ std::vector<Vec3> inline VerticiesFromIntersectingPlanes(
     {
         const auto& n1 = planes[i];
 
-        for (unsigned j = i; j < planeCount; ++j)
+        for (unsigned j = i + 1; j < planeCount; ++j)
         {
             const auto& n2 = planes[j];
 
-            for (unsigned k = j; k < planeCount; ++k)
+            for (unsigned k = j + 1; k < planeCount; ++k)
             {
                 const auto& n3 = planes[k];
 
@@ -96,7 +96,7 @@ std::vector<Vec3> inline VerticiesFromIntersectingPlanes(
                 }
 
                 // Bullet makes the quotent -ve, dunno why (yet).
-                quotient = 1.0f / quotient;
+                quotient = -1.0f / quotient;
 
                 auto d1n2n3 = n2n3 * n1.normal;
                 auto d2n3n1 = n3n1 * n2.normal;
