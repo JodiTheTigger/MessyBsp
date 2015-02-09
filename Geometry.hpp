@@ -47,6 +47,21 @@ struct alignas(16) Vec3N
     }
 };
 
+struct Vec3U
+{
+    float data[3];
+
+    constexpr operator Vec3() const
+    {
+        return
+        {
+            data[0],
+            data[1],
+            data[2],
+        };
+    }
+};
+
 struct alignas(16) Vec4N
 {
     float data[4];
@@ -63,9 +78,9 @@ struct alignas(16) Vec4N
     }
 };
 
-struct alignas(16) Plane
+struct Plane
 {
-    Vec3N normal;
+    Vec3U normal;
     float distance;
 };
 
@@ -83,5 +98,3 @@ struct alignas(16) Matrix4x4
 {
     Vec4 data[4];
 };
-
-
