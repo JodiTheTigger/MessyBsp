@@ -65,6 +65,12 @@ std::vector<Vec3> inline VerticiesFromIntersectingPlanes(
             {
                 const auto& n3 = planes[k];
 
+                // From http://geomalgorithms.com/a05-_intersect-1.html
+                // P0 = -d1(n2 x n3) - d2(n3 x n1) - d3(n1 x n2)
+                //      ----------------------------------------
+                //                n1 . (n2 x n3)
+                // Where . == dot product, and x = cross product.
+
                 auto n2n3 = Cross(n2.normal, n3.normal);
                 auto n3n1 = Cross(n3.normal, n1.normal);
                 auto n1n2 = Cross(n1.normal, n2.normal);
@@ -79,28 +85,22 @@ std::vector<Vec3> inline VerticiesFromIntersectingPlanes(
                     continue;
                 }
 
-                // From bullet physics:
-
-                // point P out of 3 plane equations:
-                // (. == Dot(), * = Cross())
-
-                //	     d1(N2 * N3) + d2(N3 * N1) + d3(N1 * N2)
-                //  P =  ---------------------------------------
-                //       N1 . (N2 * N3)
-
                 auto quotient = DotF(n2n3, n1.normal);
 
+                // There is only a 3 plane intersection if
+                // (n1 . (n2 x n3)) != 0.
                 if (std::abs(quotient) <= 0.000001f)
                 {
                     continue;
                 }
 
-                // Bullet makes the quotent -ve, dunno why (yet).
+                // Make the quotent -ve to turn
+                // all the -d1, -d2, -d3 to -(d1+d2+d3)
                 quotient = -1.0f / quotient;
 
-                auto d1n2n3 = n2n3 * n1.normal;
-                auto d2n3n1 = n3n1 * n2.normal;
-                auto d3n1n2 = n1n2 * n3.normal;
+                auto d1n2n3 = n2n3 * n1.distance;
+                auto d2n3n1 = n3n1 * n2.distance;
+                auto d3n1n2 = n1n2 * n3.distance;
 
                 auto point = d2n3n1 + d3n1n2;
                 point = point + d1n2n3;
