@@ -285,11 +285,24 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
 {
     std::vector<Vec3> mesh;
     std::vector<Plane> planes;
+
+    // Q3 stores plane distance as the distance from the origin along the normal
+    // But my maths assume it's D from Ax + By + Cz + D = 0, so I need to invert
+    // the distance.
+    auto convertD = [] (Plane p)
+    {
+        return Plane
+        {
+            p.normal,
+            -p.distance
+        };
+    };
+
     for (int i = 0; i < brush.sideCount; ++i)
     {
         const auto brushSide = bsp.brushSides[brush.firstBrushSideIndex + i];
         int planeIndex = brushSide.planeIndex;
-        planes.push_back(bsp.planes[planeIndex]);
+        planes.push_back(convertD(bsp.planes[planeIndex]));
     }
 
     const auto verts = VerticiesFromIntersectingPlanes(planes);
@@ -790,7 +803,7 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             then = now;
 
             // light rotation
-            modelRotation.data += globals.modelRotationsPerTick;
+            //modelRotation.data += globals.modelRotationsPerTick;
         }
 
         // now you can make GL calls.
