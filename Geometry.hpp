@@ -81,6 +81,9 @@ struct alignas(16) Vec4N
 struct Plane
 {
     Vec3U normal;
+
+    // RAM: TODO: Is this distance along the normal,
+    // or D from the plane equation? As D = -distance.
     float distance;
 };
 
