@@ -313,9 +313,10 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
 
         HullDesc hullInfo;
 
-        hullInfo.mVcount = verts.size();
-        hullInfo.mVertexStride = sizeof(float) * 3;
-        hullInfo.mVertices = reinterpret_cast<const float*>(&firstVert.data);
+        hullInfo.mFlags        = QF_TRIANGLES;
+        hullInfo.mVcount       = verts.size();
+        hullInfo.mVertexStride = sizeof(Vec3);
+        hullInfo.mVertices     = reinterpret_cast<const float*>(firstVert.data);
 
         HullResult result;
         HullLibrary library;
@@ -326,7 +327,7 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
         {
             for (unsigned face = 0 ; face < result.mNumFaces; ++face)
             {
-                auto index = result.mIndices[face * 3 + 0];
+                auto index = result.mIndices[face * 3 + 0] * 3;
 
                 Vec3 a =
                 {
@@ -335,7 +336,7 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
                     result.mOutputVertices[index + 2],
                 };
 
-                index = result.mIndices[face * 3 + 1];
+                index = result.mIndices[face * 3 + 1] * 3;
 
                 Vec3 b =
                 {
@@ -344,7 +345,7 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
                     result.mOutputVertices[index + 2],
                 };
 
-                index = result.mIndices[face * 3 + 2];
+                index = result.mIndices[face * 3 + 2] * 3;
 
                 Vec3 c =
                 {
@@ -375,13 +376,20 @@ std::vector<float> MakeTriangles(const Bsp::CollisionBsp& bsp)
     std::vector<float> result;
 
     // RAM: oooh, use the bsp!
-    auto oneBrush = MeshFromBrush(bsp, bsp.brushes[0].brush);
-
-    for (auto v : oneBrush)
+    unsigned count = 0;
+    for (const auto& brushAABB : bsp.brushes)
     {
-        result.push_back(v.data[0]);
-        result.push_back(v.data[1]);
-        result.push_back(v.data[2]);
+        auto oneBrush = MeshFromBrush(bsp, brushAABB.brush);
+
+        for (auto v : oneBrush)
+        {
+            result.push_back(v.data[0]);
+            result.push_back(v.data[1]);
+            result.push_back(v.data[2]);
+        }
+
+        // only do one for now
+        if (++count > 0) break;
     }
 
     return result;
