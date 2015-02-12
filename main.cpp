@@ -48,7 +48,7 @@ struct Globals
     // Need to convert all this stuff to SI units.
     // For now, lets assume 1 game unit = 1m
     float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
-    float moveDeltaPerTick = 2.0f / ticksPerSecond;
+    float moveDeltaPerTick = 200.0f / ticksPerSecond;
     float viewAnglePerMouseMoveUnit = 0.01f;
 
     // For testing lighting, rotates once every 5 seconds
@@ -230,7 +230,7 @@ void OpenAllControllers()
 
 PlayerActions GetActions()
 {
-    PlayerActions result;
+    PlayerActions result = {{},0,0};
 
     // Keyboard
     const auto* keys = SDL_GetKeyboardState(nullptr);
@@ -757,41 +757,6 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
         {
             PlayerActions actions = GetActions();
 
-            Vec3 movement = {0.0f};
-
-            if (actions.actions[Forward])
-            {
-                movement.data[2] -= 1.0f;
-            }
-            if (actions.actions[Backward])
-            {
-                movement.data[2] += 1.0f;
-            }
-
-            if (actions.actions[StrafeLeft])
-            {
-                movement.data[0] -= 1.0f;
-            }
-            if (actions.actions[StrafeRight])
-            {
-                movement.data[0] += 1.0f;
-            }
-
-            if (actions.actions[Up])
-            {
-                movement.data[1] += 1.0f;
-            }
-            if (actions.actions[Down])
-            {
-                movement.data[1] -= 1.0f;
-            }
-
-            if (SquareF(movement) > 0.0f)
-            {
-                cameraPosition +=
-                    Normalise(movement) * globals.moveDeltaPerTick;
-            }
-
             // deal with where we are looking.
             float mouseDelta =
                 globals.viewAnglePerMouseMoveUnit *
@@ -807,6 +772,65 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
             if (pitch.data < -((Pi / 2.0f) - 0.01)) pitch.data = -Pi / 2.0f;
             if (pitch.data >  ((Pi / 2.0f) - 0.01)) pitch.data =  Pi / 2.0f;
+
+            // Calculate the new Z axis, or another way, the direction
+            // we are looking as a vector.
+            Vec3 forward =
+            {
+                std::sin(yaw.data),
+                -std::sin(pitch.data)*std::cos(yaw.data),
+                std::cos(pitch.data)*std::cos(yaw.data)
+            };
+            forward = Normalise(forward);
+
+            Vec3 left =
+            {
+                forward.data[2],
+                forward.data[1],
+                forward.data[0],
+            };
+
+            Vec3 up =
+            {
+                forward.data[0],
+                forward.data[2],
+                forward.data[1],
+            };
+
+            Vec3 movement = {0.0f};
+
+            if (actions.actions[Forward])
+            {
+                movement += forward;
+            }
+            if (actions.actions[Backward])
+            {
+                movement -= forward;
+            }
+
+            if (actions.actions[StrafeLeft])
+            {
+                movement += left;
+            }
+            if (actions.actions[StrafeRight])
+            {
+                movement -= left;
+            }
+
+            if (actions.actions[Up])
+            {
+                movement += up;
+            }
+            if (actions.actions[Down])
+            {
+                movement -= up;
+            }
+
+            if (SquareF(movement) > 0.0f)
+            {
+                cameraPosition +=
+                    Normalise(movement) * globals.moveDeltaPerTick;
+            }
 
             then = now;
 
@@ -828,7 +852,7 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
                 float ratio = 1.0f * width / height;
 
-                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 100.0f);
+                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 10000.0f);
 
                 resized = false;
             }
