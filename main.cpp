@@ -289,10 +289,17 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
     // Q3 stores plane distance as the distance from the origin along the normal
     // But my maths assume it's D from Ax + By + Cz + D = 0, so I need to invert
     // the distance.
+    //
+    // Secondly, the Q3 bsp assumes the Z axis is "up", so swap z with y.
     auto convertD = [] (Plane p)
     {
         return Plane
         {
+//            Vec3U{
+//                p.normal.data[0],
+//                p.normal.data[2],
+//                p.normal.data[1]
+//            },
             p.normal,
             -p.distance
         };
@@ -374,85 +381,89 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
 std::vector<float> MakeTriangles(const Bsp::CollisionBsp& bsp)
 {
     std::vector<float> result;
+    static bool useBsp = true;
+    static unsigned maxCount = 10009;
 
-    // RAM: oooh, use the bsp!
-    unsigned count = 0;
-    for (const auto& brushAABB : bsp.brushes)
+    if (useBsp)
     {
-        auto oneBrush = MeshFromBrush(bsp, brushAABB.brush);
-
-        for (auto v : oneBrush)
+        unsigned count = 0;
+        for (const auto& brushAABB : bsp.brushes)
         {
-            result.push_back(v.data[0]);
-            result.push_back(v.data[1]);
-            result.push_back(v.data[2]);
+            auto oneBrush = MeshFromBrush(bsp, brushAABB.brush);
+
+            for (auto v : oneBrush)
+            {
+                result.push_back(v.data[0]);
+                result.push_back(v.data[1]);
+                result.push_back(v.data[2]);
+            }
+
+            // only do one for now
+            if (++count > maxCount) break;
         }
 
-        // only do one for now
-        if (++count > 0) break;
+        return result;
     }
+    else
+    {      
+        return std::vector<float>
+        {
+            // front (x,y,z,nx,ny,nz)
+            0.0f,   0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+            10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+            0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
 
-    return result;
+            10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
+            10.0f,  10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+            0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
 
+            // left
+            0.0f,   0.0f,   0.0f,       -1.0f,  0.0f,   0.0f,
+            0.0f,   10.0f,  0.0f,       -1.0f,  0.0f,   0.0f,
+            0.0f,   0.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
 
-//    // Make a cube.
-//    return std::vector<float>
-//    {
-//        // front (x,y,z,nx,ny,nz)
-//        0.0f,   0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
-//        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
-//        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+            0.0f,  0.0f,   -10.0f,      -1.0f,  0.0f,   0.0f,
+            0.0f,  10.0f,  0.0f,        -1.0f,  0.0f,   0.0f,
+            0.0f,  10.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
 
-//        10.0f,  0.0f,   0.0f,        0.0f,   0.0f,   1.0f,
-//        10.0f,  10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
-//        0.0f,   10.0f,  0.0f,        0.0f,   0.0f,   1.0f,
+            // right
+            10.0f,  0.0f,   0.0f,        1.0f,  0.0f,   0.0f,
+            10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
+            10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
 
-//        // left
-//        0.0f,   0.0f,   0.0f,       -1.0f,  0.0f,   0.0f,
-//        0.0f,   0.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
-//        0.0f,   10.0f,  0.0f,       -1.0f,  0.0f,   0.0f,
-
-//        0.0f,  0.0f,   -10.0f,      -1.0f,  0.0f,   0.0f,
-//        0.0f,  10.0f,  -10.0f,      -1.0f,  0.0f,   0.0f,
-//        0.0f,  10.0f,  0.0f,        -1.0f,  0.0f,   0.0f,
-
-//        // right
-//        10.0f,  0.0f,   0.0f,        1.0f,  0.0f,   0.0f,
-//        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
-//        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
-
-//        10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
-//        10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
-//        10.0f,  10.0f,  -10.0f,      1.0f,  0.0f,   0.0f,
+            10.0f,  0.0f,   -10.0f,      1.0f,  0.0f,   0.0f,
+            10.0f,  10.0f,  -10.0f,      1.0f,  0.0f,   0.0f,
+            10.0f,  10.0f,  0.0f,        1.0f,  0.0f,   0.0f,
 
 
-//        // back
-//        0.0f,   0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
-//        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
-//        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+            // back
+            0.0f,   0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+            0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+            10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
 
-//        10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
-//        0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
-//        10.0f,  10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+            10.0f,  0.0f,   -10.0f,      0.0f,  0.0f,  -1.0f,
+            0.0f,   10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
+            10.0f,  10.0f,  -10.0f,      0.0f,  0.0f,  -1.0f,
 
-//        // top
-//        0.0f,   10.0f,   0.0f,       0.0f,  1.0f,   0.0f,
-//        10.0f,   10.0f,  -10.0f,     0.0f,  1.0f,   0.0f,
-//        0.0f,  10.0f,   -10.0f,      0.0f,  1.0f,   0.0f,
+            // top
+            0.0f,   10.0f,   0.0f,       0.0f,  1.0f,   0.0f,
+            10.0f,   10.0f,  -10.0f,     0.0f,  1.0f,   0.0f,
+            0.0f,  10.0f,   -10.0f,      0.0f,  1.0f,   0.0f,
 
-//        0.0f,  10.0f,   0.0f,        0.0f,  1.0f,   0.0f,
-//        10.0f,   10.0f,  0.0f,       0.0f,  1.0f,   0.0f,
-//        10.0f,  10.0f,  -10.0f,      0.0f,  1.0f,   0.0f,
+            0.0f,  10.0f,   0.0f,        0.0f,  1.0f,   0.0f,
+            10.0f,   10.0f,  0.0f,       0.0f,  1.0f,   0.0f,
+            10.0f,  10.0f,  -10.0f,      0.0f,  1.0f,   0.0f,
 
-//        // bottom
-//        0.0f,   0.0f,   0.0f,        0.0f, -1.0f,   0.0f,
-//        0.0f,  0.0f,   -10.0f,       0.0f, -1.0f,   0.0f,
-//        10.0f,   0.0f,  -10.0f,      0.0f, -1.0f,   0.0f,
+            // bottom
+            0.0f,   0.0f,   0.0f,        0.0f, -1.0f,   0.0f,
+            0.0f,  0.0f,   -10.0f,       0.0f, -1.0f,   0.0f,
+            10.0f,   0.0f,  -10.0f,      0.0f, -1.0f,   0.0f,
 
-//        0.0f,  0.0f,   0.0f,         0.0f, -1.0f,   0.0f,
-//        10.0f,  0.0f,  -10.0f,       0.0f, -1.0f,   0.0f,
-//        10.0f,   0.0f,  0.0f,        0.0f, -1.0f,   0.0f,
-//    };
+            0.0f,  0.0f,   0.0f,         0.0f, -1.0f,   0.0f,
+            10.0f,  0.0f,  -10.0f,       0.0f, -1.0f,   0.0f,
+            10.0f,   0.0f,  0.0f,        0.0f, -1.0f,   0.0f,
+        };
+    }
 }
 
 void DoGraphics(const Bsp::CollisionBsp& bsp)
@@ -537,7 +548,9 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
         glEnable(GL_DEBUG_OUTPUT);
     }
 
+    glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
     // TODO: Load vertex data, gen normal data
@@ -675,8 +688,9 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
     bool running = true;
     bool visible = true;
     bool resized = true;
+    bool rotatingModel = false;
     Vec3 cameraPosition = {0,0,30};
-    Radians yaw = {0.0f};
+    Radians yaw = {-90.0f * DegToRad};
     Radians pitch = {0.0f};
     Radians modelRotation = {0.0f};
     auto then = Microseconds();
@@ -767,21 +781,27 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
             // clamp to +- 90 degrees up and down
             // +- Pi for hrizontal
-            if (yaw.data < -Pi) yaw.data += Pi * 2;
-            if (yaw.data >  Pi) yaw.data -= Pi * 2;
+            if (yaw.data < -(2.0f*Pi)) yaw.data += Pi * 2.0f;
+            if (yaw.data >  (2.0f*Pi)) yaw.data -= Pi * 2.0f;
 
-            if (pitch.data < -((Pi / 2.0f) - 0.01)) pitch.data = -Pi / 2.0f;
-            if (pitch.data >  ((Pi / 2.0f) - 0.01)) pitch.data =  Pi / 2.0f;
+            if (pitch.data < -((Pi / 2.0f) - 0.01f)) pitch.data = -((Pi / 2.0f) - 0.01f);
+            if (pitch.data >  ((Pi / 2.0f) - 0.01f)) pitch.data =  (Pi / 2.0f) - 0.01f;
 
             // Calculate the new Z axis, or another way, the direction
             // we are looking as a vector.
+            // RAM: Seems I've confused the axis, im doing yaw and roll, not
+            // pitch. wtf?
             Vec3 forward =
             {
                 std::sin(yaw.data),
-                -std::sin(pitch.data)*std::cos(yaw.data),
-                std::cos(pitch.data)*std::cos(yaw.data)
+                std::cos(yaw.data)*-std::sin(pitch.data),
+                std::cos(yaw.data)*std::cos(pitch.data)
             };
             forward = Normalise(forward);
+
+            // Fun fact, "forward" is along the +ve z axis.
+            // for openGL that's out of the monitor, ie backwards.
+            forward = - forward;
 
             Vec3 left =
             {
@@ -835,7 +855,10 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             then = now;
 
             // light rotation
-            //modelRotation.data += globals.modelRotationsPerTick;
+            if (rotatingModel)
+            {
+                modelRotation.data += globals.modelRotationsPerTick;
+            }
         }
 
         // now you can make GL calls.
