@@ -806,7 +806,7 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             {
                 forward.data[2],
                 0,
-                forward.data[0],
+                -forward.data[0],
             };
 
             Vec3 up =
