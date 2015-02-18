@@ -295,12 +295,12 @@ std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
     {
         return Plane
         {
-//            Vec3U{
-//                p.normal.data[0],
-//                p.normal.data[2],
-//                p.normal.data[1]
-//            },
-            p.normal,
+            Vec3U{
+                p.normal.data[0],
+                p.normal.data[2],
+                p.normal.data[1]
+            },
+//            p.normal,
             -p.distance
         };
     };
@@ -776,8 +776,8 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
                 globals.viewAnglePerMouseMoveUnit *
                 globals.viewAngleSpeedPerTick;
 
-            yaw.data     += actions.mouseX * mouseDelta;
-            pitch.data   += actions.mouseY * mouseDelta;
+            yaw.data     += -actions.mouseX * mouseDelta;
+            pitch.data   += -actions.mouseY * mouseDelta;
 
             // clamp to +- 90 degrees up and down
             // +- Pi for hrizontal
@@ -787,17 +787,16 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             if (pitch.data < -((Pi / 2.0f) - 0.01f)) pitch.data = -((Pi / 2.0f) - 0.01f);
             if (pitch.data >  ((Pi / 2.0f) - 0.01f)) pitch.data =  (Pi / 2.0f) - 0.01f;
 
-            // Calculate the new Z axis, or another way, the direction
-            // we are looking as a vector.
-            // RAM: Seems I've confused the axis, im doing yaw and roll, not
-            // pitch. wtf?
+            // Ok, forward movement is tied only to the yaw angle, then
+            // treat up as up, and left as normal to forward.
             Vec3 forward =
             {
                 std::sin(yaw.data),
-                std::cos(yaw.data)*-std::sin(pitch.data),
-                std::cos(yaw.data)*std::cos(pitch.data)
+                0,
+                std::cos(yaw.data),
             };
             forward = Normalise(forward);
+            //forward.data[1] = -std::sin(pitch.data);
 
             // Fun fact, "forward" is along the +ve z axis.
             // for openGL that's out of the monitor, ie backwards.
@@ -806,15 +805,15 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             Vec3 left =
             {
                 forward.data[2],
-                forward.data[1],
+                0,
                 forward.data[0],
             };
 
             Vec3 up =
             {
-                forward.data[0],
-                forward.data[2],
-                forward.data[1],
+                0,
+                1.0f,
+                0,
             };
 
             Vec3 movement = {0.0f};
