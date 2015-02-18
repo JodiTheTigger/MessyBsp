@@ -324,22 +324,22 @@ Matrix4x4 LookAtRH(
     Vec3 NewX =
     {
         cosYaw,
-        -sinPitch*-sinYaw,
-        cosPitch*-sinYaw
+        0,
+        -sinYaw
     };
 
     Vec3 NewY =
     {
-        0,
+        sinYaw*sinPitch,
         cosPitch,
-        sinPitch
+        cosYaw*sinPitch
     };
 
     Vec3 NewZ =
     {
-        sinYaw,
-        -sinPitch*cosYaw,
-        cosPitch*cosYaw
+        sinYaw*cosPitch,
+        -sinPitch,
+        cosYaw*cosPitch
     };
 
     return
