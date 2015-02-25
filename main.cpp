@@ -53,9 +53,12 @@ struct Globals
 
     // For testing lighting, rotates once every 5 seconds
     float modelRotationsPerTick = ((2 * Pi) / 5.0f) / ticksPerSecond;
+
+    int joystickDeadZone = 6000;
+    float joystickToMouseMultiplier = 0.001f;
 };
 
-const Globals globals;
+const Globals globals = {};
 
 enum ActionMap
 {
@@ -261,13 +264,36 @@ PlayerActions GetActions()
         // Gamepad axis
         if (!result.mouseX && !result.mouseY)
         {
-            result.mouseX = SDL_GameControllerGetAxis(
+            auto x = SDL_GameControllerGetAxis(
                         controller.pad,
-                        SDL_CONTROLLER_AXIS_LEFTX);
+                        SDL_CONTROLLER_AXIS_RIGHTX);
 
-            result.mouseY = SDL_GameControllerGetAxis(
+            auto y = SDL_GameControllerGetAxis(
                         controller.pad,
-                        SDL_CONTROLLER_AXIS_LEFTY);
+                        SDL_CONTROLLER_AXIS_RIGHTY);
+
+            if (x > globals.joystickDeadZone)
+            {
+                result.mouseX = x - globals.joystickDeadZone;
+            }
+
+            if (x < -globals.joystickDeadZone)
+            {
+                result.mouseX = x + globals.joystickDeadZone;
+            }
+
+            if (y > globals.joystickDeadZone)
+            {
+                result.mouseY = y - globals.joystickDeadZone;
+            }
+
+            if (y < -globals.joystickDeadZone)
+            {
+                result.mouseY = y + globals.joystickDeadZone;
+            }
+
+            result.mouseX *= globals.joystickToMouseMultiplier;
+            result.mouseY *= globals.joystickToMouseMultiplier;
         }
     }
 
@@ -468,7 +494,7 @@ std::vector<float> MakeTriangles(const Bsp::CollisionBsp& bsp)
 
 void DoGraphics(const Bsp::CollisionBsp& bsp)
 {
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 
     // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
     // FFS. I wan't scoped_exit!
@@ -681,6 +707,21 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
                     GL_FALSE,
                     3*2*sizeof(float),
                     reinterpret_cast<const void*>(3*sizeof(float)));
+    }
+
+    // On my linux, my wireless xbox360 controller has an unrecognised GUID
+    // so add it explicitly. I copied the linux x360 wireless controller
+    // but had to use the hat isntead of the buttons for the dpad to work.
+    // Also I had to adjust the right joystick axis to 2 and 3
+    // https://hg.libsdl.org/SDL/file/b577c4753421/include/SDL_gamecontroller.h#l95
+    // https://hg.libsdl.org/SDL/file/tip/src/joystick/SDL_gamecontrollerdb.h#l58
+    auto mapAddResult = SDL_GameControllerAddMapping(
+                "0000000058626f782047616d65706100,X360 Wireless Controller,a:b0,b:b1,back:b6,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,guide:b8,leftshoulder:b4,leftstick:b9,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b10,righttrigger:a5,rightx:a2,righty:a3,start:b7,x:b2,y:b3,");
+
+    if (mapAddResult >= 0)
+    {
+        // Add any existing controllers.
+        OpenAllControllers();
     }
 
 
