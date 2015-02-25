@@ -15,11 +15,9 @@
 ###############
 # Project info
 ###############
-# TODO: When cmake 3.1 gets released, use the commented out code instead.
 project(MessyBsp)
 
-#cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 
 ###############
 # Compiler Info
@@ -27,7 +25,6 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 include(CheckCXXCompilerFlag)
 
 # Check compiler options
-check_cxx_compiler_flag("-std=c++14" HAS_CPP14)
 check_cxx_compiler_flag("-march=native" HAS_NATIVE)
 check_cxx_compiler_flag("-fno-rtti" CAN_DISABLE_RTTI)
 check_cxx_compiler_flag("-fno-exceptions" CAN_DISABLE_EXCEPTIONS)
@@ -38,31 +35,17 @@ check_cxx_compiler_flag(-Werror HAS_WERROR)
 check_cxx_compiler_flag(-WX HAS_WERROR_MSVC)
 check_cxx_compiler_flag("/MP" HAS_MULTIPROCESSOR_COMPILE)
 
-# Only platforms with clangs libc++ will build with clang with these build flags.
-# Currently, that's only OSX.
-set(TEMP_STACK ${CMAKE_REQUIRED_FLAGS})
-set(CMAKE_REQUIRED_FLAGS "-std=c++14 -stdlib=libc++")
-check_cxx_source_compiles("
-#include <cstdint>
-int main(int, int)
-{
-return 0;
-}
-" HAS_CPP14_AND_LIB)
-set(CMAKE_REQUIRED_FLAGS ${TEMP_STACK})
-unset(TEMP_STACK)
+# Clang complains about perfectly valid brace initilisation in c++14
+check_cxx_compiler_flag(-Wno-missing-braces HAS_IGNORE_MISSING_BRACES)
+
+# 3rd party hull.cpp tries to disable a GCC warning, only to generate a
+# clang one due to unrecognised pragmas.
+check_cxx_compiler_flag(-Wno-unknown-pragmas HAS_IGNORE_UNKNOWN_PRAGMAS)
+
 
 ###############
 # Prerequisites
 ###############
-if (HAS_CPP14_AND_LIB)
-    message("Using HAS_CPP14_AND_LIB.")
-    set(CMAKE_CXX_FLAGS "-std=c++14 -stdlib=libc++")
-elseif (HAS_CPP14)
-    set(CMAKE_CXX_FLAGS "-std=c++14")
-elseif(NOT MSVC14)
-    message(FATAL_ERROR "Compiler requires C++14 functionality (MSVC14).")
-endif()
 
 if (HAS_NATIVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
@@ -99,53 +82,58 @@ if (HAS_MULTIPROCESSOR_COMPILE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 endif()
 
+if (HAS_IGNORE_MISSING_BRACES)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces")
+endif()
+
+if (HAS_IGNORE_UNKNOWN_PRAGMAS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-pragmas")
+endif()
+
 # Set a default build type for single-configuration
 # CMake generators if no build type is set.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
 
-## C++11/14 features I use. (CMake 3.1)
-#set(needed_features
+###############
 
-#    cxx_generic_lambdas
-#    cxx_auto_type
-#    cxx_uniform_initialization
-#    cxx_trailing_return_types
-#    cxx_right_angle_brackets
-#    cxx_return_type_deduction
-#    cxx_nullptr
-#    cxx_alignas)
+# C++11/14 features I use.
+set(needed_features
 
-#target_compile_features(MessyBsp PRIVATE ${needed_features})
+    cxx_generic_lambdas
+    cxx_auto_type
+    cxx_uniform_initialization
+    cxx_trailing_return_types
+    cxx_right_angle_brackets
+    cxx_return_type_deduction
+    cxx_nullptr
+    cxx_alignas)
 
-message("CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+###############
 
-# RAM: SDL
-INCLUDE(FindPkgConfig)
-
-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-
-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
-
-# RAM: Glew
 Find_Package(GLEW REQUIRED)
 if(NOT GLEW_FOUND)
     message( FATAL ERROR "GLEW not found!")
 endif()
 
-# RAM: openGL
 Find_Package(OpenGL REQUIRED)
 if(NOT OPENGL_FOUND)
     message( FATAL ERROR "OPENGL not found!")
 endif()
-
 
 # :-( only finds sdl, not sdl2.
 #Find_Package(SDL 2.0 REQUIRED)
 #if(NOT SDL_FOUND)
 #    message( FATAL ERROR "SDL not found!")
 #endif()
+
+INCLUDE(FindPkgConfig)
+
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
+
 
 ###############
 # Source
@@ -186,6 +174,9 @@ set(
 # Link
 ###############
 add_executable(MessyBsp ${SOURCE_LIST})
+target_compile_features(MessyBsp PRIVATE ${needed_features})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
+
+message("CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
