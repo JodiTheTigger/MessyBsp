@@ -146,9 +146,9 @@ inline Vec3 Dot(const Vec3& lhs, const Vec3& rhs)
 
     return
     {
-        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
-        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
-        mult.data[0] + mult.data[1] + mult.data[2] + mult.data[3],
+        mult.data[0] + mult.data[1] + mult.data[2],
+        mult.data[0] + mult.data[1] + mult.data[2],
+        mult.data[0] + mult.data[1] + mult.data[2],
     };
 }
 
