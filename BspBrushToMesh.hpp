@@ -21,7 +21,7 @@
 
 namespace Bsp {
 
-class CollisionBsp;
+struct CollisionBsp;
 
 struct Mesh
 {

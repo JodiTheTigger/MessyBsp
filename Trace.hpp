@@ -23,7 +23,7 @@
 // /////////////////////
 namespace Bsp
 {
-    class CollisionBsp;
+    struct CollisionBsp;
     class Plane;
 }
 
