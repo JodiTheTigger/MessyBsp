@@ -20,6 +20,50 @@
 
 namespace Bsp {
 
+#ifndef GENERIC_LAMBDAS
+// Bah MSVC 2013 doesn't do generic lambda's
+class ReadTypes
+{
+public:
+    ReadTypes(
+            FILE* fileHandle,
+            CollisionBsp& bsp,
+            size_t* counts)
+        : myFileHandle(fileHandle)
+        , myBsp(bsp)
+        , myCounts(counts)
+    {
+    }
+
+    template<typename T>
+    bool operator()(Lumps lumpEnum, T& vector, size_t typeSize)
+    {
+        fseek(
+            myFileHandle,
+            myBsp.header.lumps[lumpEnum].offsetInBytesFromStartOfFile,
+            SEEK_SET);
+
+        for (unsigned i = 0; i < myCounts[lumpEnum]; ++i)
+        {
+            vector.emplace_back();
+
+            if (!fread(&vector.back(), 1, typeSize, myFileHandle))
+            {
+                return false;
+            }
+
+        }
+
+        return true;
+    }
+
+private:
+    FILE* myFileHandle;
+    CollisionBsp& myBsp;
+    size_t* myCounts;
+};
+#endif
+
 void GetCollisionBsp(
         const std::string &filePath,
         CollisionBsp &bsp)
@@ -85,6 +129,9 @@ void GetCollisionBsp(
         bsp.brushes.reserve(Counts[Brushes]);
         bsp.brushSides.reserve(Counts[BrushSides]);
 
+#ifndef GENERIC_LAMBDAS
+        ReadTypes readTypes(fileHandle, bsp, Counts);
+#else
         // My first generic lambda. DRY FTW!
         auto readTypes = [&] (Lumps lumpEnum, auto& vector, size_t typeSize)
         {
@@ -106,6 +153,7 @@ void GetCollisionBsp(
 
             return true;
         };
+#endif
 
         // Grrr, not DRY enough (how to not repeat the enum and type?)
         // Also note that brushes is a special case it has an extented structure.
