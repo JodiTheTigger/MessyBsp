@@ -15,13 +15,12 @@
 */
 
 #include "Bsp.hpp"
+#include "BspBrushToMesh.hpp"
 #include "TraceTest.hpp"
 #include "VectorMaths3.hpp"
 #include "Matrix4x4Maths.hpp"
 #include "GLDebug.hpp"
-#include "PlaneMaths.hpp"
 #include "third-party/getopt/getopt.h"
-#include "third-party/ConvexHull/hull.h"
 
 // SDL + OpenGL
 #include <SDL2/SDL.h>
@@ -307,128 +306,16 @@ uint64_t Microseconds()
     return static_cast<uint64_t>(SDL_GetTicks()) * 1000l;
 }
 
-std::vector<Vec3> MeshFromBrush(const Bsp::CollisionBsp& bsp, Bsp::Brush brush)
-{
-    std::vector<Vec3> mesh;
-    std::vector<Plane> planes;
-
-    // Q3 stores plane distance as the distance from the origin along the normal
-    // But my maths assume it's D from Ax + By + Cz + D = 0, so I need to invert
-    // the distance.
-    //
-    // Secondly, the Q3 bsp assumes the Z axis is "up", so swap z with y.
-    auto convertD = [] (Plane p)
-    {
-        return Plane
-        {
-            Vec3U{
-                p.normal.data[0],
-                p.normal.data[2],
-                p.normal.data[1]
-            },
-//            p.normal,
-            -p.distance
-        };
-    };
-
-    for (int i = 0; i < brush.sideCount; ++i)
-    {
-        const auto brushSide = bsp.brushSides[brush.firstBrushSideIndex + i];
-        int planeIndex = brushSide.planeIndex;
-        planes.push_back(convertD(bsp.planes[planeIndex]));
-    }
-
-    const auto verts = VerticiesFromIntersectingPlanes(planes);
-
-    if (!verts.empty())
-    {
-        const auto& firstVert = verts.data()[0];
-
-        HullDesc hullInfo;
-
-        hullInfo.mFlags        = QF_TRIANGLES;
-        hullInfo.mVcount       = verts.size();
-        hullInfo.mVertexStride = sizeof(Vec3);
-        hullInfo.mVertices     = reinterpret_cast<const float*>(firstVert.data);
-
-        HullResult result;
-        HullLibrary library;
-
-        auto createResult = library.CreateConvexHull(hullInfo, result);
-
-        if (createResult == QE_OK)
-        {
-            for (unsigned face = 0 ; face < result.mNumFaces; ++face)
-            {
-                auto index = result.mIndices[face * 3 + 0] * 3;
-
-                Vec3 a =
-                {
-                    result.mOutputVertices[index + 0],
-                    result.mOutputVertices[index + 1],
-                    result.mOutputVertices[index + 2],
-                };
-
-                index = result.mIndices[face * 3 + 1] * 3;
-
-                Vec3 b =
-                {
-                    result.mOutputVertices[index + 0],
-                    result.mOutputVertices[index + 1],
-                    result.mOutputVertices[index + 2],
-                };
-
-                index = result.mIndices[face * 3 + 2] * 3;
-
-                Vec3 c =
-                {
-                    result.mOutputVertices[index + 0],
-                    result.mOutputVertices[index + 1],
-                    result.mOutputVertices[index + 2],
-                };
-
-                auto normal = Normalise(Cross(b-a, c-a));
-
-                mesh.push_back(a);
-                mesh.push_back(normal);
-
-                mesh.push_back(b);
-                mesh.push_back(normal);
-
-                mesh.push_back(c);
-                mesh.push_back(normal);
-            }
-        }
-    }
-
-    return mesh;
-}
-
 std::vector<float> MakeTriangles(const Bsp::CollisionBsp& bsp)
 {
-    std::vector<float> result;
     static bool useBsp = true;
     static unsigned maxCount = 10009;
 
     if (useBsp)
     {
-        unsigned count = 0;
-        for (const auto& brushAABB : bsp.brushes)
-        {
-            auto oneBrush = MeshFromBrush(bsp, brushAABB.brush);
-
-            for (auto v : oneBrush)
-            {
-                result.push_back(v.data[0]);
-                result.push_back(v.data[1]);
-                result.push_back(v.data[2]);
-            }
-
-            // only do one for now
-            if (++count > maxCount) break;
-        }
-
-        return result;
+        return Bsp::BrushMeshesAsTriangleListWithNormals(
+            bsp,
+            maxCount);
     }
     else
     {      
