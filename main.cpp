@@ -35,6 +35,8 @@
 #include <cstdio>
 #include <cmath>
 
+extern char* optarg;
+
 static const float Pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
 static const float DegToRad = (2.0f * Pi / 360.0f);
 
@@ -53,7 +55,10 @@ struct Globals
     // For testing lighting, rotates once every 5 seconds
     float modelRotationsPerTick = ((2 * Pi) / 5.0f) / ticksPerSecond;
 
+    // got the deadzone value from SDL somewhere.
     int joystickDeadZone = 6000;
+
+    // Deduced this one emperically.
     float joystickToMouseMultiplier = 0.001f;
 };
 
@@ -112,12 +117,35 @@ Matrix4x4 g_projection;
 
 void DoGraphics(const Bsp::CollisionBsp& bsp);
 
+
+void PrintHelp()
+{
+    printf("\n");
+    printf("MessyBsp - By Richard Maxwell\n\n");
+
+    printf("  Renders or does a collsion detection benchmark on a quake3 bsp.\n\n");
+
+    printf("  MessyBsp [-b] [-h] [-f <path to quake3 bsp>]\n\n");
+
+    printf("  -b:  Benchmark 100,000 random collision tests\n");
+    printf("       Prints the cost in Microseconds. Otherwise\n");
+    printf("       Renders all the solid brushes using opengl.\n\n");
+
+    printf("  -f:  Quake3 bsp file to use. Defaults to 'final.bsp'.\n\n");
+
+    printf("  -h:  This help text.\n");
+    printf("\n");
+}
+
 int main(int argc, char** argv)
 {
     bool benchmark = false;
+    char fileName[1024];
+
+    strcpy(fileName, "final.bsp");
 
     // Parse options
-    while (auto ch = getopt(argc, argv, "hb"))
+    while (auto ch = getopt(argc, argv, "hbf:"))
     {
         if (ch < 0)
         {
@@ -126,42 +154,52 @@ int main(int argc, char** argv)
 
         if (ch == 'h')
         {
-            printf("MessyBsp - By Richard Maxwell\n\n");
-
-            printf("  Renders 'final.bsp' or does a collsion detection bnechmark.\n\n");
-
-            printf("  MessyBsp [--benchmark] [--help]\n\n");
-
-            printf("  -b:  Benchmark 1,000,000 random collision tests\n");
-            printf("       against 'final.bsp'. Prints the cost in Microseconds.\n\n");
-
-            printf("  -h:  This help text.\n");
-            printf("\n");
+            PrintHelp();
 
             return 0;
+        }
+
+        if (ch == 'f')
+        {
+            if (optarg)
+            {
+                strncpy(fileName, optarg, sizeof(fileName) - 1);
+            }
         }
 
         if (ch == 'b')
         {
             benchmark = true;
-            break;
         }
+    }
+
+    {
+        auto fileHandleExists = fopen(fileName, "r");
+        if (!fileHandleExists)
+        {
+            PrintHelp();
+            printf("---------------------------\n");
+            printf("File '%s' cannot be opened.\n", fileName);
+            printf("---------------------------\n");
+            return -1;
+        }
+
+        fclose(fileHandleExists);
     }
 
     Bsp::CollisionBsp bsp;
 
-    Bsp::GetCollisionBsp("final.bsp", bsp);
+    Bsp::GetCollisionBsp(fileName, bsp);
 
     if (benchmark)
     {
-        auto result = TimeBspCollision(bsp, 1000);//1000000);
+        auto result = TimeBspCollision(bsp, 100000);
 
         printf("Trace Took %ld microseconds\n", result.count());
 
         return 0;
     }
 
-    // RAM: sdl testing.
     DoGraphics(bsp);
 
     return 0;
@@ -385,10 +423,16 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 
     // Window mode MUST include SDL_WINDOW_OPENGL for use with OpenGL.
-    // FFS. I wan't scoped_exit!
+    // (btw, when will C++ get scoped_exit?)
     SDL_Window *window = SDL_CreateWindow(
-        "SDL2/OpenGL Demo", 0, 0, 640, 480,
-        SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+        "SDL2/OpenGL Demo",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        640,
+        480,
+        SDL_WINDOW_OPENGL|
+        SDL_WINDOW_RESIZABLE|
+        SDL_WINDOW_INPUT_GRABBED);
 
     // Create an OpenGL context associated with the window.
 
@@ -467,11 +511,6 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    // TODO: Load vertex data, gen normal data
-    // TODO: player controller
-    // TODO: use opengl debug function binding
-    // TODO: breakpoint at debug error
-
     // Loading vertex data (1 == number of buffers)
     // http://en.wikipedia.org/wiki/Vertex_Buffer_Object
     GLuint triangleVboHandle;
@@ -485,7 +524,6 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
         triangles.data(),
         GL_STATIC_DRAW);
 
-    // TODO: vertex, fragment, program, bind, load
     // try https://www.opengl.org/sdk/docs/tutorials/ClockworkCoders/loading.php
     // http://classes.soe.ucsc.edu/cmps162/Spring12/s12/labnotes/shaders.html
     // FFS I cannot find a simple tutorial!
@@ -724,11 +762,12 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             Vec3 forward =
             {
                 std::sin(yaw.data),
-                0,
+
+                // Set this to 0 to prevent "flying".
+                -std::sin(pitch.data),
                 std::cos(yaw.data),
             };
             forward = Normalise(forward);
-            //forward.data[1] = -std::sin(pitch.data);
 
             // Fun fact, "forward" is along the +ve z axis.
             // for openGL that's out of the monitor, ie backwards.
@@ -819,21 +858,12 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             // Get Matricies
             auto view = LookAtRH(cameraPosition, yaw, pitch) * model;
 
-            // Assuming world matrix is identity
-            // projection * view * model
-            // vertex = PVM * in_vertex;
-            // Who would have thought that this little line would have
-            // caused me so much fucking pain.
-            //auto projViewWorld = g_projection * view;
-
             // Note: I should be able to avoid an inverse
             // calcuation of the view matrix due to the fact
             // that the rotation part is orthonormal and therefore
             // M^T = M^(-1). But for now, I'll just use inverse.
             auto normalXform = Transpose(Inverse(view));
 
-            // lets put the light at a height of 100, circling with a radius
-            // of 20, say.
             auto lightPosition = Vec4
             {
                     20.0f,
@@ -847,16 +877,9 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
             // zero out the w row? Yes!
             normalXform.data[3] = {0.0f, 0.0f, 0.0f, 0.0f};
 
-            // Stupid OpenGL docs make matrix stuff confusing
-            // http://stackoverflow.com/questions/17717600/confusion-between-c-and-opengl-matrix-order-row-major-vs-column-major
-            //
-            // Sadly, the use of column-major format in the spec and blue book
-            // has resulted in endless confusion in the OpenGL programming
-            // community. Column-major notation suggests that matrices are not
-            // laid out in memory as a programmer would expect.
-
-            // My matricies are stored in crow major format, so I need to
-            // Transpose them to be in OpenGL and DirectX's Column major format.
+            // Matrix stuff was hard due to confusing documentation on the net.
+            // So I figured it out from first principles and wrote my own guide.
+            // https://gist.github.com/JodiTheTigger/477c776b30da21a6a123
             auto viewMatrix = Transpose(view);
             auto projMatrix = Transpose(g_projection);
             auto normalMatrix = Transpose(normalXform);
