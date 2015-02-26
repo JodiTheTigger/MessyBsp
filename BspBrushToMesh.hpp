@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include "Geometry.hpp"
+#include "Bsp.hpp"
+
 #include <vector>
 #include <stdint.h>
 
@@ -23,12 +26,12 @@ namespace Bsp {
 
 struct CollisionBsp;
 
-struct Mesh
-{
-    std::vector<float> verticies;
-    std::vector<uint16_t> indicies;
-};
+std::vector<float> BrushMeshesAsTriangleListWithNormals(
+        const CollisionBsp &bsp,
+        unsigned maxBrushCount);
 
-std::vector<Mesh> GetBrushMeshes(const CollisionBsp &bsp);
+std::vector<Vec3> MeshFromBrush(
+        const Bsp::CollisionBsp& bsp,
+        const Bsp::Brush& brush);
 
 } //namespace

@@ -15,23 +15,23 @@
 */
 
 #include "BspBrushToMesh.hpp"
-#include "Bsp.hpp"
 #include "PlaneMaths.hpp"
 #include "third-party/ConvexHull/hull.h"
 
 namespace Bsp {
 
-std::vector<Mesh> GetBrushMeshes(const CollisionBsp &bsp)
+std::vector<float> BrushMeshesAsTriangleListWithNormals(
+        const CollisionBsp &bsp,
+        unsigned maxBrushCount)
 {
-    std::vector<Mesh> result;
+    std::vector<float> result;
     std::vector<bool> flags(bsp.brushes.size());
-    HullLibrary mrHull;
 
     // For each brush that's solid, get all the plane equations
     // and then get all the intersection points between all the planes.
     // Once you have those, get the convex hull for those points, then
     // turn it into a triangle mesh. Return.
-
+    unsigned count = 0;
     for (const auto& leaf : bsp.leaves)
     {
         const auto* leafBrushes = &bsp.leafBrushes[leaf.firstLeafBrushIndex];
@@ -54,54 +54,133 @@ std::vector<Mesh> GetBrushMeshes(const CollisionBsp &bsp)
                 continue;
             }
 
-            std::vector<Plane> planes;
-            const auto* brushSides = &bsp.brushSides[brush.firstBrushSideIndex];
+            auto mesh = MeshFromBrush(bsp, brush);
 
-            for (auto j = 0; j < brush.sideCount; ++j)
+            if (!mesh.empty())
             {
-                const auto& brushSide = brushSides[j];
+                for (const auto& v : mesh)
+                {
+                    result.push_back(v.data[0]);
+                    result.push_back(v.data[1]);
+                    result.push_back(v.data[2]);
 
-                auto plane = bsp.planes[brushSide.planeIndex];
-                plane.distance = -plane.distance;
+                    count++;
 
-                planes.push_back(plane);
+                    if (count >= maxBrushCount)
+                    {
+                        break;
+                    }
+                }
             }
+        }        
 
-            if (!planes.empty())
-            {
-                // According to the spec, alignment can be ignored.
-                auto verts =
-                        VerticiesFromIntersectingPlanes(planes);
-
-                unsigned stride = verts.size() > 1 ?
-                        verts[1].data - verts[0].data :
-                        sizeof(Vec3);
-
-                HullResult  hResult;
-                HullDesc    hullInfo
-                (
-                    QF_TRIANGLES,
-                    verts.size(),
-                    verts[0].data,
-                    stride
-                );
-
-                mrHull.CreateConvexHull(hullInfo, hResult);
-
-                // RAM: TODO: Asserts.
-                // RAM: TODO: check index conversion works.
-                Mesh mesh;
-                mesh.verticies = std::vector<float>(hResult.mOutputVertices, hResult.mOutputVertices + hResult.mNumOutputVertices);
-                mesh.indicies = std::vector<uint16_t>(hResult.mIndices, hResult.mIndices + hResult.mNumIndices);
-
-                result.push_back(mesh);
-
-                mrHull.ReleaseResult(hResult);
-            }
+        if (count >= maxBrushCount)
+        {
+            break;
         }
     }
 
     return result;
+}
+
+std::vector<Vec3> MeshFromBrush(
+        const Bsp::CollisionBsp& bsp,
+        const Bsp::Brush& brush)
+{
+    std::vector<Vec3> mesh;
+    std::vector<Plane> planes;
+
+    // Q3 stores plane distance as the distance from the origin along the normal
+    // But my maths assume it's D from Ax + By + Cz + D = 0, so I need to invert
+    // the distance.
+    //
+    // Secondly, the Q3 bsp assumes the Z axis is "up", so swap z with y.
+    auto convertD = [] (Plane p)
+    {
+        return Plane
+        {
+            Vec3U{
+                p.normal.data[0],
+                p.normal.data[2],
+                p.normal.data[1]
+            },
+            -p.distance
+        };
+    };
+
+    for (int i = 0; i < brush.sideCount; ++i)
+    {
+        const auto brushSide = bsp.brushSides[brush.firstBrushSideIndex + i];
+        int planeIndex = brushSide.planeIndex;
+        planes.push_back(convertD(bsp.planes[planeIndex]));
+    }
+
+    const auto verts = VerticiesFromIntersectingPlanes(planes);
+
+    if (!verts.empty())
+    {
+        const auto& firstVert = verts.data()[0];
+
+        HullDesc hullInfo;
+
+        hullInfo.mFlags        = QF_TRIANGLES;
+        hullInfo.mVcount       = verts.size();
+        hullInfo.mVertexStride = sizeof(Vec3);
+        hullInfo.mVertices     = reinterpret_cast<const float*>(firstVert.data);
+
+        HullResult result;
+        HullLibrary library;
+
+        auto createResult = library.CreateConvexHull(hullInfo, result);
+
+        if (createResult == QE_OK)
+        {
+            for (unsigned face = 0 ; face < result.mNumFaces; ++face)
+            {
+                auto index = result.mIndices[face * 3 + 0] * 3;
+
+                Vec3 a =
+                {
+                    result.mOutputVertices[index + 0],
+                    result.mOutputVertices[index + 1],
+                    result.mOutputVertices[index + 2],
+                };
+
+                index = result.mIndices[face * 3 + 1] * 3;
+
+                Vec3 b =
+                {
+                    result.mOutputVertices[index + 0],
+                    result.mOutputVertices[index + 1],
+                    result.mOutputVertices[index + 2],
+                };
+
+                index = result.mIndices[face * 3 + 2] * 3;
+
+                Vec3 c =
+                {
+                    result.mOutputVertices[index + 0],
+                    result.mOutputVertices[index + 1],
+                    result.mOutputVertices[index + 2],
+                };
+
+                auto normal = Normalise(Cross(b-a, c-a));
+
+                mesh.push_back(a);
+                mesh.push_back(normal);
+
+                mesh.push_back(b);
+                mesh.push_back(normal);
+
+                mesh.push_back(c);
+                mesh.push_back(normal);
+            }
+        }
+
+        library.ReleaseResult(result);
+    }
+
+    return mesh;
 }
 
 } // namespace
