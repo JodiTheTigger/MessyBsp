@@ -87,9 +87,6 @@ struct ControllerIdToPointer
     int instance;
 };
 
-// WTF? Global? What are you? 12 or something? Remove this!
-std::vector<ControllerIdToPointer> g_controllers;
-
 static const uint8_t keymap[ActionMap::Count] =
 {
     SDL_SCANCODE_W,
@@ -170,14 +167,16 @@ int main(int argc, char** argv)
     return 0;
 }
 
-void AddController(int id)
+void AddController(
+        int id,
+        std::vector<ControllerIdToPointer>& controllers)
 {
     if (!SDL_IsGameController(id))
     {
         return;
     }
 
-    for (const auto& pad : g_controllers)
+    for (const auto& pad : controllers)
     {
         if (pad.id == id)
         {
@@ -197,7 +196,7 @@ void AddController(int id)
         if (result.padAsJoystick)
         {
             result.instance = SDL_JoystickInstanceID(result.padAsJoystick);
-            g_controllers.push_back(result);
+            controllers.push_back(result);
             return;
         }
     }
@@ -208,9 +207,11 @@ void AddController(int id)
     }
 }
 
-void RemoveController(int instance)
+void RemoveController(
+        int instance,
+        std::vector<ControllerIdToPointer>& controllers)
 {
-    for (const auto& pad : g_controllers)
+    for (const auto& pad : controllers)
     {
         if (pad.instance == instance)
         {
@@ -220,17 +221,17 @@ void RemoveController(int instance)
     }
 }
 
-void OpenAllControllers()
+void OpenAllControllers(std::vector<ControllerIdToPointer>& controllers)
 {
     auto count = SDL_NumJoysticks();
 
     for (int i = 0; i < count; ++i)
     {
-        AddController(i);
+        AddController(i, controllers);
     }
 }
 
-PlayerActions GetActions()
+PlayerActions GetActions(std::vector<ControllerIdToPointer>& controllers)
 {
     PlayerActions result = {{},0,0};
 
@@ -249,7 +250,7 @@ PlayerActions GetActions()
     SDL_GetRelativeMouseState(&result.mouseX, &result.mouseY);
 
     // Gamepad
-    for (const auto& controller : g_controllers)
+    for (const auto& controller : controllers)
     {
         // buttons
         for (unsigned i = 0; i < ActionMap::Count; ++i)
@@ -596,6 +597,8 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
                     reinterpret_cast<const void*>(3*sizeof(float)));
     }
 
+
+
     // On my linux, my wireless xbox360 controller has an unrecognised GUID
     // so add it explicitly. I copied the linux x360 wireless controller
     // but had to use the hat isntead of the buttons for the dpad to work.
@@ -605,10 +608,11 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
     auto mapAddResult = SDL_GameControllerAddMapping(
                 "0000000058626f782047616d65706100,X360 Wireless Controller,a:b0,b:b1,back:b6,dpup:h0.1,dpleft:h0.8,dpdown:h0.4,dpright:h0.2,guide:b8,leftshoulder:b4,leftstick:b9,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b10,righttrigger:a5,rightx:a2,righty:a3,start:b7,x:b2,y:b3,");
 
+    std::vector<ControllerIdToPointer> controllers;
     if (mapAddResult >= 0)
     {
         // Add any existing controllers.
-        OpenAllControllers();
+        OpenAllControllers(controllers);
     }
 
 
@@ -644,12 +648,12 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
             if (e.type == SDL_CONTROLLERDEVICEADDED)
             {
-                AddController(e.cdevice.which);
+                AddController(e.cdevice.which, controllers);
             }
 
             if (e.type == SDL_CONTROLLERDEVICEREMOVED)
             {
-                RemoveController(e.cdevice.which);
+                RemoveController(e.cdevice.which, controllers);
             }
 
             if (e.type == SDL_WINDOWEVENT)
@@ -697,7 +701,7 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
         auto delta = now - then;
         if (delta > globals.tickClientPeriodInMicroseconds)
         {
-            PlayerActions actions = GetActions();
+            PlayerActions actions = GetActions(controllers);
 
             // deal with where we are looking.
             float mouseDelta =
