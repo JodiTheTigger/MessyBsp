@@ -101,7 +101,6 @@ endif()
 # C++11/14 features I use.
 set(needed_features
 
-    cxx_generic_lambdas
     cxx_auto_type
     cxx_uniform_initialization
     cxx_trailing_return_types
@@ -109,6 +108,14 @@ set(needed_features
     cxx_return_type_deduction
     cxx_nullptr
     cxx_alignas)
+
+# Had to make generic lambdas optional as it isn't supported by MSVC2013
+list(FIND CMAKE_CXX_COMPILE_FEATURES cxx_generic_lambdas hasGeneric)
+if (hasGeneric)
+    message("Yay, Generic Lambdas are supported")
+    add_definitions(-DGENERIC_LAMBDAS)
+endif()
+
 
 ###############
 
