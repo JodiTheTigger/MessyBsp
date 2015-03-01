@@ -114,25 +114,24 @@ set(needed_features
 
 Find_Package(GLEW REQUIRED)
 if(NOT GLEW_FOUND)
-    message( FATAL ERROR "GLEW not found!")
+    message(FATAL_ERROR "GLEW not found!")
 endif()
+include_directories(${GLEW_INCLUDE_DIR})
 
 Find_Package(OpenGL REQUIRED)
 if(NOT OPENGL_FOUND)
-    message( FATAL ERROR "OPENGL not found!")
+    message(FATAL_ERROR "OPENGL not found!")
 endif()
+include_directories(${OPENGL_INCLUDE_DIR})
 
-# :-( only finds sdl, not sdl2.
-#Find_Package(SDL 2.0 REQUIRED)
-#if(NOT SDL_FOUND)
-#    message( FATAL ERROR "SDL not found!")
-#endif()
-
-INCLUDE(FindPkgConfig)
-
-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-
-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
+# Cmake doesn't have a FindSDL2, had to get
+# a third party one from the net.
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
+Find_Package(SDL2 REQUIRED)
+if(NOT SDL2_FOUND)
+    message(FATAL_ERROR "SDL not found!")
+endif()
+include_directories(${SDL2_INCLUDE_DIR})
 
 
 ###############
@@ -175,7 +174,7 @@ set(
 ###############
 add_executable(MessyBsp ${SOURCE_LIST})
 target_compile_features(MessyBsp PRIVATE ${needed_features})
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES})
 

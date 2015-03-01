@@ -137,7 +137,7 @@ void PrintHelp()
     printf("\n");
 }
 
-int main(int argc, char** argv)
+int main(int argc, char *argv[])
 {
     bool benchmark = false;
     char fileName[1024];
