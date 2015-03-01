@@ -23,7 +23,7 @@
 #include "third-party/getopt/getopt.h"
 
 // SDL + OpenGL
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 // Need ifdef for different platforms.
 #include <GL/glew.h>
@@ -37,7 +37,7 @@
 
 extern char* optarg;
 
-static const float Pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
+static const float Pi = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679f;
 static const float DegToRad = (2.0f * Pi / 360.0f);
 
 struct Globals
@@ -330,8 +330,8 @@ PlayerActions GetActions(std::vector<ControllerIdToPointer>& controllers)
                 result.mouseY = y + globals.joystickDeadZone;
             }
 
-            result.mouseX *= globals.joystickToMouseMultiplier;
-            result.mouseY *= globals.joystickToMouseMultiplier;
+            result.mouseX = static_cast<int>(result.mouseX * globals.joystickToMouseMultiplier);
+            result.mouseY = static_cast<int>(result.mouseY * globals.joystickToMouseMultiplier);
         }
     }
 
@@ -850,7 +850,7 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
                 resized = false;
             }
 
-            glClearColor(0.1,0.2,0.1,1);
+            glClearColor(0.1f,0.2f,0.1f,1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             auto model = Ry(modelRotation) * Rx({modelRotation.data*2.0f});
