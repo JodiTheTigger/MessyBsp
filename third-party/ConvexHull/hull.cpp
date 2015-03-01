@@ -48,12 +48,6 @@
 #define SQRT_OF_2 (1.4142135f)
 #define OFFSET(Class,Member)  (((char*) (&(((Class*)NULL)-> Member )))- ((char*)NULL))
 
-// WTF GCC?
-// 'p' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-// c = ConvexHCrop(*tmp,planes[k]);
-//                               ^
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-
 int    argmin(float a[],int n);
 float  sqr(float a);
 float  clampf(float a) ;
@@ -67,8 +61,6 @@ void Swap(T &a,T &b)
 	a=b;
 	b=tmp;
 }
-
-
 
 template <class T>
 T Max(const T &a,const T &b)
