@@ -144,7 +144,7 @@ void GetCollisionBsp(
             brushAabb.aabbMax.data[2] =  sideDistance(brush.firstBrushSideIndex + 5);
         }
 
-    } while(false);
+    } while(!fileHandle);
 
     fclose(fileHandle);
 }
