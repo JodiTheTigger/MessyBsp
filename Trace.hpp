@@ -37,9 +37,9 @@ struct Bounds
     // Ray      : boxMin == boxMax == {0, 0, 0}, sphereRadius == 0
     // Sphere   : boxMin == boxMax == {0, 0, 0}, sphereRadius > 0
     // Box      : boxMin != {0, 0, 0}, boxMax != {0, 0, 0}, sphereRadius == 0
-    float   sphereRadius;
     Vec3    boxMin;
     Vec3    boxMax;
+	float   sphereRadius;
 };
 
 enum class PathInfo

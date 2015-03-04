@@ -115,9 +115,9 @@ struct Brush
 
 struct BrushAabb
 {
-    Brush brush;
     Vec3 aabbMin;
     Vec3 aabbMax;
+	Brush brush;
 };
 
 struct BrushSide

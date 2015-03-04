@@ -16,9 +16,12 @@
 
 #pragma once
 
+// RAM: TODO: Are we just going to use float[4], or keep a seperate padding member?
+// Decide what you actually want to do.
 struct alignas(16) Vec3
 {
     float data[3];
+	float pad0;
 };
 
 struct alignas(16) Vec4
@@ -35,6 +38,7 @@ struct alignas(16) Quaternion
 struct alignas(16) Vec3N
 {
     float data[3];
+	float pad0;
 
     constexpr operator Vec3() const
     {
