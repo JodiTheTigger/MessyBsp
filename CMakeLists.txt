@@ -71,11 +71,11 @@ if (HAS_WEXTRA)
 endif()
 
 if (HAS_WERROR)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    set(WARNINGS_AS_ERRORS "${WARNINGS_AS_ERRORS} -Werror")
 endif()
 
 if (HAS_WERROR_MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -WX")
+    set(WARNINGS_AS_ERRORS "${WARNINGS_AS_ERRORS} -WX")
 endif()
 
 if (HAS_MULTIPROCESSOR_COMPILE)
@@ -144,6 +144,12 @@ include_directories(${SDL2_INCLUDE_DIR})
 ###############
 # Source
 ###############
+set(SOURCE_LIST_THIRDPARTY
+    third-party/getopt/getopt.h
+    third-party/getopt/getopt.c
+    third-party/ConvexHull/hull.cpp
+    third-party/ConvexHull/hull.h)
+
 set(
     SOURCE_LIST
     main.cpp
@@ -163,15 +169,16 @@ set(
     PlaneMaths.hpp
     QuaternionMaths.hpp
     VectorMaths3.hpp
-    VectorMaths4.hpp
-    third-party/getopt/getopt.h
-    third-party/getopt/getopt.c
-    third-party/ConvexHull/hull.cpp
-    third-party/ConvexHull/hull.h)
+    VectorMaths4.hpp)
 
 set(
     TEST_LIST
     test/TestBspBrushToMesh.cpp)
+
+set_source_files_properties(
+    ${SOURCE_LIST}
+    PROPERTIES
+    COMPILE_FLAGS ${WARNINGS_AS_ERRORS})
 
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -march=native -Wall -g")
@@ -179,7 +186,7 @@ set(
 ###############
 # Link
 ###############
-add_executable(MessyBsp ${SOURCE_LIST})
+add_executable(MessyBsp ${SOURCE_LIST} ${SOURCE_LIST_THIRDPARTY})
 target_compile_features(MessyBsp PRIVATE ${needed_features})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARY})
 target_link_libraries(${PROJECT_NAME} ${GLEW_LIBRARIES})

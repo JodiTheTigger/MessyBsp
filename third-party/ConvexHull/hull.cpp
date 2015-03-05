@@ -1622,9 +1622,9 @@ ConvexH *ConvexHDup(ConvexH *src) {
 }
 
 
-unsigned char PlaneTest(const Plane &p, const REAL3 &v) {
+int PlaneTest(const Plane &p, const REAL3 &v) {
 	REAL a  = dot(v,p.normal)+p.dist;
-	unsigned char   flag = (a>planetestepsilon)?OVER:((a<-planetestepsilon)?UNDER:COPLANAR);
+	int   flag = (a>planetestepsilon)?OVER:((a<-planetestepsilon)?UNDER:COPLANAR);
 	return flag;
 }
 
@@ -1795,9 +1795,9 @@ ConvexH *ConvexHMakeCube(const REAL3 &bmin, const REAL3 &bmax) {
 }
 ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 {
-	short i;
-	unsigned char vertcountunder=0;
-    unsigned char vertcountover =0;
+	int i;
+	int vertcountunder=0;
+    int vertcountover =0;
 
 	static Array<int> vertscoplanar;  // existing vertex members of convex that are coplanar
 	vertscoplanar.count=0;
@@ -1828,13 +1828,13 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 		else {
 			assert(vertflag[i].planetest == OVER);
 			vertflag[i].overmap  = vertcountover++;
-			vertflag[i].undermap = static_cast<unsigned char>(-1); // for debugging purposes
+			vertflag[i].undermap = -1; // for debugging purposes
 		}
 	}
 	int vertcountunderold = vertcountunder; // for debugging only
 
-	short under_edge_count =0;
-	unsigned char underplanescount=0;
+	int under_edge_count =0;
+	int underplanescount=0;
 	int e0=0;
 
 	for(int currentplane=0; currentplane<convex.facets.count; currentplane++) {
@@ -1931,7 +1931,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 				under_edge_count++;
 				/// hmmm something to think about: i might be able to output this edge regarless of 
 				// wheter or not we know v-in yet.  ok i;ll try this now:
-				tmpunderedges[under_edge_count].v = static_cast<unsigned char>(vout);
+				tmpunderedges[under_edge_count].v = vout;
 				tmpunderedges[under_edge_count].p = underplanescount;
 				tmpunderedges[under_edge_count].ea = -1;
 				coplanaredge = under_edge_count;
@@ -1958,7 +1958,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 					k++;
 				}
 				if(planeside&UNDER){
-					tmpunderedges[under_edge_count].v = static_cast<unsigned char>(vout);
+					tmpunderedges[under_edge_count].v = vout;
 					tmpunderedges[under_edge_count].p = underplanescount;
 					tmpunderedges[under_edge_count].ea = -1;
 					coplanaredge = under_edge_count; // hmmm should make a note of the edge # for later on
@@ -1996,7 +1996,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 					// ADD THIS EDGE TO THE LIST OF EDGES THAT NEED NEIGHBOR ON PARTITION PLANE!!
 				}
 				// output edge
-				tmpunderedges[under_edge_count].v = static_cast<unsigned char>(vin);
+				tmpunderedges[under_edge_count].v = vin;
 				tmpunderedges[under_edge_count].p = underplanescount;
 				edgeflag[e0].undermap = under_edge_count;
 				if(e0>edge0.ea) {
@@ -2039,9 +2039,9 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 			assert(vin>=0);
 			assert(coplanaredge>=0);
 			assert(coplanaredge!=511);
-			coplanaredges[coplanaredges_num].ea = static_cast<unsigned short>(coplanaredge);
-			coplanaredges[coplanaredges_num].v0 = static_cast<unsigned char>(vin);
-			coplanaredges[coplanaredges_num].v1 = static_cast<unsigned char>(vout);
+			coplanaredges[coplanaredges_num].ea = coplanaredge;
+			coplanaredges[coplanaredges_num].v0 = vin;
+			coplanaredges[coplanaredges_num].v1 = vout;
 			coplanaredges_num++;
 		}
 	}
@@ -2177,9 +2177,9 @@ int maxdirsterid(const T *p,int count,const T &dir,Array<int> &allow)
 				int mc = ma;
 				for(float xx = x-40.0f ; xx <= x ; xx+= 5.0f)
 				{
-					float s2 = sinf(DEG2RAD*(xx));
-					float c2 = cosf(DEG2RAD*(xx));
-					int md = maxdirfiltered(p,count,dir+(u*s2+v*c2)*0.025f,allow);
+					float s = sinf(DEG2RAD*(xx));
+					float c = cosf(DEG2RAD*(xx));
+					int md = maxdirfiltered(p,count,dir+(u*s+v*c)*0.025f,allow);
 					if(mc==m && md==m)
 					{
 						allow[m]=3;
@@ -2677,23 +2677,23 @@ bool ComputeHull(unsigned int vcount,const float *vertices,PHullResult &result,u
 	int ret = overhullv((float3*)vertices,vcount,35,verts_out,verts_count_out,faces,index_count,inflate,120.0f,vlimit);
 	if(!ret) return false;
 
-	Array<int3> tris2;
+	Array<int3> tris;
 	int n=faces[0];
 	int k=1;
 	for(int i=0;i<n;i++)
 	{
 		int pn = faces[k++];
-		for(int j=2;j<pn;j++) tris2.Add(int3(faces[k],faces[k+j-1],faces[k+j]));
+		for(int j=2;j<pn;j++) tris.Add(int3(faces[k],faces[k+j-1],faces[k+j]));
 		k+=pn;
 	}
-	assert(tris2.count == index_count-1-(n*3));
+	assert(tris.count == index_count-1-(n*3));
 
-	result.mIndexCount = (unsigned int) (tris2.count*3);
-	result.mFaceCount  = (unsigned int) tris2.count;
+	result.mIndexCount = (unsigned int) (tris.count*3);
+	result.mFaceCount  = (unsigned int) tris.count;
 	result.mVertices   = (float*) verts_out;
 	result.mVcount     = (unsigned int) verts_count_out;
-	result.mIndices    = (unsigned int *) tris2.element;
-	tris2.element=NULL; tris2.count = tris2.array_size=0;
+	result.mIndices    = (unsigned int *) tris.element;
+	tris.element=NULL; tris.count = tris.array_size=0;
 
 	return true;
 }
@@ -2750,7 +2750,7 @@ HullError HullLibrary::CreateConvexHull(const HullDesc       &desc,           //
 	{
 
 
-		//if ( 1 ) // scale vertices back to their original size.
+		if ( 1 ) // scale vertices back to their original size.
 		{
 			for (unsigned int i=0; i<ovcount; i++)
 			{
@@ -2819,7 +2819,7 @@ HullError HullLibrary::CreateConvexHull(const HullDesc       &desc,           //
 				result.mIndices           = (unsigned int *) malloc( sizeof(unsigned int)*result.mNumIndices);
 				memcpy(result.mOutputVertices, vscratch, sizeof(float)*3*ovcount );
 
-				//if ( 1 )
+				if ( 1 )
 				{
 					const unsigned int *source = hr.mIndices;
 								unsigned int *dest   = result.mIndices;
@@ -2929,7 +2929,7 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 
 	const char *vtx = (const char *) svertices;
 
-	//if ( 1 )
+	if ( 1 )
 	{
 		for (unsigned int i=0; i<svcount; i++)
 		{
@@ -2945,77 +2945,76 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 		}
 	}
 
+	float dx = bmax[0] - bmin[0];
+	float dy = bmax[1] - bmin[1];
+	float dz = bmax[2] - bmin[2];
+
 	float center[3];
+
+	center[0] = dx*0.5f + bmin[0];
+	center[1] = dy*0.5f + bmin[1];
+	center[2] = dz*0.5f + bmin[2];
+
+	if ( dx < EPSILON || dy < EPSILON || dz < EPSILON || svcount < 3 )
 	{
-		float dx = bmax[0] - bmin[0];
-		float dy = bmax[1] - bmin[1];
-		float dz = bmax[2] - bmin[2];
 
-		center[0] = dx*0.5f + bmin[0];
-		center[1] = dy*0.5f + bmin[1];
-		center[2] = dz*0.5f + bmin[2];
+		float len = FLT_MAX;
 
-		if (dx < EPSILON || dy < EPSILON || dz < EPSILON || svcount < 3)
+		if ( dx > EPSILON && dx < len ) len = dx;
+		if ( dy > EPSILON && dy < len ) len = dy;
+		if ( dz > EPSILON && dz < len ) len = dz;
+
+		if ( len == FLT_MAX )
 		{
-
-			float len = FLT_MAX;
-
-			if (dx > EPSILON && dx < len) len = dx;
-			if (dy > EPSILON && dy < len) len = dy;
-			if (dz > EPSILON && dz < len) len = dz;
-
-			if (len == FLT_MAX)
-			{
-				dx = dy = dz = 0.01f; // one centimeter
-			}
-			else
-			{
-				if (dx < EPSILON) dx = len * 0.05f; // 1/5th the shortest non-zero edge.
-				if (dy < EPSILON) dy = len * 0.05f;
-				if (dz < EPSILON) dz = len * 0.05f;
-			}
-
-			float x1 = center[0] - dx;
-			float x2 = center[0] + dx;
-
-			float y1 = center[1] - dy;
-			float y2 = center[1] + dy;
-
-			float z1 = center[2] - dz;
-			float z2 = center[2] + dz;
-
-			AddPoint(vcount, vertices, x1, y1, z1);
-			AddPoint(vcount, vertices, x2, y1, z1);
-			AddPoint(vcount, vertices, x2, y2, z1);
-			AddPoint(vcount, vertices, x1, y2, z1);
-			AddPoint(vcount, vertices, x1, y1, z2);
-			AddPoint(vcount, vertices, x2, y1, z2);
-			AddPoint(vcount, vertices, x2, y2, z2);
-			AddPoint(vcount, vertices, x1, y2, z2);
-
-			return true; // return cube
-
-
+			dx = dy = dz = 0.01f; // one centimeter
 		}
 		else
 		{
-			if (scale)
-			{
-				scale[0] = dx;
-				scale[1] = dy;
-				scale[2] = dz;
+			if ( dx < EPSILON ) dx = len * 0.05f; // 1/5th the shortest non-zero edge.
+			if ( dy < EPSILON ) dy = len * 0.05f;
+			if ( dz < EPSILON ) dz = len * 0.05f;
+		}
 
-				recip[0] = 1 / dx;
-				recip[1] = 1 / dy;
-				recip[2] = 1 / dz;
+		float x1 = center[0] - dx;
+		float x2 = center[0] + dx;
 
-				center[0] *= recip[0];
-				center[1] *= recip[1];
-				center[2] *= recip[2];
+		float y1 = center[1] - dy;
+		float y2 = center[1] + dy;
 
-			}
+		float z1 = center[2] - dz;
+		float z2 = center[2] + dz;
+
+		AddPoint(vcount,vertices,x1,y1,z1);
+		AddPoint(vcount,vertices,x2,y1,z1);
+		AddPoint(vcount,vertices,x2,y2,z1);
+		AddPoint(vcount,vertices,x1,y2,z1);
+		AddPoint(vcount,vertices,x1,y1,z2);
+		AddPoint(vcount,vertices,x2,y1,z2);
+		AddPoint(vcount,vertices,x2,y2,z2);
+		AddPoint(vcount,vertices,x1,y2,z2);
+
+		return true; // return cube
+
+
+	}
+	else
+	{
+		if ( scale )
+		{
+			scale[0] = dx;
+			scale[1] = dy;
+			scale[2] = dz;
+
+			recip[0] = 1 / dx;
+			recip[1] = 1 / dy;
+			recip[2] = 1 / dz;
+
+			center[0]*=recip[0];
+			center[1]*=recip[1];
+			center[2]*=recip[2];
 
 		}
+
 	}
 
 
@@ -3039,7 +3038,7 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 			pz = pz*recip[2]; // normalize
 		}
 
-		//if ( 1 )
+		if ( 1 )
 		{
 			unsigned int j;
 
@@ -3087,10 +3086,10 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 	}
 
 	// ok..now make sure we didn't prune so many vertices it is now invalid.
-	//if ( 1 )
+	if ( 1 )
 	{
-		float bmin2[3] = {  FLT_MAX,  FLT_MAX,  FLT_MAX };
-		float bmax2[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+		float bmin[3] = {  FLT_MAX,  FLT_MAX,  FLT_MAX };
+		float bmax[3] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
 
 		for (unsigned int i=0; i<vcount; i++)
 		{
@@ -3102,15 +3101,15 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 			}
 		}
 
-		float dx = bmax2[0] - bmin2[0];
-		float dy = bmax2[1] - bmin2[1];
-		float dz = bmax2[2] - bmin2[2];
+		float dx = bmax[0] - bmin[0];
+		float dy = bmax[1] - bmin[1];
+		float dz = bmax[2] - bmin[2];
 
 		if ( dx < EPSILON || dy < EPSILON || dz < EPSILON || vcount < 3)
 		{
-			float cx = dx*0.5f + bmin2[0];
-			float cy = dy*0.5f + bmin2[1];
-			float cz = dz*0.5f + bmin2[2];
+			float cx = dx*0.5f + bmin[0];
+			float cy = dy*0.5f + bmin[1];
+			float cz = dz*0.5f + bmin[2];
 
 			float len = FLT_MAX;
 
