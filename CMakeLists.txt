@@ -92,6 +92,9 @@ endif()
 
 if (MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+	# Hack to allow MSVC2015 Preview to work
+    add_definitions(-DMSVC2015_PREVIEW)
 endif()
 
 # Set a default build type for single-configuration

@@ -1828,13 +1828,13 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 		else {
 			assert(vertflag[i].planetest == OVER);
 			vertflag[i].overmap  = vertcountover++;
-			vertflag[i].undermap = -1; // for debugging purposes
+			vertflag[i].undermap = static_cast<unsigned char>(-1); // for debugging purposes
 		}
 	}
 	int vertcountunderold = vertcountunder; // for debugging only
 
 	short under_edge_count =0;
-	int underplanescount=0;
+	unsigned char underplanescount=0;
 	int e0=0;
 
 	for(int currentplane=0; currentplane<convex.facets.count; currentplane++) {
@@ -1931,7 +1931,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 				under_edge_count++;
 				/// hmmm something to think about: i might be able to output this edge regarless of 
 				// wheter or not we know v-in yet.  ok i;ll try this now:
-				tmpunderedges[under_edge_count].v = vout;
+				tmpunderedges[under_edge_count].v = static_cast<unsigned char>(vout);
 				tmpunderedges[under_edge_count].p = underplanescount;
 				tmpunderedges[under_edge_count].ea = -1;
 				coplanaredge = under_edge_count;
@@ -1958,7 +1958,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 					k++;
 				}
 				if(planeside&UNDER){
-					tmpunderedges[under_edge_count].v = vout;
+					tmpunderedges[under_edge_count].v = static_cast<unsigned char>(vout);
 					tmpunderedges[under_edge_count].p = underplanescount;
 					tmpunderedges[under_edge_count].ea = -1;
 					coplanaredge = under_edge_count; // hmmm should make a note of the edge # for later on
@@ -1996,7 +1996,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 					// ADD THIS EDGE TO THE LIST OF EDGES THAT NEED NEIGHBOR ON PARTITION PLANE!!
 				}
 				// output edge
-				tmpunderedges[under_edge_count].v = vin;
+				tmpunderedges[under_edge_count].v = static_cast<unsigned char>(vin);
 				tmpunderedges[under_edge_count].p = underplanescount;
 				edgeflag[e0].undermap = under_edge_count;
 				if(e0>edge0.ea) {
@@ -2039,9 +2039,9 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 			assert(vin>=0);
 			assert(coplanaredge>=0);
 			assert(coplanaredge!=511);
-			coplanaredges[coplanaredges_num].ea = coplanaredge;
-			coplanaredges[coplanaredges_num].v0 = vin;
-			coplanaredges[coplanaredges_num].v1 = vout;
+			coplanaredges[coplanaredges_num].ea = static_cast<unsigned short>(coplanaredge);
+			coplanaredges[coplanaredges_num].v0 = static_cast<unsigned char>(vin);
+			coplanaredges[coplanaredges_num].v1 = static_cast<unsigned char>(vout);
 			coplanaredges_num++;
 		}
 	}
@@ -2945,12 +2945,11 @@ bool  HullLibrary::CleanupVertices(unsigned int svcount,
 		}
 	}
 
+	float center[3];
 	{
 		float dx = bmax[0] - bmin[0];
 		float dy = bmax[1] - bmin[1];
 		float dz = bmax[2] - bmin[2];
-
-		float center[3];
 
 		center[0] = dx*0.5f + bmin[0];
 		center[1] = dy*0.5f + bmin[1];

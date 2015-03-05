@@ -16,6 +16,13 @@
 
 #pragma once
 
+// MSVC2015 preview doesn't support constexpr constructor initlisers yet.
+#ifdef MSVC2015_PREVIEW
+#define msvc_constexpr
+#else
+#define msvc_constexpr constexpr
+#endif
+
 // RAM: TODO: Are we just going to use float[4], or keep a seperate padding member?
 // Decide what you actually want to do.
 struct alignas(16) Vec3
@@ -40,7 +47,7 @@ struct alignas(16) Vec3N
     float data[3];
 	float pad0;
 
-    constexpr operator Vec3() const
+	msvc_constexpr operator Vec3() const
     {
         return
         {
@@ -55,7 +62,7 @@ struct Vec3U
 {
     float data[3];
 
-    constexpr operator Vec3() const
+	msvc_constexpr operator Vec3() const
     {
         return
         {

@@ -56,9 +56,9 @@ std::chrono::microseconds TimeBspCollision(
                     d(e)
                 },
 
-                0.0f,
                 {0,0,0},
                 {0,0,0},
+				0.0f,
             };
 
             auto typeTest = d(e);

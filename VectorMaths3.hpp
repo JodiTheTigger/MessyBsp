@@ -54,7 +54,7 @@ inline Vec3& operator/=(Vec3& lhs, const Vec3& rhs)
     return lhs;
 }
 
-inline constexpr Vec3 operator-(const Vec3& lhs)
+inline msvc_constexpr Vec3 operator-(const Vec3& lhs)
 {
     return
     {
@@ -106,7 +106,7 @@ inline Vec3 operator/(Vec3 lhs, float rhs){ lhs /= rhs;  return lhs; }
 // ///////////////////
 // Vector Return Maths
 // ///////////////////
-inline constexpr Vec3 Sqrt(const Vec3& lhs)
+inline msvc_constexpr Vec3 Sqrt(const Vec3& lhs)
 {
     return
     {
@@ -118,7 +118,7 @@ inline constexpr Vec3 Sqrt(const Vec3& lhs)
 
 /// If it uses the SIMD invsqrt, then it will be less precision
 /// than explicitly doing 1.0f/Sqrt(lhs)
-inline constexpr Vec3 InvSqrt(const Vec3& lhs)
+inline msvc_constexpr Vec3 InvSqrt(const Vec3& lhs)
 {
     return
     {
@@ -128,7 +128,7 @@ inline constexpr Vec3 InvSqrt(const Vec3& lhs)
     };
 }
 
-inline constexpr Vec3 Absolute(const Vec3& lhs)
+inline msvc_constexpr Vec3 Absolute(const Vec3& lhs)
 {
     return
     {
@@ -152,7 +152,7 @@ inline Vec3 Dot(const Vec3& lhs, const Vec3& rhs)
     };
 }
 
-inline constexpr Vec3 Cross(const Vec3& lhs, const Vec3& rhs)
+inline msvc_constexpr Vec3 Cross(const Vec3& lhs, const Vec3& rhs)
 {
     return
     {
@@ -209,7 +209,7 @@ inline Vec3 Rotate(Vec3 lhs, const Vec3& wAxis, Radians rotation)
     return (o + _x * std::cos(rotation.data) + _y * std::sin(rotation.data));
 }
 
-inline constexpr Vec3 Lerp(const Vec3& lhs, const Vec3& rhs, float scale)
+inline msvc_constexpr Vec3 Lerp(const Vec3& lhs, const Vec3& rhs, float scale)
 {
     return
     {
@@ -219,7 +219,7 @@ inline constexpr Vec3 Lerp(const Vec3& lhs, const Vec3& rhs, float scale)
     };
 }
 
-inline constexpr Vec3 Max(const Vec3& lhs, const Vec3& rhs)
+inline msvc_constexpr Vec3 Max(const Vec3& lhs, const Vec3& rhs)
 {
     return
     {
@@ -229,7 +229,7 @@ inline constexpr Vec3 Max(const Vec3& lhs, const Vec3& rhs)
     };
 }
 
-inline constexpr Vec3 Min(const Vec3& lhs, const Vec3& rhs)
+inline msvc_constexpr Vec3 Min(const Vec3& lhs, const Vec3& rhs)
 {
     return
     {
@@ -239,7 +239,7 @@ inline constexpr Vec3 Min(const Vec3& lhs, const Vec3& rhs)
     };
 }
 
-inline constexpr Vec3 Clamp(const Vec3& lhs, float min = 0.0f, float max = 1.0f)
+inline msvc_constexpr Vec3 Clamp(const Vec3& lhs, float min = 0.0f, float max = 1.0f)
 {
     return Max(Min({max}, lhs),{min});
 }

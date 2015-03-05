@@ -114,7 +114,7 @@ inline Vec4 operator/(Vec4 lhs, float rhs){ lhs /= rhs;  return lhs; }
 // ///////////////////
 // Vector Return Maths
 // ///////////////////
-inline constexpr Vec4 Sqrt(const Vec4& lhs)
+inline msvc_constexpr Vec4 Sqrt(const Vec4& lhs)
 {
     return Vec4
     {
@@ -127,7 +127,7 @@ inline constexpr Vec4 Sqrt(const Vec4& lhs)
 
 /// If it uses the SIMD invsqrt, then it will be less precision
 /// than explicitly doing 1.0f/Sqrt(lhs)
-inline constexpr Vec4 InvSqrt(const Vec4& lhs)
+inline msvc_constexpr Vec4 InvSqrt(const Vec4& lhs)
 {
     return
     {
@@ -138,7 +138,7 @@ inline constexpr Vec4 InvSqrt(const Vec4& lhs)
     };
 }
 
-inline constexpr Vec4 Absolute(const Vec4& lhs)
+inline msvc_constexpr Vec4 Absolute(const Vec4& lhs)
 {
     return Vec4
     {
@@ -270,7 +270,7 @@ inline constexpr Vec4 Min(const Vec4& lhs, const Vec4& rhs)
     };
 }
 
-inline constexpr Vec4 Clamp(const Vec4& lhs, float min = 0.0f, float max = 1.0f)
+inline msvc_constexpr Vec4 Clamp(const Vec4& lhs, float min = 0.0f, float max = 1.0f)
 {
     return Max(Min({max}, lhs),{min});
 }
