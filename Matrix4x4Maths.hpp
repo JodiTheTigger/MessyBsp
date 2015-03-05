@@ -85,9 +85,34 @@ inline constexpr Matrix4x4 operator-(const Matrix4x4& lhs)
     };
 }
 
-inline Matrix4x4 operator+(Matrix4x4 lhs, const Matrix4x4& rhs){ lhs += rhs;  return lhs; }
-inline Matrix4x4 operator-(Matrix4x4 lhs, const Matrix4x4& rhs){ lhs -= rhs;  return lhs; }
-inline Matrix4x4 operator*(Matrix4x4 lhs, const Matrix4x4& rhs){ lhs *= rhs;  return lhs; }
+inline msvc_constexpr Matrix4x4 operator+(const Matrix4x4& lhs, const Matrix4x4& rhs)
+{
+    return
+    {
+        lhs.data[0] + rhs.data[0],
+        lhs.data[1] + rhs.data[1],
+        lhs.data[2] + rhs.data[2],
+        lhs.data[3] + rhs.data[3],
+    };
+}
+
+inline msvc_constexpr Matrix4x4 operator-(const Matrix4x4& lhs, const Matrix4x4& rhs)
+{
+    return
+    {
+        lhs.data[0] - rhs.data[0],
+        lhs.data[1] - rhs.data[1],
+        lhs.data[2] - rhs.data[2],
+        lhs.data[3] - rhs.data[3],
+    };
+}
+
+inline Matrix4x4 operator*(const Matrix4x4& lhs, const Matrix4x4& rhs)
+{
+    auto temp = lhs;
+    temp *= rhs;
+    return temp;
+}
 
 inline Matrix4x4& operator*=(Matrix4x4& lhs, float rhs)
 {
@@ -98,12 +123,21 @@ inline Matrix4x4& operator*=(Matrix4x4& lhs, float rhs)
     return lhs;
 }
 
-inline Matrix4x4 operator*(Matrix4x4 lhs, float rhs){ lhs *= rhs;  return lhs; }
+inline msvc_constexpr Matrix4x4 operator*(const Matrix4x4& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] * rhs,
+        lhs.data[1] * rhs,
+        lhs.data[2] * rhs,
+        lhs.data[3] * rhs,
+    };
+}
 
 // ///////////////////
 // Matrix Maths.
 // ///////////////////
-inline constexpr Matrix4x4 Transpose(const Matrix4x4& lhs)
+inline msvc_constexpr Matrix4x4 Transpose(const Matrix4x4& lhs)
 {
     return
     {
@@ -129,7 +163,7 @@ inline constexpr Matrix4x4 Transpose(const Matrix4x4& lhs)
     };
 }
 
-inline constexpr Matrix4x4 Translation(const Vec3& lhs)
+inline msvc_constexpr Matrix4x4 Translation(const Vec3& lhs)
 {
     return
     {
@@ -419,7 +453,7 @@ Matrix4x4 ProjectionMatrix(
 // ///////////////////
 // Vector Maths.
 // ///////////////////
-inline Vec4 operator*(const Matrix4x4& lhs, const Vec4& rhs)
+inline msvc_constexpr Vec4 operator*(const Matrix4x4& lhs, const Vec4& rhs)
 {
     return
     {
@@ -430,7 +464,7 @@ inline Vec4 operator*(const Matrix4x4& lhs, const Vec4& rhs)
     };
 }
 
-inline Vec4 operator*(const Vec4& lhs, const Matrix4x4& rhs)
+inline msvc_constexpr Vec4 operator*(const Vec4& lhs, const Matrix4x4& rhs)
 {
     return
     {

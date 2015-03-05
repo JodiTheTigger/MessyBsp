@@ -19,6 +19,8 @@
 #include "Geometry.hpp"
 #include <cmath>
 
+// Vec3 is aligned, so I cannot pass by value.
+
 // ///////////////////
 // Operators
 // ///////////////////
@@ -64,10 +66,45 @@ inline msvc_constexpr Vec3 operator-(const Vec3& lhs)
     };
 }
 
-inline Vec3 operator+(Vec3 lhs, const Vec3& rhs){ lhs += rhs;  return lhs; }
-inline Vec3 operator-(Vec3 lhs, const Vec3& rhs){ lhs -= rhs;  return lhs; }
-inline Vec3 operator*(Vec3 lhs, const Vec3& rhs){ lhs *= rhs;  return lhs; }
-inline Vec3 operator/(Vec3 lhs, const Vec3& rhs){ lhs /= rhs;  return lhs; }
+inline msvc_constexpr Vec3 operator+(const Vec3& lhs, const Vec3& rhs)
+{
+    return
+    {
+        lhs.data[0] + rhs.data[0],
+        lhs.data[1] + rhs.data[1],
+        lhs.data[2] + rhs.data[2],
+    };
+}
+
+inline msvc_constexpr Vec3 operator-(const Vec3& lhs, const Vec3& rhs)
+{
+    return
+    {
+        lhs.data[0] - rhs.data[0],
+        lhs.data[1] - rhs.data[1],
+        lhs.data[2] - rhs.data[2],
+    };
+}
+
+inline msvc_constexpr Vec3 operator*(const Vec3& lhs, const Vec3& rhs)
+{
+    return
+    {
+        lhs.data[0] * rhs.data[0],
+        lhs.data[1] * rhs.data[1],
+        lhs.data[2] * rhs.data[2],
+    };
+}
+
+inline msvc_constexpr Vec3 operator/(const Vec3& lhs, const Vec3& rhs)
+{
+    return
+    {
+        lhs.data[0] / rhs.data[0],
+        lhs.data[1] / rhs.data[1],
+        lhs.data[2] / rhs.data[2],
+    };
+}
 
 inline Vec3& operator+=(Vec3& lhs, float rhs)
 {
@@ -98,10 +135,45 @@ inline Vec3& operator/=(Vec3& lhs, float rhs)
     return lhs *= 1.0f / rhs;
 }
 
-inline Vec3 operator+(Vec3 lhs, float rhs){ lhs += rhs;  return lhs; }
-inline Vec3 operator-(Vec3 lhs, float rhs){ lhs -= rhs;  return lhs; }
-inline Vec3 operator*(Vec3 lhs, float rhs){ lhs *= rhs;  return lhs; }
-inline Vec3 operator/(Vec3 lhs, float rhs){ lhs /= rhs;  return lhs; }
+inline msvc_constexpr Vec3 operator+(const Vec3& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] + rhs,
+        lhs.data[1] + rhs,
+        lhs.data[2] + rhs,
+    };
+}
+
+inline msvc_constexpr Vec3 operator-(const Vec3& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] - rhs,
+        lhs.data[1] - rhs,
+        lhs.data[2] - rhs,
+    };
+}
+
+inline msvc_constexpr Vec3 operator*(const Vec3& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] * rhs,
+        lhs.data[1] * rhs,
+        lhs.data[2] * rhs,
+    };
+}
+
+inline msvc_constexpr Vec3 operator/(const Vec3& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] / rhs,
+        lhs.data[1] / rhs,
+        lhs.data[2] / rhs,
+    };
+}
 
 // ///////////////////
 // Vector Return Maths

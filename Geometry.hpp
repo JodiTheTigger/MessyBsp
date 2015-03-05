@@ -23,12 +23,9 @@
 #define msvc_constexpr constexpr
 #endif
 
-// RAM: TODO: Are we just going to use float[4], or keep a seperate padding member?
-// Decide what you actually want to do.
 struct alignas(16) Vec3
 {
-    float data[3];
-	float pad0;
+    float data[4];
 };
 
 struct alignas(16) Vec4
@@ -44,8 +41,7 @@ struct alignas(16) Quaternion
 /// Normalised Vector, ie Length == 1.0
 struct alignas(16) Vec3N
 {
-    float data[3];
-	float pad0;
+    float data[4];
 
 	msvc_constexpr operator Vec3() const
     {
@@ -95,6 +91,8 @@ struct Plane
 
     // RAM: TODO: Is this distance along the normal,
     // or D from the plane equation? As D = -distance.
+    // Secondly, treat this as a seperate named paramter
+    // or as a float[4]?
     float distance;
 };
 

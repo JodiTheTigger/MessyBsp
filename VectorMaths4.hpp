@@ -69,10 +69,49 @@ inline constexpr Vec4 operator-(const Vec4& lhs)
     };
 }
 
-inline Vec4 operator+(Vec4 lhs, const Vec4& rhs){ lhs += rhs;  return lhs; }
-inline Vec4 operator-(Vec4 lhs, const Vec4& rhs){ lhs -= rhs;  return lhs; }
-inline Vec4 operator*(Vec4 lhs, const Vec4& rhs){ lhs *= rhs;  return lhs; }
-inline Vec4 operator/(Vec4 lhs, const Vec4& rhs){ lhs /= rhs;  return lhs; }
+inline msvc_constexpr Vec4 operator+(const Vec4& lhs, const Vec4& rhs)
+{
+    return
+    {
+        lhs.data[0] + rhs.data[0],
+        lhs.data[1] + rhs.data[1],
+        lhs.data[2] + rhs.data[2],
+        lhs.data[3] + rhs.data[3],
+    };
+}
+
+inline msvc_constexpr Vec4 operator-(const Vec4& lhs, const Vec4& rhs)
+{
+    return
+    {
+        lhs.data[0] - rhs.data[0],
+        lhs.data[1] - rhs.data[1],
+        lhs.data[2] - rhs.data[2],
+        lhs.data[3] - rhs.data[3],
+    };
+}
+
+inline msvc_constexpr Vec4 operator*(const Vec4& lhs, const Vec4& rhs)
+{
+    return
+    {
+        lhs.data[0] * rhs.data[0],
+        lhs.data[1] * rhs.data[1],
+        lhs.data[2] * rhs.data[2],
+        lhs.data[3] * rhs.data[3],
+    };
+}
+
+inline msvc_constexpr Vec4 operator/(const Vec4& lhs, const Vec4& rhs)
+{
+    return
+    {
+        lhs.data[0] / rhs.data[0],
+        lhs.data[1] / rhs.data[1],
+        lhs.data[2] / rhs.data[2],
+        lhs.data[3] / rhs.data[3],
+    };
+}
 
 inline Vec4& operator+=(Vec4& lhs, float rhs)
 {
@@ -106,10 +145,49 @@ inline Vec4& operator/=(Vec4& lhs, float rhs)
     return lhs *= 1.0f / rhs;
 }
 
-inline Vec4 operator+(Vec4 lhs, float rhs){ lhs += rhs;  return lhs; }
-inline Vec4 operator-(Vec4 lhs, float rhs){ lhs -= rhs;  return lhs; }
-inline Vec4 operator*(Vec4 lhs, float rhs){ lhs *= rhs;  return lhs; }
-inline Vec4 operator/(Vec4 lhs, float rhs){ lhs /= rhs;  return lhs; }
+inline msvc_constexpr Vec4 operator+(const Vec4& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] + rhs,
+        lhs.data[1] + rhs,
+        lhs.data[2] + rhs,
+        lhs.data[3] + rhs,
+    };
+}
+
+inline msvc_constexpr Vec4 operator-(const Vec4& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] - rhs,
+        lhs.data[1] - rhs,
+        lhs.data[2] - rhs,
+        lhs.data[3] - rhs,
+    };
+}
+
+inline msvc_constexpr Vec4 operator*(const Vec4& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] * rhs,
+        lhs.data[1] * rhs,
+        lhs.data[2] * rhs,
+        lhs.data[3] * rhs,
+    };
+}
+
+inline msvc_constexpr Vec4 operator/(const Vec4& lhs, float rhs)
+{
+    return
+    {
+        lhs.data[0] / rhs,
+        lhs.data[1] / rhs,
+        lhs.data[2] / rhs,
+        lhs.data[3] / rhs,
+    };
+}
 
 // ///////////////////
 // Vector Return Maths
