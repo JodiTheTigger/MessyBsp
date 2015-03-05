@@ -328,9 +328,9 @@ Matrix4x4 Inverse(const Matrix4x4& lhs)
 /// RH Means we are using the right hand coordinate system so that the positive
 /// z axis points out of the screen when up is y and right is x.
 Matrix4x4 LookAtRH(
-        Vec3 eyePosition,
-        Vec3 target,
-        Vec3N up = {0.0f, 1.0f, 0.0f})
+        const Vec3& eyePosition,
+        const Vec3& target,
+        const Vec3N& up = {0.0f, 1.0f, 0.0f})
 {
     auto direction  = Normalise(target - eyePosition);
     auto right      = Normalise(Cross(direction, up));
@@ -346,7 +346,7 @@ Matrix4x4 LookAtRH(
 }
 
 Matrix4x4 LookAtRH(
-        Vec3 eyePosition,
+        const Vec3& eyePosition,
         Radians yaw,
         Radians pitch)
 {

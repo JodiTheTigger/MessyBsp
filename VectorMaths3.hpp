@@ -270,7 +270,7 @@ inline Vec3N Normalise(const Vec3& lhs)
     return result;
 }
 
-inline Vec3 Rotate(Vec3 lhs, const Vec3& wAxis, Radians rotation)
+inline Vec3 Rotate(const Vec3& lhs, const Vec3& wAxis, Radians rotation)
 {
     // Stole this from  bullet3's btVec3
 
