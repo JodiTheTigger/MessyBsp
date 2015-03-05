@@ -1795,7 +1795,7 @@ ConvexH *ConvexHMakeCube(const REAL3 &bmin, const REAL3 &bmax) {
 }
 ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 {
-	int i;
+	short i;
 	unsigned char vertcountunder=0;
     unsigned char vertcountover =0;
 
@@ -1833,7 +1833,7 @@ ConvexH *ConvexHCrop(ConvexH &convex,const Plane &slice)
 	}
 	int vertcountunderold = vertcountunder; // for debugging only
 
-	int under_edge_count =0;
+	short under_edge_count =0;
 	int underplanescount=0;
 	int e0=0;
 
