@@ -18,6 +18,9 @@
 project(MessyBsp)
 
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+if (MSVC)
+    cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR)
+endif()
 
 ###############
 # Compiler Info
