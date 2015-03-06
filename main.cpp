@@ -70,6 +70,7 @@ enum ActionMap
     StrafeRight,
     Up,
     Down,
+    Quit,
 
     Count
 };
@@ -97,7 +98,8 @@ static const uint8_t keymap[ActionMap::Count] =
     SDL_SCANCODE_A,
     SDL_SCANCODE_D,
     SDL_SCANCODE_SPACE,
-    SDL_SCANCODE_Q
+    SDL_SCANCODE_Q,
+    SDL_SCANCODE_ESCAPE,
 };
 
 static const SDL_GameControllerButton padmap[ActionMap::Count] =
@@ -108,6 +110,7 @@ static const SDL_GameControllerButton padmap[ActionMap::Count] =
     SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
     SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
     SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    SDL_CONTROLLER_BUTTON_START,
 };
 
 // Globals
@@ -738,6 +741,11 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
         if (delta > globals.tickClientPeriodInMicroseconds)
         {
             PlayerActions actions = GetActions(controllers);
+
+            if (actions.actions[Quit])
+            {
+                running = false;
+            }
 
             // deal with where we are looking.
             float mouseDelta =
