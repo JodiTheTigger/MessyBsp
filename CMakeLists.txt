@@ -98,6 +98,9 @@ if (MSVC)
 
 	# Hack to allow MSVC2015 Preview to work
     add_definitions(-DMSVC2015_PREVIEW)
+
+	# Dunno why, but SDL overrides main, then doesn't work
+    add_definitions(-DUNDEF_MAIN)
 endif()
 
 # Set a default build type for single-configuration
