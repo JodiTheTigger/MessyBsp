@@ -52,6 +52,7 @@ struct Globals
     // For now, lets assume 1 game unit = 1m
     float viewAngleSpeedPerTick = 2 * Pi / ticksPerSecond * 2.0f;
     float moveDeltaPerTick = 200.0f / ticksPerSecond;
+    float runMultiplier = 5.0f;
     float viewAnglePerMouseMoveUnit = 0.01f;
 
     // For testing lighting, rotates once every 5 seconds
@@ -74,6 +75,7 @@ enum ActionMap
     StrafeRight,
     Up,
     Down,
+    Fast,
     Quit,
 
     Count
@@ -103,6 +105,7 @@ static const uint8_t keymap[ActionMap::Count] =
     SDL_SCANCODE_D,
     SDL_SCANCODE_SPACE,
     SDL_SCANCODE_Q,
+    SDL_SCANCODE_LSHIFT,
     SDL_SCANCODE_ESCAPE,
 };
 
@@ -114,6 +117,7 @@ static const SDL_GameControllerButton padmap[ActionMap::Count] =
     SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
     SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
     SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    SDL_CONTROLLER_BUTTON_X,
     SDL_CONTROLLER_BUTTON_START,
 };
 
@@ -799,6 +803,7 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
             Vec3 movement = {0.0f};
 
+
             if (actions.actions[Forward])
             {
                 movement += forward;
@@ -826,10 +831,12 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
                 movement -= up;
             }
 
+            float speed = actions.actions[Fast] ? globals.runMultiplier : 1.0f;
+
             if (SquareF(movement) > 0.0f)
             {
                 cameraPosition +=
-                    Normalise(movement) * globals.moveDeltaPerTick;
+                    Normalise(movement) * globals.moveDeltaPerTick * speed;
             }
 
             then = now;
