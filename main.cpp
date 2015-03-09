@@ -855,7 +855,14 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
                 float ratio = 1.0f * width / height;
 
-                g_projection = ProjectionMatrix(Radians{90 * DegToRad}, ratio, 0.1f, 10000.0f);
+                // Note: I got marching stairs at the intersection of planes
+                // due to loss of precision on my depth buffer.
+                // I need log2(far/near) bits before I start getting z-fighting.
+                g_projection = ProjectionMatrix(
+                            Radians{90 * DegToRad},
+                            ratio,
+                            0.5f,
+                            4096.0f);
 
                 resized = false;
             }
