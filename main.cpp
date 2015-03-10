@@ -498,14 +498,14 @@ void DoGraphics(const Bsp::CollisionBsp& bsp)
 
     if (noDebug && glewIsExtensionSupported("GL_ARB_debug_output"))
     {
-        noDebug = false;
+        //noDebug = false;
         // RAM: TODO
         printf("GL_ARB_debug_output\n");
     }
 
     if (noDebug && glewIsExtensionSupported("GL_AMD_debug_output"))
     {
-        noDebug = false;
+        //noDebug = false;
         // RAM: TODO
         printf("GL_AMD_debug_output\n");
     }
